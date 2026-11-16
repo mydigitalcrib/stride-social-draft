@@ -1,0 +1,120 @@
+---
+// About Stride (brief §7: company, business model, mission, values, international presence): on desktop the
+// story is a reel in front of the homepage's showreel, blurred (group/StoryReel, core/BackVideo; the owner's choice,
+// 2026-11-12, in place of the road): About Stride, then Our story, the
+// milestones and Where we work, and under it the people behind Stride, the field of faces from Our Team
+// (group/TeamField), on the road's own navy, then the way to the open roles (the owner's, 2026-11-11: the team
+// belongs on About, and the page keeps one colour). Phones and tablets have the same story, chapter after chapter
+// down the page (the owner, 2026-11-13). Milestones are verified only in production. Mission and values
+// must be Stride's own: nothing is drafted, and only a preview note stands in for them.
+import { getCollection, getEntry } from 'astro:content';
+import SiteLayout from '@/layouts/SiteLayout.astro';
+import StoryReel from '@/components/group/StoryReel.astro';
+import BackVideo from '@/components/core/BackVideo.astro';
+import TeamField from '@/components/group/TeamField.astro';
+import NewsletterPreview from '@/components/group/NewsletterPreview.astro';
+import { teamField } from '@/lib/team';
+import { divisionsOf, getRoster } from '@/lib/roster';
+import PlaceholderNotice from '@/components/core/PlaceholderNotice.astro';
+import { isPreview } from '@/lib/env';
+import { chunks, paragraphs } from '@/lib/experience';
+
+const page = await getEntry('pages', 'about');
+const home = await getEntry('pages', 'home');
+if (!page || !home) throw new Error('Missing src/content/pages/about.yaml or home.yaml');
+const s = page.data.sections;
+const story = paragraphs(s.founders.body);
+const markets = await getCollection('markets', (m) => m.data.status === 'verified');
+const talentMarkets = markets.filter((m) => m.data.roles.includes('talent-market')).map((m) => m.data.label);
+const milestones = (await getCollection('milestones', (m) => m.data.status === 'verified' || isPreview)).sort((a, b) => a.data.order - b.data.order);
+// Creators for a milestone that asks for them (`creators`): the ones Stride Talent's page features, by the roster's
+// rules, each a print captioned with their name.
+const talentFeatured = (await getEntry('pages', 'talent'))?.data.sections.hero?.featured ?? [];
+const roster = await getRoster();
+const featured = talentFeatured.flatMap((id) => roster.filter((c) => c.id === id && c.data.portrait));
+const faceOf = (c: (typeof roster)[number], caption = c.data.name) => ({ src: c.data.portrait!.src, alt: c.data.portrait!.alt, caption });
+const divisionNames = new Map((await getCollection('talentDivisions')).map((d) => [d.id, d.data.name]));
+// Each milestone that asks gets the next ones along, and a division's creator is one not shown elsewhere in the story,
+// so no creator shows twice.
+const shown = new Set<string>();
+let facesTaken = 0;
+const facesFor = new Map(
+  milestones.map((m) => {
+    const picked = featured.slice(facesTaken, facesTaken + (m.data.creators ?? 0));
+    facesTaken += picked.length;
+    picked.forEach((c) => shown.add(c.id));
+    return [m.id, picked.map((c) => faceOf(c))];
+  }),
+);
+milestones.forEach((m) => {
+  const byDivision = m.data.divisions.flatMap(({ id }) => {
+    const c = roster.find((r) => r.data.portrait && !shown.has(r.id) && divisionsOf(r).includes(id));
+    if (!c) return [];
+    shown.add(c.id);
+    return [faceOf(c, `${c.data.name} · ${divisionNames.get(id) ?? id}`)];
+  });
+  // Little ones tucked behind the chapter's own photograph (`behind`): from one division, never one already shown.
+  const behind = m.data.behind;
+  const tucked = behind
+    ? roster
+        .filter((r) => r.data.portrait && !shown.has(r.id) && divisionsOf(r).includes(behind.division.id))
+        .slice(0, behind.count)
+        .map((c) => {
+          shown.add(c.id);
+          return { ...faceOf(c, ''), small: true };
+        })
+    : [];
+  facesFor.set(m.id, [...(facesFor.get(m.id) ?? []), ...byDivision, ...tucked]);
+});
+const imagesOf = (m: (typeof milestones)[number]) => [...m.data.images, ...(facesFor.get(m.id) ?? [])];
+// The team under the story, with Our Team's own words.
+const teamCopy = (await getEntry('pages', 'team'))?.data.sections;
+const field = await teamField();
+const teamUi = (key: string, fallback: string) => teamCopy?.field?.items?.find((i) => i.key === key)?.label ?? fallback;
+
+// The story's chapters (every screen): after the opening, Our story as the dial tells it (its first
+// paragraph), the milestones in full as Our History tells them, then where we work.
+const stops = [
+  ...(milestones.length
+    ? [
+        { id: 'our-story', mark: s.founders.eyebrow ?? 'Our story', title: s.founders.headline, body: story[0] ? [chunks(story[0], 360)[0]] : [], images: s.founders.images },
+        ...milestones.map((m) => ({ id: m.id, mark: String(m.data.year), title: m.data.title, body: paragraphs(m.data.body), image: m.data.image, video: m.data.video, images: imagesOf(m), tiktok: m.data.tiktok })),
+      ]
+    : story.flatMap((p, i) => chunks(p, 360).map((text, k) => ({ id: `our-story-${i + 1}-${k + 1}`, mark: s.founders.eyebrow ?? 'Our story', title: i === 0 && k === 0 ? s.founders.headline : undefined, body: [text] })))),
+  ...(talentMarkets.length ? [{ id: 'where-we-work', mark: s.presence.eyebrow ?? 'Where we work', title: s.presence.headline, body: [], chips: talentMarkets }] : []),
+];
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'AboutPage',
+    name: 'About Stride',
+    description: s.hero.body,
+  },
+];
+---
+
+<SiteLayout title="About Stride | Social, Talent and Academy" description={s.hero.body} jsonLd={jsonLd} headerOverlay>
+  <BackVideo look="deep" mp4="/assets/video/stride-showreel-desktop.mp4" webm="/assets/video/stride-showreel-desktop.webm" poster="/assets/site/stride-showreel-desktop-poster.jpg" blur={12} />
+  <StoryReel copy={{ headline: s.hero.headline, body: s.hero.body }} stops={stops} crumbs={[{ label: 'About' }]}>
+    {isPreview && <PlaceholderNotice label="Needed from Stride">{(s.mission.awaiting ?? []).join(' · ')}</PlaceholderNotice>}
+  </StoryReel>
+  {/* The people behind Stride, under the story: Our Team's field of faces, on the same navy. */}
+  {teamCopy && (
+    <TeamField
+      id="team"
+      level="h2"
+      look="deep"
+      eager={false}
+      tools={false}
+      copy={teamCopy.hero}
+      people={field.people}
+      departments={field.departments}
+      crumbs={[]}
+      ui={{ all: teamUi('all', 'Everyone'), shuffle: teamUi('shuffle', 'Shuffle'), hint: teamCopy.field?.body ?? '', hintDesk: teamUi('hint-desk', 'Move across the faces') }}
+    />
+  )}
+  {/* Stride's LinkedIn newsletter, right after the team (the owner, 2026-11-13). */}
+  {s.newsletter && <NewsletterPreview copy={s.newsletter} />}
+
+</SiteLayout>

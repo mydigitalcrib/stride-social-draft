@@ -1,0 +1,282 @@
+---
+// Legal pages: privacy, cookies, terms. Kept plain and readable, as they should be: the text in glass, with
+// a table of contents that follows you and marks where you are. The text must come from Stride (Q15).
+// Until then each page says so, stays out of search results, and the labelled notice blocks a production release.
+// Desktop: a lit line beside the contents slides to the section you're in, and a contents link glides there and
+// moves focus to its heading. Sizes in rem, so the glass keeps its margins past 1920×1080.
+import { getCollection, render } from 'astro:content';
+import SiteLayout from '@/layouts/SiteLayout.astro';
+import Breadcrumbs from '@/components/global/Breadcrumbs.astro';
+import Prose from '@/components/core/Prose.astro';
+import PlaceholderNotice from '@/components/core/PlaceholderNotice.astro';
+import { enquiryEmail } from '@/config/forms';
+import { formatDate } from '@/lib/insights';
+
+export async function getStaticPaths() {
+  const pages = await getCollection('legal');
+  return pages.map((page) => ({ params: { legal: page.id }, props: { page } }));
+}
+
+const { page } = Astro.props;
+const d = page.data;
+const { Content, headings } = await render(page);
+const toc = headings.filter((h) => h.depth === 2);
+const ready = d.status === 'approved' && (page.body ?? '').trim() !== '';
+---
+
+<SiteLayout title={`${d.title} | Stride`} description={d.summary} noindex={!ready} look="white" headerOverlay>
+  <article class="legal" data-legal data-tone="group" data-look="white">
+    <div class="legal__inner container-wide">
+      <header class="legal__head">
+        <Breadcrumbs items={[{ label: d.title }]} tone="dark" />
+        <h1 class="legal__title exp-title">{d.title}</h1>
+        {ready && d.updated && <p class="exp-label">Last updated {formatDate(d.updated)}</p>}
+      </header>
+      {ready ? (
+        <div class="legal__body">
+          {toc.length > 1 && (
+            <nav class="legal__toc glass" aria-label="Contents" data-legal-toc>
+              <span class="legal__mark" aria-hidden="true" data-legal-mark></span>
+              <p class="exp-label">Contents</p>
+              <ol role="list">
+                {toc.map((h) => <li><a href={`#${h.slug}`} data-legal-link={h.slug}>{h.text}</a></li>)}
+              </ol>
+            </nav>
+          )}
+          <div class="legal__text glass">
+            <Prose class="exp-prose"><Content /></Prose>
+          </div>
+        </div>
+      ) : (
+        <div class="legal__pending glass">
+          <PlaceholderNotice variant="block" label="Legal text to be supplied by Stride (Q15)">
+            <p>{d.summary} Add the approved text to src/content/legal/{page.id}.md and set status: approved.</p>
+          </PlaceholderNotice>
+          <p>Questions in the meantime: <a href={`mailto:${enquiryEmail}`}>{enquiryEmail}</a></p>
+        </div>
+      )}
+    </div>
+  </article>
+</SiteLayout>
+
+<style>
+  .legal {
+    position: relative;
+    min-height: 100svh;
+    padding-block: calc(var(--header-h) + var(--space-3)) var(--space-8);
+    overflow: clip;
+    color: rgb(var(--ink));
+  }
+
+  .legal__inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  .legal__head {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .legal__title {
+    font-size: clamp(2.5rem, 6vw, 6rem);
+  }
+
+  .legal__body {
+    display: grid;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+    gap: var(--space-5) var(--gutter);
+    align-items: start;
+  }
+
+  .legal__toc {
+    position: sticky;
+    top: calc(var(--header-h) + var(--space-3));
+    display: grid;
+    gap: var(--space-3);
+    padding: clamp(18px, 1.8vw, 28px);
+  }
+
+  .legal__toc ol {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .legal__toc a {
+    font-size: 0.9375rem;
+    color: rgb(var(--ink) / 0.72);
+    transition: color 300ms var(--ease-out);
+  }
+
+  .legal__toc a:hover,
+  .legal__toc a.is-here {
+    color: rgb(var(--tone-lit));
+  }
+
+  .legal__text,
+  .legal__pending {
+    padding: clamp(22px, 2.6vw, 44px);
+  }
+
+  .legal__pending {
+    display: grid;
+    gap: var(--space-4);
+    max-width: 48rem;
+  }
+
+  .legal__pending a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  @media (max-width: 1023px) {
+    .legal__body {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .legal__toc {
+      position: static;
+    }
+  }
+
+  /* Every screen (2026-11-13): in rem, so the glass keeps its margin round the words past 1920×1080
+     (styles/system/tokens.css). */
+  @media all {
+    .legal__toc {
+      --toc-pad: clamp(1.125rem, 1.8vw, 1.75rem);
+      padding: var(--toc-pad);
+    }
+
+    .legal__text,
+    .legal__pending {
+      padding: clamp(1.375rem, 2.6vw, 2.75rem);
+    }
+
+    .legal__pending a {
+      text-underline-offset: 0.1875rem;
+    }
+
+    /* Where you are in the contents: one lit line beside them that slides to the section being read and takes its
+       height (--my, --mh: the script, which shows it once it has measured). */
+    .legal__mark {
+      position: absolute;
+      top: 0;
+      left: calc(var(--toc-pad) / 2 - 1px);
+      width: 2px;
+      height: 1rem;
+      border-radius: 2px;
+      background: rgb(var(--tone-lit));
+      opacity: 0;
+      transform: translateY(var(--my, 0px)) scaleY(var(--mh, 1));
+      transform-origin: 0 0;
+      pointer-events: none;
+      transition:
+        transform 420ms var(--ease-out),
+        opacity 300ms var(--ease-out);
+    }
+
+    .legal__mark.is-on {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .legal__mark {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  // The contents mark the section you're reading, on every screen: a lit line beside the contents slides to it, worked
+  // out once a frame from positions measured as the page settles; a link in the contents glides there (when the page
+  // scrolls smoothly) and moves focus to the heading.
+  type Lenis = { scrollTo(target: number, options?: { duration?: number; force?: boolean; onComplete?: () => void }): void };
+
+  document.querySelectorAll<HTMLElement>('[data-legal]').forEach((root) => {
+    if (root.dataset.ready) return;
+    root.dataset.ready = 'true';
+    const links = [...root.querySelectorAll<HTMLElement>('[data-legal-link]')];
+    const sections = links.map((l) => document.getElementById(l.dataset.legalLink ?? '')).filter((s): s is HTMLElement => !!s);
+    if (!sections.length) return;
+
+    const toc = root.querySelector<HTMLElement>('[data-legal-toc]');
+    const mark = root.querySelector<HTMLElement>('[data-legal-mark]');
+    const pairs = links.flatMap((link) => {
+      const section = document.getElementById(link.dataset.legalLink ?? '');
+      return section ? [{ link, section, item: link.closest('li') ?? link }] : [];
+    });
+    let tops: number[] = [];
+    let here = -1;
+    let queued = false;
+
+    // The marker: down to the current entry, as tall as it is.
+    const place = () => {
+      const p = pairs[here];
+      if (!mark || !p) return;
+      // Everything read first, then written, so the browser lays the contents out once.
+      const y = p.item.offsetTop;
+      const k = p.item.offsetHeight / Math.max(1, mark.offsetHeight);
+      const first = !mark.classList.contains('is-on');
+      // The first time it simply appears where it belongs: no slide while it's placed, then it fades in there.
+      if (first) mark.style.transition = 'none';
+      mark.style.setProperty('--my', `${y}px`);
+      mark.style.setProperty('--mh', k.toFixed(3));
+      if (!first) return;
+      void mark.offsetWidth;
+      mark.style.transition = '';
+      mark.classList.add('is-on');
+    };
+    const frame = () => {
+      queued = false;
+      const line = window.scrollY + window.innerHeight * 0.35;
+      let at = 0;
+      tops.forEach((t, i) => {
+        if (t < line) at = i;
+      });
+      if (at === here) return;
+      here = at;
+      pairs.forEach((p, i) => p.link.classList.toggle('is-here', i === at));
+      place();
+    };
+    const queue = () => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(frame);
+    };
+    const measure = () => {
+      const y = window.scrollY;
+      tops = pairs.map((p) => p.section.getBoundingClientRect().top + y);
+      place();
+      queue();
+    };
+    window.addEventListener('scroll', queue, { passive: true });
+    window.addEventListener('resize', measure, { passive: true });
+    new ResizeObserver(measure).observe(root);
+    document.fonts?.ready.then(measure);
+    measure();
+
+    // With smooth scrolling on, a link in the contents glides to its section (clear of the header, as the page's own
+    // anchors are) and focus lands on the heading; otherwise the browser's own jump does.
+    toc?.addEventListener('click', (e) => {
+      const lenis = (window as unknown as { lenis?: Lenis }).lenis;
+      const link = (e.target as HTMLElement).closest<HTMLElement>('[data-legal-link]');
+      const section = pairs.find((p) => p.link === link)?.section;
+      if (!lenis || !section || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      const clear = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
+      history.replaceState(null, '', `#${section.id}`);
+      lenis.scrollTo(section.getBoundingClientRect().top + window.scrollY - clear, {
+        duration: 1,
+        // Even while smooth scrolling is paused (a menu open): the browser's own jump has been called off.
+        force: true,
+        onComplete: () => {
+          if (!section.hasAttribute('tabindex')) section.setAttribute('tabindex', '-1');
+          section.focus({ preventScroll: true });
+        },
+      });
+    });
+  });
+</script>

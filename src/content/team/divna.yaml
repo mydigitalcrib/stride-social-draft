@@ -1,0 +1,10 @@
+# Hidden on 2026-11-11: not on slide 15 of Stride's 2026 talent deck, which the team now follows. Set `visible: true`
+# (and give a blue-background photograph) if still at Stride.
+name: Divna
+role: Talent Manager
+department: talent
+photo:
+  src: /assets/team/blue/0056d1f1-screenshot_2026-01-23_at_14.52.14_50.jpg
+  alt: Divna, Talent Manager at Stride
+order: 26
+visible: false

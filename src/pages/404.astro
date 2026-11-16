@@ -1,0 +1,464 @@
+---
+// 404: three huge outlined digits that lean towards the pointer, a short message, and glass routes to the
+// three divisions and home, inside the normal site chrome so visitors can navigate on.
+// Every screen (phones and tablets since 2026-11-13): the digits float a little, out of step (weightless), swell when
+// held and can be thrown (a finger too); a torch lights inside their outlines wherever the pointer or finger nears
+// them; a route focused from the keyboard turns them towards it.
+// With reduced motion they stay still (no lean, float or throw). Sizes in rem, so it grows past 1920×1080.
+import { getEntry } from 'astro:content';
+import SiteLayout from '@/layouts/SiteLayout.astro';
+
+const copy = (await getEntry('pages', 'system'))?.data.sections.notFound;
+if (!copy) throw new Error('Missing notFound in src/content/pages/system.yaml');
+const routes = [
+  { key: 'social', label: 'Stride Social', note: 'For brands', href: '/social' },
+  { key: 'talent', label: 'Stride Talent', note: 'For creators', href: '/talent' },
+  { key: 'education', label: 'Stride Academy', note: 'For the next generation', href: '/academy' },
+  { key: 'group', label: 'Homepage', note: 'Start again', href: '/' },
+];
+---
+
+<SiteLayout title="Page not found | Stride" description={copy.body} noindex headerOverlay>
+  <section class="nf" aria-labelledby="nf-title" data-tone="group" data-look="deep" data-nf>
+    <div class="nf__inner container-wide">
+      <p class="nf__code" aria-hidden="true" data-nf-code><span>4</span><span>0</span><span>4</span></p>
+      <div class="nf__text">
+        <p class="exp-label">{copy.eyebrow}</p>
+        <h1 class="nf__title exp-title" id="nf-title">{copy.headline}</h1>
+        <p class="nf__body">{copy.body}</p>
+      </div>
+      <ul class="nf__routes" role="list">
+        {routes.map((r) => (
+          <li data-tone={r.key}>
+            <a class="nf__route glass" href={r.href}>
+              <span class="nf__label">{r.label}</span>
+              <span class="nf__note">{r.note}</span>
+              <span class="exp-round" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg></span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+</SiteLayout>
+
+<style>
+  .nf {
+    position: relative;
+    display: grid;
+    align-items: center;
+    min-height: 100svh;
+    padding-block: calc(var(--header-h) + var(--space-3)) var(--space-6);
+    overflow: clip;
+    color: rgb(var(--ink));
+  }
+
+  .nf__inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: var(--space-5);
+    width: 100%;
+    perspective: 1200px;
+  }
+
+  .nf__code {
+    display: flex;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: clamp(7rem, min(24vw, 42svh), 24rem);
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    line-height: 0.86;
+    letter-spacing: -0.03em;
+    color: transparent;
+    -webkit-text-stroke: 1.5px rgb(var(--tone-lit) / 0.85);
+    transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transition: transform 260ms var(--ease-out);
+    user-select: none;
+  }
+
+  .nf__code span {
+    display: inline-block;
+    cursor: grab;
+    touch-action: none;
+    will-change: transform;
+    background: linear-gradient(180deg, rgb(var(--tone-lit) / 0.26), rgb(var(--white-rgb) / calc(0.02 * var(--fill-k))) 82%);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+
+  .nf__text {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-2);
+    text-align: center;
+  }
+
+  .nf__title {
+    font-size: clamp(1.75rem, 3.4vw, 3.25rem);
+  }
+
+  .nf__body {
+    color: rgb(var(--ink) / 0.86);
+  }
+
+  .nf__routes {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(10px, 1.1vw, 18px);
+  }
+
+  .nf__route {
+    position: relative;
+    display: grid;
+    gap: 4px;
+    height: 100%;
+    padding: clamp(16px, 1.5vw, 22px);
+    padding-right: 72px;
+    color: rgb(var(--ink));
+    transition:
+      translate 400ms var(--ease-out),
+      box-shadow 400ms var(--ease-out);
+  }
+
+  .nf__route:hover,
+  .nf__route:focus-visible {
+    translate: 0 -5px;
+    outline: none;
+    box-shadow:
+      inset 0 0 0 1.5px rgb(var(--tone-lit) / 0.95),
+      0 0 30px -4px rgb(var(--tone-glow) / 0.65);
+  }
+
+  .nf__route .exp-round {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    margin-top: -23px;
+  }
+
+  .nf__label {
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 1.3vw, 1.25rem);
+    font-weight: 800;
+  }
+
+  .nf__note {
+    font-size: 0.8125rem;
+    color: rgb(var(--ink) / 0.76);
+  }
+
+  @media (max-width: 1023px) {
+    .nf__routes {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 599px) {
+    .nf__routes {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  /* ---------- Every screen: in rem, so it grows past 1920×1080 with the page (styles/system/tokens.css) ---------- */
+  @property --torch {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 0;
+  }
+
+  @media all {
+    .nf__inner {
+      perspective: 75rem;
+    }
+
+    /* The torch comes up as the pointer nears the digits and goes as it leaves (--torch, the script). */
+    .nf__code {
+      -webkit-text-stroke-width: 0.09375rem;
+      transition:
+        transform 260ms var(--ease-out),
+        --torch 400ms var(--ease-out);
+    }
+
+    /* A torch searching the digits: light inside the outlines where the pointer is (--lx, --ly, the script),
+       following a thrown digit too. None until the pointer comes near, so at rest they're as they were. Held, a
+       digit swells a little. */
+    .nf__code span {
+      background:
+        radial-gradient(circle 14rem at var(--lx, -100rem) var(--ly, -100rem), rgb(var(--tone-lit) / calc(0.55 * var(--torch, 0))), transparent 70%),
+        linear-gradient(180deg, rgb(var(--tone-lit) / 0.26), rgb(var(--white-rgb) / calc(0.02 * var(--fill-k))) 82%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      transition: scale 160ms var(--ease-out);
+    }
+
+    .nf__code span.is-held {
+      scale: 1.05;
+    }
+
+    .nf__routes {
+      gap: clamp(0.625rem, 1.1vw, 1.125rem);
+    }
+
+    .nf__route {
+      gap: 0.25rem;
+      padding: clamp(1rem, 1.5vw, 1.375rem);
+      padding-right: 4.5rem;
+    }
+
+    .nf__route:hover,
+    .nf__route:focus-visible {
+      translate: 0 -0.3125rem;
+      box-shadow:
+        inset 0 0 0 1.5px rgb(var(--tone-lit) / 0.95),
+        0 0 1.875rem -0.25rem rgb(var(--tone-glow) / 0.65);
+    }
+
+    .nf__route .exp-round {
+      right: 0.875rem;
+      margin-top: -1.4375rem;
+    }
+  }
+
+  /* A narrow laptop: the routes two by two, as on a tablet, so their names keep to a line. */
+  @media (min-width: 1024px) and (max-width: 1279px) {
+    .nf__routes {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  /* Weightless: each digit drifts a little, out of step with the others; held, it waits. */
+  @media (prefers-reduced-motion: no-preference) {
+    .nf__code span {
+      animation: nf-drift 6.2s ease-in-out infinite;
+    }
+
+    .nf__code span:nth-child(2) {
+      animation-duration: 7.4s;
+      animation-delay: -2.4s;
+    }
+
+    .nf__code span:nth-child(3) {
+      animation-duration: 6.8s;
+      animation-delay: -4.6s;
+    }
+
+    .nf__code span.is-held {
+      animation-play-state: paused;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nf__code {
+      transform: none;
+      transition: none;
+    }
+
+    .nf__code span {
+      transition: none;
+    }
+  }
+
+  /* On transform: a throw moves a digit with translate and rotate (the script), and the swell's scale comes between
+     the two, so it grows the digit where it is rather than pushing it further along its throw. */
+  @keyframes nf-drift {
+    50% {
+      transform: translateY(-0.35rem);
+    }
+  }
+</style>
+
+<script>
+  import { uiScale } from '@/scripts/system/scale';
+  
+  document.querySelectorAll<HTMLElement>('[data-nf]').forEach((root) => {
+    if (root.dataset.ready) return;
+    root.dataset.ready = 'true';
+    const code = root.querySelector<HTMLElement>('[data-nf-code]');
+    if (!code) return;
+    // The digits lean wherever the pointer is on the page, not only over them.
+    const lean = (x: number, y: number) => {
+      code.style.setProperty('--ry', `${((x / window.innerWidth - 0.5) * 26).toFixed(2)}deg`);
+      code.style.setProperty('--rx', `${((0.5 - y / window.innerHeight) * 18).toFixed(2)}deg`);
+    };
+    /* ---------- Every screen ---------- */
+    // The lean (once a frame, and not with reduced motion), the torch, and a route focused from the keyboard turning
+    // the digits towards it.
+    const moves = window.matchMedia('(prefers-reduced-motion: no-preference)').matches;
+    type Digit = { el: HTMLElement; left: number; top: number; w: number; h: number; x: number; y: number; vx: number; vy: number; r: number; held: boolean; lastX: number; lastY: number; thrown: number };
+    const digits: Digit[] = ([...code.children] as HTMLElement[]).map((el) => ({ el, left: 0, top: 0, w: 0, h: 0, x: 0, y: 0, vx: 0, vy: 0, r: 0, held: false, lastX: 0, lastY: 0, thrown: 0 }));
+    if (!digits.length) return;
+
+    // Each digit's place at rest, in the page, from its layout, so neither the lean nor a throw skews it.
+    const measure = () => {
+      const y = window.scrollY;
+      digits.forEach((d) => {
+        const p = (d.el.offsetParent as HTMLElement | null)?.getBoundingClientRect();
+        d.left = (p?.left ?? 0) + d.el.offsetLeft;
+        d.top = (p?.top ?? 0) + y + d.el.offsetTop;
+        d.w = d.el.offsetWidth;
+        d.h = d.el.offsetHeight;
+      });
+    };
+    window.addEventListener('resize', measure, { passive: true });
+    document.fonts?.ready.then(measure);
+    measure();
+
+    let px = 0;
+    let py = 0;
+    let seen = false;
+    let lit = false;
+    let aimed = false;
+    let queued = false;
+    // The torch: lit within one and a half digits' height of them, its light wherever the pointer is.
+    const torch = () => {
+      if (!seen) return;
+      const sy = window.scrollY;
+      const first = digits[0];
+      const last = digits[digits.length - 1];
+      const top = first.top - sy;
+      const dx = Math.max(first.left - px, 0, px - (last.left + last.w));
+      const dy = Math.max(top - py, 0, py - (top + first.h));
+      const near = Math.hypot(dx, dy) < first.h * 1.5;
+      if (near !== lit) {
+        lit = near;
+        code.style.setProperty('--torch', near ? '1' : '0');
+      }
+      if (!near) return;
+      for (const d of digits) {
+        d.el.style.setProperty('--lx', `${(px - d.left - d.x).toFixed(1)}px`);
+        d.el.style.setProperty('--ly', `${(py - (d.top - sy) - d.y).toFixed(1)}px`);
+      }
+    };
+    const frame = () => {
+      queued = false;
+      if (moves && !aimed) lean(px, py);
+      torch();
+    };
+    window.addEventListener(
+      'pointermove',
+      (e) => {
+        px = e.clientX;
+        py = e.clientY;
+        seen = true;
+        aimed = false;
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(frame);
+      },
+      { passive: true },
+    );
+    document.documentElement.addEventListener(
+      'pointerleave',
+      () => {
+        lit = false;
+        code.style.setProperty('--torch', '0');
+      },
+      { passive: true },
+    );
+    if (moves) {
+      root.querySelectorAll<HTMLElement>('.nf__route').forEach((route) => {
+        route.addEventListener('focus', () => {
+          if (!route.matches(':focus-visible')) return;
+          aimed = true;
+          const r = route.getBoundingClientRect();
+          lean(r.left + r.width / 2, r.top + r.height / 2);
+        });
+        route.addEventListener('blur', () => {
+          if (!aimed) return;
+          aimed = false;
+          if (seen) lean(px, py);
+          else lean(window.innerWidth / 2, window.innerHeight / 2);
+        });
+      });
+    }
+
+    // Throw the digits around: they bounce off the screen's edges, then drift home. A throw is written as translate
+    // and rotate, not transform, so a held digit's swell (scale) grows it in place and its float (a transform) stays.
+    if (!moves) return;
+    const pose = (d: Digit) => {
+      d.el.style.translate = `${d.x.toFixed(1)}px ${d.y.toFixed(1)}px`;
+      d.el.style.rotate = `${d.r.toFixed(1)}deg`;
+    };
+    let raf = 0;
+    const tick = (t: number) => {
+      raf = 0;
+      let moving = false;
+      const sy = window.scrollY;
+      const k = uiScale();
+      for (const d of digits) {
+        if (d.held) {
+          moving = true;
+          continue;
+        }
+        if (t - d.thrown > 2600) {
+          d.vx += -d.x * 0.012;
+          d.vy += -d.y * 0.012;
+          d.vx *= 0.9;
+          d.vy *= 0.9;
+        } else {
+          d.vx *= 0.985;
+          d.vy *= 0.985;
+        }
+        d.x += d.vx;
+        d.y += d.vy;
+        // The spin from the speed at 1920×1080's scale, so a larger screen spins no harder.
+        d.r += (d.vx / k) * 0.6 - d.r * 0.02;
+        // The screen's edges, from its place at rest and how far it's been thrown (no layout read per frame).
+        const left = d.left + d.x;
+        const top = d.top - sy + d.y;
+        if (left < 0 && d.vx < 0) d.vx *= -0.72;
+        if (left + d.w > window.innerWidth && d.vx > 0) d.vx *= -0.72;
+        if (top < 0 && d.vy < 0) d.vy *= -0.72;
+        if (top + d.h > window.innerHeight && d.vy > 0) d.vy *= -0.72;
+        pose(d);
+        if (Math.abs(d.x) > 0.3 || Math.abs(d.y) > 0.3 || Math.abs(d.vx) > 0.05 || Math.abs(d.vy) > 0.05) moving = true;
+        else {
+          d.x = d.y = d.r = 0;
+          d.el.style.translate = '';
+          d.el.style.rotate = '';
+        }
+      }
+      // The torch follows a thrown digit.
+      if (lit) torch();
+      if (moving) raf = requestAnimationFrame(tick);
+    };
+    const run = () => {
+      if (!raf) raf = requestAnimationFrame(tick);
+    };
+    digits.forEach((d) => {
+      d.el.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0) return;
+        d.held = true;
+        d.lastX = e.clientX;
+        d.lastY = e.clientY;
+        d.vx = d.vy = 0;
+        d.el.setPointerCapture(e.pointerId);
+        d.el.style.cursor = 'grabbing';
+        d.el.classList.add('is-held');
+        run();
+      });
+      d.el.addEventListener('pointermove', (e) => {
+        if (!d.held) return;
+        d.vx = e.clientX - d.lastX;
+        d.vy = e.clientY - d.lastY;
+        d.lastX = e.clientX;
+        d.lastY = e.clientY;
+        d.x += d.vx;
+        d.y += d.vy;
+        pose(d);
+      });
+      const release = () => {
+        if (!d.held) return;
+        d.held = false;
+        d.thrown = performance.now();
+        d.el.style.cursor = '';
+        d.el.classList.remove('is-held');
+        run();
+      };
+      d.el.addEventListener('pointerup', release);
+      d.el.addEventListener('pointercancel', release);
+    });
+  });
+</script>

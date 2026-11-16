@@ -1,0 +1,878 @@
+---
+// Stride Speakers, in front of its studio: two scenes (every screen: on a phone the running order and the monitor side
+// by side as on desktop, smaller, the monitor keeping its place as the names go by; a first tap on a name puts them on
+// the monitor, the next opens their profile; the slides change with a tap on either half; no laser on a touch screen).
+// "Who you can book." The speakers' names in big type on the left, like a running order; on the right a studio monitor
+// (the camera's frame marks, a LIVE light) showing the one pointed at, in colour, with a broadcast caption sliding in
+// along its foot: their name, what they do, what a click does. A click on the picture adds them ("Click to get to know":
+// the camera's shot and the tray, shortlist.ts); a name opens their profile over the page (creator-sheet.ts).
+// "Where they've spoken." The engagements as slides on the stage's big screen: the picture filling it, a caption with who,
+// what and when, the slide's number; the pointer over the screen is a presenter's laser, a click on its right half goes
+// on and on its left half back, as do the arrow keys and the strip of pictures below; "See the post" opens the post it
+// comes from. Speakers only through the roster's rules; the engagements are the copy file's, their words only what each
+// post says.
+// Like a vision mixer: each new speaker on the monitor is a cut, a line of light sweeping down it and the picture
+// settling from bright; the frame marks close in on the picture as the pointer comes onto it (an autofocus) and snap
+// in as a click adds the speaker; the LIVE light pulses. Left alone in view, the monitor moves on to the next speaker
+// every few seconds. From the keyboard, the names are one tab stop, the arrow keys (and Home, End) move along them,
+// and the next stop is the speaker on the monitor's "+ Add", showing over the monitor's corner when focused. Like a presenter's
+// clicker: a click sends a ring of light out from the laser, a soft light at the screen's edge says which way the
+// half pointed at goes, slides move in from the side they come from, the number rolls, and a sideways swipe on a
+// trackpad goes on or back. Over the caption's links the cursor is the site's own again. On a very wide screen the
+// monitor keeps to the right margin and the stage screen stands centred. Sizes in rem, so both scenes grow with a large
+// screen. Nothing moves under reduced motion. Behaviour: speaker-stage.ts.
+import type { CreatorView } from '@/lib/creator-view';
+import { interfaceCopy } from '@/lib/ui-copy';
+
+export interface Props {
+  /** Where a creator's own page is (routes.creator, without the id): for a screen without the profile over the page. */
+  profile?: string;
+  people: { eyebrow?: string; headline?: string };
+  placements: { eyebrow?: string; headline?: string };
+  speakers: CreatorView[];
+  seen: { label: string; copy?: string; image?: string; alt?: string; position?: string; href?: string; who: { name: string; href: string } | null }[];
+}
+
+const { profile, people, placements, speakers, seen } = Astro.props;
+const t = await interfaceCopy();
+const ids = speakers.map((s) => s.id).join(' ');
+---
+
+<section class="lineup" aria-labelledby="lineup-title" data-tone="talent" data-look="deep" data-speaker-lineup data-ids={ids} data-profile={profile}>
+  <div class="lineup__inner">
+    <div class="lineup__side">
+      {people.eyebrow && <p class="exp-label">{people.eyebrow}</p>}
+      <h2 class="lineup__title exp-title" id="lineup-title">{people.headline}</h2>
+      <ol class="lineup__names" role="list">
+        {speakers.map((s, i) => (
+          <li>
+            <button class:list={['lineup__name', { 'is-on': i === 0 }]} type="button" data-lineup-name={i}>
+              <span class="lineup__no exp-label" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+              {s.name}
+            </button>
+          </li>
+        ))}
+      </ol>
+    </div>
+
+    <div class="lineup__monitor" data-press data-lineup-monitor>
+      {speakers.map((s, i) => s.portrait && <img class:list={{ 'is-on': i === 0 }} src={s.portrait.src} alt="" sizes="(min-width: 1024px) 40vw, 100vw" decoding="async" draggable="false" data-lineup-img={i} />)}
+      <span class="lineup__frame" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span class="lineup__live exp-label" aria-hidden="true"><span></span>{t('spec.speakers.live')}</span>
+      <span class="lineup__cut" aria-hidden="true" data-lineup-cut></span>
+      <div class="lineup__caption" aria-live="polite">
+        <b data-lineup-cap-name>{speakers[0]?.name}</b>
+        <span data-lineup-cap-what>{[speakers[0]?.niche, speakers[0]?.handle].filter(Boolean).join(' · ')}</span>
+        <em class="exp-label" data-lineup-cap-act data-shoot={t('photocall.shoot')} data-kept={t('photocall.kept')}>{t('photocall.shoot')}</em>
+      </div>
+      {speakers.map((s, i) => (
+        <button class="lineup__keep exp-pill exp-pill--ghost" type="button" hidden={i !== 0} aria-pressed="false" data-keep="creators" data-keep-id={s.id} data-keep-label={s.name} data-keep-image={s.portrait?.src} data-lineup-keep={i}>
+          <span class="keep-off">+ {t('hand.keep')} {s.name}</span><span class="keep-on">{t('hand.kept')}</span>
+        </button>
+      ))}
+      <script type="application/json" data-lineup-data set:html={JSON.stringify(speakers.map((s) => ({ name: s.name, what: [s.niche, s.handle].filter(Boolean).join(' · '), src: s.portrait?.src ?? '' }))).replace(/</g, '\\u003c')} />
+    </div>
+  </div>
+</section>
+
+{seen.length > 0 && (
+  <section class="slides" aria-labelledby="slides-title" data-tone="talent" data-look="deep" data-speaker-slides data-tray-away>
+    <div class="slides__inner">
+      <header class="slides__head">
+        {placements.eyebrow && <p class="exp-label">{placements.eyebrow}</p>}
+        <h2 class="slides__title exp-title" id="slides-title">{placements.headline}</h2>
+        <p class="slides__hint">{t('spec.speakers.slides')}</p>
+      </header>
+
+      <div class="slides__screen" data-own-cursor data-slides-screen>
+        <ol class="slides__deck" role="list">
+          {seen.map((item, i) => (
+            <li class:list={['slides__slide', { 'is-on': i === 0 }]} data-slide={i} aria-hidden={i === 0 ? undefined : 'true'}>
+              <img src={item.image} alt={item.alt ?? ''} loading={i === 0 ? undefined : 'lazy'} decoding="async" sizes="(min-width: 1024px) 80vw, 100vw" style={item.position ? `object-position: ${item.position}` : undefined} draggable="false" />
+              <div class="slides__caption">
+                {item.who && <a class="slides__who exp-label" href={item.who.href}>{item.who.name}</a>}
+                <h3 class="slides__what">{item.label}</h3>
+                {item.copy && <p class="slides__when">{item.copy}</p>}
+                {item.href && (
+                  <a class="slides__post" href={item.href} target="_blank" rel="noopener">
+                    {t('spec.speakers.post')}
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"></path></svg>
+                    <span class="visually-hidden">: on Instagram, in a new tab</span>
+                  </a>
+                )}
+              </div>
+            </li>
+          ))}
+        </ol>
+        <span class="slides__edge slides__edge--prev" aria-hidden="true"></span>
+        <span class="slides__edge slides__edge--next" aria-hidden="true"></span>
+        <p class="slides__count exp-label" aria-live="polite"><span class="slides__at" data-most={seen.length}><span data-slides-at>1</span></span> / {seen.length}</p>
+        <span class="slides__laser" aria-hidden="true" data-slides-laser></span>
+        <canvas class="slides__trail" aria-hidden="true" data-slides-trail></canvas>
+      </div>
+
+      <div class="slides__strip" role="group" aria-label={placements.headline}>
+        <button class="slides__step" type="button" aria-label={t('spec.prev')} data-slides-prev>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5.5M11 6.5 5.5 12l5.5 5.5"></path></svg>
+        </button>
+        {seen.map((item, i) => (
+          <button class:list={['slides__thumb', { 'is-on': i === 0 }]} type="button" aria-label={`${item.label}${item.who ? `, ${item.who.name}` : ''}`} aria-pressed={i === 0 ? 'true' : 'false'} data-slides-go={i}>
+            <img src={item.image} alt="" loading="lazy" decoding="async" sizes="(min-width: 1921px) 8.4vw, 160px" style={item.position ? `object-position: ${item.position}` : undefined} draggable="false" />
+          </button>
+        ))}
+        <button class="slides__step" type="button" aria-label={t('spec.next')} data-slides-next>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+)}
+
+<style>
+  /* ---------- Who you can book: the running order and the monitor ---------- */
+  .lineup {
+    position: relative;
+    padding-block: clamp(4rem, 11vh, 8.125rem);
+    color: rgb(var(--ink));
+  }
+
+  .lineup__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
+    gap: clamp(2rem, 4vw, 4.5rem);
+    align-items: center;
+    margin-inline: var(--margin);
+  }
+
+  .lineup__side {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-4);
+  }
+
+  .lineup__title {
+    font-size: clamp(2rem, 3.4vw, 3.5rem);
+  }
+
+  .lineup__names {
+    display: grid;
+    gap: 0.25rem;
+    margin-top: var(--space-3);
+  }
+
+  .lineup__name {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.25rem 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 3.5vw, 4rem);
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    line-height: 0.98;
+    letter-spacing: -0.025em;
+    text-align: left;
+    text-transform: uppercase;
+    color: transparent;
+    -webkit-text-stroke: 0.0625rem rgb(var(--white-rgb) / 0.5);
+    transition:
+      color 260ms var(--ease-out),
+      -webkit-text-stroke-color 260ms var(--ease-out),
+      translate 380ms var(--spring-soft, cubic-bezier(0.3, 1.25, 0.45, 1));
+  }
+
+  .lineup__no {
+    -webkit-text-stroke: 0;
+    color: rgb(var(--ink) / 0.5);
+  }
+
+  .lineup__name.is-on {
+    color: var(--white);
+    -webkit-text-stroke-color: var(--white);
+    text-shadow: 0 0 1.875rem rgb(var(--ice-rgb) / 0.45);
+    translate: 0.75rem 0;
+  }
+
+  .lineup__name.is-on .lineup__no {
+    color: rgb(var(--tone-lit));
+  }
+
+  .lineup__name:focus-visible {
+    outline: 2px solid rgb(var(--tone-lit));
+    outline-offset: 4px;
+  }
+
+  .lineup__monitor {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    max-height: 78svh;
+    overflow: hidden;
+    border-radius: 0.625rem;
+    background: #050c1a;
+    box-shadow:
+      inset 0 0 0 1px rgb(var(--white-rgb) / 0.12),
+      0 0 4.375rem -0.875rem rgb(var(--ice-rgb) / 0.25),
+      0 3.125rem 5.625rem -2.5rem rgb(0 0 0 / 0.95);
+    cursor: pointer;
+  }
+
+  /* On a very wide screen the monitor keeps to the right margin, where the header and the footer end. Its width is
+     said outright (what the height's cap makes it), so aligning it can't shrink it to its contents. */
+  @media (min-width: 1024px) and (min-aspect-ratio: 2 / 1) {
+    .lineup__monitor {
+      justify-self: end;
+      width: min(100%, 78svh * 4 / 5);
+    }
+  }
+
+  /* A new speaker is a cut: the picture comes in quickly (and, the script, settles from bright). */
+  .lineup__monitor img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 22%;
+    opacity: 0;
+    scale: 1.04;
+    transition:
+      opacity 160ms var(--ease-out),
+      scale 1200ms var(--ease-out);
+  }
+
+  .lineup__monitor img.is-on {
+    opacity: 1;
+    scale: 1;
+  }
+
+  /* A camera's frame marks, and its scan lines, faintly. */
+  .lineup__monitor::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(180deg, rgb(var(--white-rgb) / 0.035) 0 1px, transparent 1px 3px);
+    pointer-events: none;
+  }
+
+  .lineup__frame i {
+    position: absolute;
+    z-index: 1;
+    width: 1.625rem;
+    height: 1.625rem;
+    border: 0 solid rgb(var(--white-rgb) / 0.85);
+    transition: translate 280ms var(--ease-out);
+  }
+
+  .lineup__frame i:nth-child(1) { top: 1.125rem; left: 1.125rem; border-width: 2px 0 0 2px; }
+  .lineup__frame i:nth-child(2) { top: 1.125rem; right: 1.125rem; border-width: 2px 2px 0 0; }
+  .lineup__frame i:nth-child(3) { bottom: 1.125rem; left: 1.125rem; border-width: 0 0 2px 2px; }
+  .lineup__frame i:nth-child(4) { right: 1.125rem; bottom: 1.125rem; border-width: 0 2px 2px 0; }
+
+  /* The autofocus: the pointer on the picture, the marks close in on it, a touch past and back. */
+  .lineup__monitor:hover .lineup__frame i {
+    transition: translate 340ms cubic-bezier(0.3, 1.5, 0.4, 1);
+  }
+
+  .lineup__monitor:hover .lineup__frame i:nth-child(1) { translate: 0.625rem 0.625rem; }
+  .lineup__monitor:hover .lineup__frame i:nth-child(2) { translate: -0.625rem 0.625rem; }
+  .lineup__monitor:hover .lineup__frame i:nth-child(3) { translate: 0.625rem -0.625rem; }
+  .lineup__monitor:hover .lineup__frame i:nth-child(4) { translate: -0.625rem -0.625rem; }
+
+  .lineup__live {
+    position: absolute;
+    top: 1.5rem;
+    right: 3.375rem;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--white);
+  }
+
+  .lineup__live span {
+    width: 0.5625rem;
+    height: 0.5625rem;
+    border-radius: 50%;
+    background: #f4fcff;
+    box-shadow: 0 0 0.625rem 0.125rem rgb(var(--ice-rgb) / 0.9);
+  }
+
+  /* The cut's line of light, sweeping down the monitor (the script). */
+  .lineup__cut {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 2;
+    height: 1px;
+    background: var(--ice);
+    box-shadow:
+      0 0 0.5rem 0.0625rem rgb(var(--ice-rgb) / 0.8),
+      0 0 1.5rem rgb(var(--ice-rgb) / 0.5);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* The broadcast caption, along the monitor's foot. */
+  .lineup__caption {
+    position: absolute;
+    right: 2.5rem;
+    bottom: 2.5rem;
+    left: 2.5rem;
+    z-index: 1;
+    display: grid;
+    gap: 0.25rem;
+    padding: 0.875rem 1.125rem 0.8125rem;
+    border-radius: 0.375rem;
+    background: linear-gradient(90deg, rgb(var(--navy-900-rgb) / 0.92), rgb(var(--navy-900-rgb) / 0.7));
+    box-shadow:
+      inset 0.1875rem 0 0 rgb(var(--tone-lit)),
+      0 1.25rem 2.5rem -1.25rem rgb(0 0 0 / 0.9);
+    backdrop-filter: blur(0.625rem);
+    -webkit-backdrop-filter: blur(0.625rem);
+  }
+
+  .lineup__caption b {
+    font-family: var(--font-display);
+    font-size: clamp(1.25rem, 1.8vw, 1.75rem);
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .lineup__caption span {
+    font-size: 0.9375rem;
+    color: rgb(var(--ink) / 0.8);
+  }
+
+  .lineup__caption span:empty {
+    display: none;
+  }
+
+  .lineup__caption em {
+    font-style: normal;
+    color: rgb(var(--tone-lit));
+  }
+
+  .lineup__caption.is-in {
+    animation: lineup-cap 520ms cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+
+  @keyframes lineup-cap {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0);
+    }
+  }
+
+  .lineup__monitor.is-kept {
+    box-shadow:
+      0 0 0 2px rgb(var(--tone-lit)),
+      0 0 3.75rem rgb(var(--tone-lit) / 0.35),
+      0 3.125rem 5.625rem -2.5rem rgb(0 0 0 / 0.95);
+  }
+
+  /* The speaker on the monitor's "+ Add", for the keyboard: unseen until it's focused, then over the monitor's corner. */
+  .lineup__keep {
+    position: absolute;
+    top: 1.125rem;
+    left: 1.125rem;
+    z-index: 3;
+  }
+
+  .lineup__keep:not(:focus-visible) {
+    overflow: hidden;
+    width: 1px;
+    min-height: 0;
+    height: 1px;
+    padding: 0;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* ---------- Where they've spoken: the stage's screen ---------- */
+  .slides {
+    position: relative;
+    padding-block: clamp(3rem, 9vh, 6.875rem) clamp(4.5rem, 12vh, 8.75rem);
+    color: rgb(var(--ink));
+  }
+
+  .slides__inner {
+    display: grid;
+    gap: var(--space-5);
+    margin-inline: var(--margin);
+  }
+
+  .slides__head {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-3);
+  }
+
+  .slides__title {
+    font-size: clamp(2rem, 3.4vw, 3.5rem);
+  }
+
+  .slides__hint {
+    font-size: 1.0625rem;
+    color: rgb(var(--ink) / 0.78);
+  }
+
+  /* Its width said outright (what the height's cap already makes it), so the strip below matches it exactly and
+     centring it on a very wide screen can't shrink it to its contents. */
+  .slides__screen {
+    position: relative;
+    width: min(100%, 78svh * 16 / 9);
+    aspect-ratio: 16 / 9;
+    max-height: 78svh;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    background: #050c1a;
+    box-shadow:
+      0 0 0 0.625rem #0a1324,
+      0 0 0 calc(0.625rem + 1px) rgb(var(--white-rgb) / 0.1),
+      0 0 7.5rem -1.25rem rgb(var(--ice-rgb) / 0.25),
+      0 3.75rem 6.25rem -3.125rem rgb(0 0 0 / 0.95);
+    cursor: none;
+  }
+
+  .slides__slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 520ms var(--ease-out),
+      visibility 0s linear 520ms;
+  }
+
+  .slides__slide.is-on {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 520ms var(--ease-out);
+  }
+
+  .slides__slide img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    scale: 1.06;
+    transition: scale 6s linear;
+  }
+
+  .slides__slide.is-on img {
+    scale: 1;
+  }
+
+  .slides__slide::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgb(var(--navy-900-rgb) / 0.9), rgb(var(--navy-900-rgb) / 0.25) 42%, transparent 62%);
+    pointer-events: none;
+  }
+
+  .slides__caption {
+    position: absolute;
+    bottom: clamp(1.5rem, 4vw, 3rem);
+    left: clamp(1.5rem, 4vw, 3.25rem);
+    z-index: 1;
+    display: grid;
+    justify-items: start;
+    gap: 0.375rem;
+    max-width: 60%;
+  }
+
+  .slides__who {
+    color: rgb(var(--tone-lit));
+    cursor: pointer;
+  }
+
+  .slides__what {
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 3.2vw, 3.25rem);
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    line-height: 0.98;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+  }
+
+  .slides__when {
+    font-size: 1.0625rem;
+    color: rgb(var(--ink) / 0.86);
+  }
+
+  .slides__post {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.375rem;
+    padding: 0.5rem 0.875rem;
+    border-radius: 999px;
+    background: rgb(var(--white-rgb) / 0.1);
+    box-shadow: inset 0 0 0 1px rgb(var(--white-rgb) / 0.3);
+    font-family: var(--font-mono);
+    font-size: var(--type-label);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .slides__post svg,
+  .slides__step svg {
+    width: 0.9375rem;
+    height: 0.9375rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Which way a click goes: a soft light rising at the edge of the half pointed at (the script). */
+  .slides__edge {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 18%;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 260ms var(--ease-out);
+  }
+
+  .slides__edge--prev {
+    left: 0;
+    background: linear-gradient(90deg, rgb(var(--ice-rgb) / 0.28), transparent);
+  }
+
+  .slides__edge--next {
+    right: 0;
+    background: linear-gradient(270deg, rgb(var(--ice-rgb) / 0.28), transparent);
+  }
+
+  .slides__screen.is-prev .slides__edge--prev,
+  .slides__screen.is-next .slides__edge--next {
+    opacity: 0.9;
+  }
+
+  .slides__count {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.5rem;
+    z-index: 1;
+    padding: 0.375rem 0.75rem;
+    border-radius: 999px;
+    background: rgb(var(--navy-900-rgb) / 0.72);
+    box-shadow: inset 0 0 0 1px rgb(var(--white-rgb) / 0.24);
+    color: var(--white);
+    backdrop-filter: blur(0.5rem);
+    -webkit-backdrop-filter: blur(0.5rem);
+  }
+
+  /* The slide's number: it rolls, the old one up and away and the new one up from below (the script), in a box as
+     wide as the largest, so the count never changes width. */
+  .slides__at {
+    display: inline-grid;
+    clip-path: inset(0 -0.25em);
+  }
+
+  .slides__at > :global(*),
+  .slides__at::after {
+    grid-area: 1 / 1;
+  }
+
+  .slides__at::after {
+    content: attr(data-most);
+    visibility: hidden;
+  }
+
+  /* The presenter's laser: a point of light where the pointer is, with a short fading trail (speaker-stage.ts). */
+  .slides__laser {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 3;
+    width: 0.625rem;
+    height: 0.625rem;
+    margin: -0.3125rem 0 0 -0.3125rem;
+    border-radius: 50%;
+    background: var(--white);
+    box-shadow:
+      0 0 0.375rem 0.125rem rgb(var(--ice-rgb) / 1),
+      0 0 1.375rem 0.375rem rgb(var(--ice-rgb) / 0.6);
+    opacity: 0;
+    translate: var(--lx, 0px) var(--ly, 0px);
+    pointer-events: none;
+    transition: opacity 200ms var(--ease-out);
+  }
+
+  .slides__screen:hover .slides__laser {
+    opacity: 1;
+  }
+
+  /* Over the caption's links, the pointer is a pointer again. */
+  .slides__screen.is-on-link .slides__laser {
+    opacity: 0;
+  }
+
+  .slides__trail {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  /* A click: a ring of laser light going out from where it was (made by the script, hence global). */
+  .slides__screen :global(.slides__ping) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 3;
+    width: 2.5rem;
+    height: 2.5rem;
+    margin: -1.25rem 0 0 -1.25rem;
+    border: 1.5px solid rgb(var(--ice-rgb) / 0.95);
+    border-radius: 50%;
+    box-shadow:
+      0 0 0.75rem rgb(var(--ice-rgb) / 0.7),
+      inset 0 0 0.75rem rgb(var(--ice-rgb) / 0.4);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* The strip of pictures shares the screen's width, so the two are centred on each other. */
+  .slides__strip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    width: min(100%, 78svh * 16 / 9);
+  }
+
+  /* On a very wide screen the stage screen stands centred, its strip under it. */
+  @media (min-width: 1024px) and (min-aspect-ratio: 2 / 1) {
+    .slides__screen,
+    .slides__strip {
+      justify-self: center;
+    }
+  }
+
+  .slides__thumb {
+    width: 7.5rem;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border-radius: 0.375rem;
+    opacity: 0.45;
+    filter: grayscale(1);
+    box-shadow: inset 0 0 0 1px rgb(var(--white-rgb) / 0.2);
+    transition:
+      opacity 260ms var(--ease-out),
+      filter 260ms var(--ease-out),
+      translate 300ms var(--spring-soft, cubic-bezier(0.3, 1.25, 0.45, 1));
+  }
+
+  .slides__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .slides__thumb:hover {
+    opacity: 0.85;
+    translate: 0 -0.1875rem;
+  }
+
+  .slides__thumb.is-on {
+    opacity: 1;
+    filter: none;
+    box-shadow:
+      0 0 0 2px rgb(var(--tone-lit)),
+      0 0 1.375rem rgb(var(--tone-lit) / 0.4);
+  }
+
+  .slides__step {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgb(var(--white-rgb) / 0.18), rgb(var(--white-rgb) / 0.05));
+    box-shadow: inset 0 0 0 1px rgb(var(--white-rgb) / 0.32);
+    color: rgb(var(--ink));
+  }
+
+  .slides__thumb:focus-visible,
+  .slides__step:focus-visible,
+  .slides__post:focus-visible,
+  .slides__who:focus-visible {
+    outline: 2px solid rgb(var(--tone-lit));
+    outline-offset: 3px;
+  }
+
+  /* ---------- Phones and tablets ----------
+     The running order and the monitor side by side, as on desktop: the names smaller, the monitor narrower and keeping
+     its place below the header while the names go by. The stage screen as wide as the screen allows, a little taller
+     on a phone; its strip of pictures scrolls sideways; no laser where there's no pointer. */
+  @media (max-width: 1023px) {
+    .lineup__inner {
+      align-items: start;
+    }
+
+    .lineup__monitor {
+      position: sticky;
+      top: calc(var(--header-h) + var(--space-3));
+    }
+
+    .lineup__caption {
+      right: 0.75rem;
+      bottom: 0.75rem;
+      left: 0.75rem;
+      padding: 0.5rem 0.625rem;
+    }
+
+    .lineup__caption b {
+      font-size: 1rem;
+    }
+
+    .lineup__caption span {
+      font-size: 0.75rem;
+    }
+
+    .lineup__frame i {
+      width: 1.125rem;
+      height: 1.125rem;
+    }
+
+    .lineup__frame i:nth-child(1) { top: 0.625rem; left: 0.625rem; }
+    .lineup__frame i:nth-child(2) { top: 0.625rem; right: 0.625rem; }
+    .lineup__frame i:nth-child(3) { bottom: 0.625rem; left: 0.625rem; }
+    .lineup__frame i:nth-child(4) { right: 0.625rem; bottom: 0.625rem; }
+
+    .lineup__live {
+      top: 0.875rem;
+      right: 2rem;
+    }
+
+    .slides__screen {
+      width: 100%;
+      max-height: none;
+      cursor: auto;
+    }
+
+    .slides__caption {
+      right: 1rem;
+      bottom: 1rem;
+      left: 1rem;
+    }
+
+    .slides__what {
+      font-size: clamp(1.25rem, 5vw, 2rem);
+    }
+
+    .slides__when {
+      font-size: 0.875rem;
+    }
+
+    .slides__count {
+      top: 0.75rem;
+      right: 0.75rem;
+    }
+
+    .slides__laser,
+    .slides__trail {
+      display: none;
+    }
+
+    .slides__strip {
+      justify-content: flex-start;
+      width: auto;
+      margin-inline: calc(-1 * var(--margin));
+      padding-inline: var(--margin);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .slides__strip::-webkit-scrollbar {
+      display: none;
+    }
+
+    .slides__thumb,
+    .slides__step {
+      flex: none;
+    }
+
+    .slides__thumb {
+      width: 5.5rem;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .lineup__inner {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      gap: var(--space-4);
+    }
+
+    .lineup__name {
+      gap: 0.5rem;
+      font-size: clamp(1.125rem, 5.4vw, 1.625rem);
+    }
+
+    .lineup__caption span,
+    .lineup__caption em {
+      display: none;
+    }
+
+    .slides__screen {
+      aspect-ratio: 4 / 3;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .lineup__live span {
+      animation: lineup-tally 2.4s ease-in-out infinite;
+    }
+
+    @keyframes lineup-tally {
+      50% {
+        opacity: 0.35;
+        box-shadow: 0 0 0.25rem rgb(var(--ice-rgb) / 0.5);
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lineup__monitor img,
+    .lineup__name,
+    .lineup__frame i,
+    .lineup__monitor:hover .lineup__frame i,
+    .slides__slide,
+    .slides__slide img,
+    .slides__edge,
+    .slides__thumb {
+      transition: none;
+    }
+
+    .lineup__caption.is-in {
+      animation: none;
+    }
+
+    /* Nothing moves under the pointer: only the light and colour change. */
+    .lineup__monitor:hover .lineup__frame i,
+    .slides__thumb:hover {
+      translate: none;
+    }
+  }
+</style>
+
+<script>
+  import { initSpeakerStage } from '@/scripts/system/speaker-stage';
+  initSpeakerStage();
+</script>

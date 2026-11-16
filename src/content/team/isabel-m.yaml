@@ -1,0 +1,10 @@
+# Hidden on 2026-11-11: not on slide 15 of Stride's 2026 talent deck, which the team now follows. Set `visible: true`
+# (and give a blue-background photograph) if still at Stride.
+name: Isabel M
+role: Talent Manager
+department: talent
+photo:
+  src: /assets/team/blue/8109fe69-img_9452-1-.jpg
+  alt: Isabel M, Talent Manager at Stride
+order: 11
+visible: false

@@ -1,0 +1,683 @@
+---
+// "Your career. Our commitment.": the eight services the visitor picks, building their own plan. A stage in the dark
+// (the owner's choice, 2026-11-12; phones and tablets too since 2026-11-13, the words one under another, a tap lighting
+// one, the plan below them). On desktop: The services are big type, in outline; a soft light follows the pointer and brings the words it passes out of
+// the dark, the one under it explaining itself on the left. A click puts a service in the spotlight: a cone of light
+// falls on it from above, flickering on like a stage lamp, and the word is lit solid; a click again turns it off. With
+// all of them lit the whole stage comes up. What they pick goes with them to the application form
+// (/talent/apply?needs=...), where it starts their introduction. Behaviour: src/scripts/system/career.ts.
+// The lamps behave like lamps on desktop: one swings in from where it hangs as it comes on, dies away slowly as it goes
+// off (the pool it left going last), and the last one lit sends a chase down the rig; the count slides to its figure.
+// The keyboard brings the light to the service in focus. The stage's light, cones and glows are in rem, so they keep
+// their reach on a large screen.
+
+import { interfaceCopy } from '@/lib/ui-copy';
+
+export interface Props {
+  headline?: string;
+  eyebrow?: string;
+  body?: string;
+  items: { label: string; copy?: string }[];
+  planTitle: string;
+  planEmpty: string;
+  apply: { label: string; href: string };
+}
+
+const { headline, eyebrow, body, items, planTitle, planEmpty, apply } = Astro.props;
+const t = await interfaceCopy();
+// Each line's place on the stage: how far in it stands (a loose stagger, so it reads as a stage, not a list), and
+// where its spotlight hangs (off its centre, in % of its width).
+const STAND = [0, 9, 3, 13, 1, 10, 5, 14];
+const HANG = [-18, 22, -8, 30, 14, -26, 6, -14];
+---
+
+<section class="career" aria-labelledby="career-title" data-career data-tone="talent" data-look="deep" data-apply={apply.href}>
+  <div class="career__inner container-wide">
+    <div class="career__side">
+      {eyebrow && <p class="exp-label">{eyebrow}</p>}
+      <h2 class="career__title exp-title" id="career-title">{headline}</h2>
+      <div class="career__say">
+        {body && <p class="career__body not-desk">{body}</p>}
+        <p class="career__body career__hint desk-only">{t('career.hint')}</p>
+        <p class="career__peek desk-only" aria-hidden="true" data-career-peek></p>
+      </div>
+      <div class="career__plan glass" aria-live="polite" data-career-plan>
+        <p class="career__plan-head"><span class="exp-label">{planTitle}</span><span class="exp-label career__count" data-career-count>0 / {items.length}</span></p>
+        <div class="career__bar" aria-hidden="true"><span></span></div>
+        <p class="career__empty" data-career-empty>{planEmpty}</p>
+        <ol class="career__list" role="list" data-career-list></ol>
+        <a class="exp-pill" href={apply.href} data-career-apply>
+          {apply.label}
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="career__stage" data-career-stage>
+      {/* Desktop: the light that follows the pointer. */}
+      <span class="career__light" aria-hidden="true" data-career-light></span>
+      <ul class="career__tiles" role="list" data-career-tiles>
+        {items.map((item, i) => (
+          <li>
+            <button class="career__tile glass" type="button" aria-pressed="false" data-career-tile={item.label} data-copy={item.copy} style={`--i: ${i}; --stand: ${STAND[i % STAND.length]}%; --hang: ${HANG[i % HANG.length]}%`}>
+              <span class="career__dot" aria-hidden="true"></span>
+              <span class="career__switch" aria-hidden="true"><span></span></span>
+              <span class="career__name"><span class="career__beam" aria-hidden="true"></span>{item.label}</span>
+              {item.copy && <span class="career__copy">{item.copy}</span>}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</section>
+
+<style>
+  .career {
+    position: relative;
+    display: grid;
+    align-items: center;
+    min-height: 100svh;
+    padding-block: calc(var(--header-h) + var(--space-3)) var(--space-6);
+    overflow: hidden;
+    color: rgb(var(--ink));
+  }
+
+  .career__inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+    gap: var(--space-6) var(--gutter);
+    align-items: center;
+    width: 100%;
+  }
+
+  .career__side {
+    display: grid;
+    gap: var(--space-4);
+    container-type: inline-size;
+  }
+
+  .career__title {
+    font-size: clamp(2rem, 11cqi, 4rem);
+  }
+
+  .career__body {
+    color: rgb(var(--ink) / 0.84);
+  }
+
+  .career__plan {
+    display: grid;
+    gap: var(--space-3);
+    justify-items: start;
+    padding: clamp(18px, 1.8vw, 28px);
+  }
+
+  .career__plan-head {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .career__bar {
+    width: 100%;
+    height: 6px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgb(var(--white-rgb) / calc(0.14 * var(--fill-k)));
+  }
+
+  .career__bar span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: rgb(var(--tone-lit));
+    box-shadow: 0 0 14px rgb(var(--tone-glow) / 0.9);
+    transform: scaleX(var(--plan, 0));
+    transform-origin: left;
+    transition: transform 600ms cubic-bezier(0.2, 1.3, 0.35, 1);
+  }
+
+  .career__empty {
+    font-size: 0.9375rem;
+    color: rgb(var(--ink) / 0.74);
+  }
+
+  .career__empty[hidden] {
+    display: none;
+  }
+
+  .career__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .career__list :global(li) {
+    padding: 5px 11px;
+    border-radius: 999px;
+    background: rgb(var(--tone-lit));
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgb(var(--tone-on));
+    animation: career-pop 480ms cubic-bezier(0.2, 1.6, 0.35, 1);
+  }
+
+  @keyframes career-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+  }
+
+  .career__tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+    gap: clamp(10px, 1.1vw, 16px);
+  }
+
+  .career__tile {
+    position: relative;
+    display: grid;
+    align-content: start;
+    gap: var(--space-2);
+    width: 100%;
+    height: 100%;
+    min-height: clamp(150px, 24svh, 210px);
+    padding: clamp(14px, 1.3vw, 20px);
+    border-radius: 22px;
+    text-align: left;
+    color: rgb(var(--ink));
+    transition:
+      translate 400ms cubic-bezier(0.2, 1.4, 0.35, 1),
+      box-shadow 400ms var(--ease-out);
+  }
+
+  .career__tile:hover {
+    translate: 0 -4px;
+  }
+
+  .career__tile:focus-visible {
+    outline: 2px solid rgb(var(--tone-lit));
+    outline-offset: 3px;
+  }
+
+  .career__tile[aria-pressed='true'] {
+    box-shadow:
+      inset 0 0 0 1.5px rgb(var(--tone-lit) / 0.95),
+      0 0 28px -4px rgb(var(--tone-glow) / 0.7),
+      0 24px 50px -30px rgb(var(--shade) / 0.8);
+  }
+
+  /* A little switch, like the phone's. */
+  .career__switch {
+    position: relative;
+    width: 38px;
+    height: 22px;
+    margin-bottom: var(--space-2);
+    border-radius: 999px;
+    background: rgb(var(--ink) / 0.2);
+    transition: background-color 300ms var(--ease-out);
+  }
+
+  .career__switch span {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--white);
+    box-shadow: 0 1px 4px rgb(var(--shade) / 0.4);
+    transition:
+      translate 360ms cubic-bezier(0.2, 1.5, 0.35, 1),
+      background-color 300ms var(--ease-out);
+  }
+
+  .career__tile[aria-pressed='true'] .career__switch {
+    background: rgb(var(--tone-lit));
+  }
+
+  .career__tile[aria-pressed='true'] .career__switch span {
+    translate: 16px 0;
+    background: rgb(var(--tone-on));
+  }
+
+  .career__name {
+    font-family: var(--font-display);
+    font-size: clamp(0.9375rem, 1.15vw, 1.15rem);
+    font-weight: 800;
+    line-height: 1.1;
+  }
+
+  .career__copy {
+    font-size: 0.8125rem;
+    line-height: 1.36;
+    color: rgb(var(--ink) / 0.78);
+  }
+
+  @media (max-width: 1023px) {
+    .career__inner {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    /* The stage in the dark here too (the owner, 2026-11-13: phones rebuilt from the desktop): the services one under
+       another in big type, in outline; a tap puts one in the spotlight, lit solid under a short beam of light, and
+       its line shows beneath it; again, it goes off. The plan follows, with the way to apply. */
+    .career__stage {
+      order: -1;
+    }
+
+    .career__side {
+      display: contents;
+    }
+
+    .career__side > :not(.career__plan) {
+      order: -2;
+    }
+
+    .career__tiles {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+    }
+
+    .career__tile.glass {
+      min-height: 0;
+      gap: 0.25rem;
+      padding: 0.875rem 0 0.875rem;
+      border: 0;
+      border-radius: 0;
+      background: none;
+      box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      overflow: visible;
+    }
+
+    .career__tile.glass[aria-pressed='true'] {
+      background: radial-gradient(60% 120% at 12% 0%, rgb(var(--ice-rgb) / 0.2), transparent 70%);
+      box-shadow: none;
+    }
+
+    .career__switch {
+      display: none;
+    }
+
+    .career__name {
+      font-family: var(--font-display);
+      font-size: clamp(1.625rem, 8vw, 2.75rem);
+      font-weight: 850;
+      font-stretch: var(--stretch-wide);
+      line-height: 0.95;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+      color: transparent;
+      -webkit-text-stroke: 0.0625rem rgb(var(--ink) / 0.55);
+      transition:
+        color 260ms var(--ease-out),
+        -webkit-text-stroke-color 260ms var(--ease-out);
+    }
+
+    .career__tile[aria-pressed='true'] .career__name {
+      color: rgb(var(--ink));
+      -webkit-text-stroke-color: rgb(var(--ink));
+    }
+
+    .career__copy {
+      display: none;
+      max-width: 34rem;
+      font-size: 0.9375rem;
+    }
+
+    .career__tile[aria-pressed='true'] .career__copy {
+      display: block;
+    }
+
+    .career__plan {
+      margin-top: var(--space-3);
+    }
+  }
+
+  .career__say {
+    display: grid;
+  }
+
+  .career__say > * {
+    grid-area: 1 / 1;
+  }
+
+  .career__dot,
+  .career__beam,
+  .career__light {
+    display: none;
+  }
+
+  /* ---------- Desktop: the stage and its spotlights ---------- */
+  @media (min-width: 1024px) {
+    /* A narrow laptop's side column is too narrow for the headline at 2rem: it follows the column all the way. */
+    .career__title {
+      font-size: clamp(1.25rem, 11cqi, 4rem);
+    }
+
+    :global(.js) .career__inner {
+      grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+      gap: var(--gutter);
+    }
+
+    :global(.js) .career__say {
+      min-height: 6.6em;
+      align-content: start;
+    }
+
+    :global(.js) .career__body,
+    :global(.js) .career__peek {
+      font-size: 1.0625rem;
+      line-height: 1.45;
+      transition:
+        opacity 260ms var(--ease-out),
+        translate 360ms var(--ease-out);
+    }
+
+    :global(.js) .career__peek {
+      opacity: 0;
+      translate: 0 0.5rem;
+      color: var(--white);
+    }
+
+    :global(.js) .career.is-peeking .career__body {
+      opacity: 0;
+      translate: 0 -0.5rem;
+    }
+
+    :global(.js) .career.is-peeking .career__peek {
+      opacity: 1;
+      translate: 0 0;
+    }
+
+    /* The plan's box: how many are lit, large, and the way on; the plan itself is the stage. */
+    :global(.js) .career__plan.glass {
+      gap: var(--space-4);
+      padding: 0;
+      border-radius: 0;
+      background: none;
+      box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+
+    :global(.js) .career__plan > :is(.career__bar, .career__empty, .career__list) {
+      display: none;
+    }
+
+    :global(.js) .career__plan-head {
+      flex-direction: column-reverse;
+      gap: 0.25rem;
+    }
+
+    :global(.js) .career__count {
+      font-family: var(--font-display);
+      font-size: clamp(2.25rem, 3.4vw, 3.5rem);
+      font-weight: 850;
+      font-stretch: var(--stretch-wide);
+      line-height: 0.9;
+      letter-spacing: -0.02em;
+      color: rgb(var(--ink));
+      text-shadow: 0 0 calc(var(--plan, 0) * 2.5rem) rgb(var(--ice-rgb) / 0.6);
+      transition: text-shadow 600ms var(--ease-out);
+    }
+
+    /* The way on stays one line, as designed; on a narrow laptop's side column it may reach into the gutter, without
+       widening the column (the headline and the words keep to it). */
+    :global(.js) .career__plan {
+      min-width: 0;
+    }
+
+    :global(.js) .career__plan [data-career-apply] {
+      white-space: nowrap;
+    }
+
+    :global(.js) .career.is-planned [data-career-apply] {
+      box-shadow:
+        0 0 0 1px rgb(var(--tone-lit) / 0.6),
+        0 0 2.125rem rgb(var(--tone-glow) / 0.55);
+    }
+
+    /* ---------- The stage ---------- */
+    :global(.js) .career__stage {
+      position: relative;
+      isolation: isolate;
+    }
+
+    /* No pool of shadow behind the words: they stand on the page's own background (the owner, 2026-11-13). */
+
+    /* The light that follows the pointer, eased (career.ts sets --lx and --ly). */
+    :global(.js) .career__light {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 0;
+      display: block;
+      width: 35rem;
+      height: 26.25rem;
+      margin: -13.125rem 0 0 -17.5rem;
+      border-radius: 50%;
+      background: radial-gradient(closest-side, rgb(var(--ice-rgb) / 0.16), rgb(var(--ice-rgb) / 0.06) 55%, transparent);
+      mix-blend-mode: screen;
+      opacity: 0;
+      transform: translate(var(--lx, 0px), var(--ly, 0px));
+      pointer-events: none;
+      transition: opacity 500ms var(--ease-out);
+    }
+
+    :global(.js) .career__stage.is-lit .career__light {
+      opacity: 1;
+    }
+
+    /* All of them lit: the whole stage comes up. */
+    :global(.js) .career__stage::before {
+      content: '';
+      position: absolute;
+      inset: -20% -10%;
+      z-index: 0;
+      background: radial-gradient(60% 60% at 45% 55%, rgb(var(--ice-rgb) / 0.12), transparent 70%);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1200ms var(--ease-out);
+    }
+
+    :global(.js) .career.is-all .career__stage::before {
+      opacity: 1;
+    }
+
+    :global(.js) .career__tiles {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: clamp(2px, 0.6svh, 0.5rem);
+    }
+
+    :global(.js) .career__tile.glass {
+      --near: 0;
+      display: block;
+      width: auto;
+      height: auto;
+      min-height: 0;
+      padding: clamp(5px, 1svh, 0.6875rem) 0;
+      margin-left: var(--stand);
+      border-radius: 0;
+      background: none;
+      box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      text-align: left;
+    }
+
+    :global(.js) .career__tile.glass:hover {
+      translate: none;
+    }
+
+    :global(.js) .career__tile.glass[aria-pressed='true'] {
+      box-shadow: none;
+    }
+
+    :global(.js) .career__tile.glass:focus-visible {
+      outline: none;
+    }
+
+    :global(.js) .career__tile.glass:focus-visible .career__name {
+      outline: 2px solid rgb(var(--tone-lit));
+      outline-offset: 6px;
+    }
+
+    :global(.js) .career__switch {
+      display: none;
+    }
+
+    /* The words in the dark: an outline, brought up by the light passing (--near, career.ts). */
+    :global(.js) .career__name {
+      position: relative;
+      display: inline-block;
+      max-width: 100%;
+      font-size: min(2.25vw, 4svh);
+      font-weight: 850;
+      font-stretch: var(--stretch-wide);
+      line-height: 1.02;
+      letter-spacing: -0.015em;
+      text-transform: uppercase;
+      text-wrap: balance;
+      color: rgb(var(--white-rgb) / calc(var(--near) * 0.12));
+      -webkit-text-stroke: 0.0625rem rgb(var(--white-rgb) / calc(0.26 + var(--near) * 0.64));
+      transition:
+        color 260ms var(--ease-out),
+        -webkit-text-stroke-color 260ms var(--ease-out),
+        text-shadow 500ms var(--ease-out);
+    }
+
+    :global(.js) .career__tile:hover .career__name {
+      color: rgb(var(--white-rgb) / 0.2);
+    }
+
+    /* In the spotlight: lit solid, glowing. */
+    :global(.js) .career__tile[aria-pressed='true'] .career__name {
+      color: var(--white);
+      -webkit-text-stroke-color: var(--white);
+      text-shadow:
+        0 0 1.375rem rgb(var(--ice-rgb) / 0.6),
+        0 0 4.375rem rgb(var(--ice-rgb) / 0.3);
+    }
+
+    /* Switched off, the word dies away with its lamp (career.ts: .is-cooling). */
+    :global(.js) .career__tile.is-cooling .career__name {
+      transition-duration: 700ms;
+    }
+
+    /* Its spotlight: a cone of light from high above (cut off at the top of the section), hanging a little to one side,
+       soft at its edges, with a pool of light where it lands. It swings from where it hangs (career.ts). */
+    :global(.js) .career__beam {
+      position: absolute;
+      bottom: -0.3em;
+      left: 50%;
+      z-index: -1;
+      display: block;
+      width: min(110%, 26.25rem);
+      height: 130svh;
+      translate: -50% 0;
+      transform-origin: calc(50% + var(--hang)) 0;
+      filter: blur(0.375rem);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 380ms var(--ease-out);
+    }
+
+    :global(.js) .career__beam::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to bottom, rgb(var(--ice-rgb) / 0) 0%, rgb(var(--ice-rgb) / 0.025) 40%, rgb(var(--ice-rgb) / 0.08) 84%, rgb(var(--white-rgb) / 0.15) 100%);
+      clip-path: polygon(calc(50% + var(--hang) - 3%) 0, calc(50% + var(--hang) + 3%) 0, 92% 100%, 8% 100%);
+      mix-blend-mode: screen;
+    }
+
+    :global(.js) .career__beam::after {
+      content: '';
+      position: absolute;
+      right: 4%;
+      bottom: -0.25em;
+      left: 4%;
+      height: 0.9em;
+      border-radius: 50%;
+      background: radial-gradient(closest-side, rgb(var(--ice-rgb) / 0.24), rgb(var(--ice-rgb) / 0.06) 60%, transparent);
+    }
+
+    :global(.js) .career__tile[aria-pressed='true'] .career__beam {
+      opacity: 1;
+    }
+
+    /* The words stay for screen readers; on screen they appear on the left. */
+    :global(.js) .career__copy {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) and (min-width: 1024px) {
+    /* Switched on, the lamp catches like a stage light does: a flicker, then on; the word with it. */
+    :global(.js) .career__tile[aria-pressed='true'] .career__beam {
+      animation: career-lamp 640ms steps(1) both;
+    }
+
+    :global(.js) .career__tile[aria-pressed='true'] .career__name {
+      animation: career-lit 640ms steps(1) both;
+    }
+
+    @keyframes career-lamp {
+      0% { opacity: 0.2; }
+      14% { opacity: 1; }
+      26% { opacity: 0.35; }
+      42% { opacity: 0.9; }
+      56% { opacity: 0.55; }
+      70%,
+      100% { opacity: 1; }
+    }
+
+    @keyframes career-lit {
+      0% { opacity: 0.6; }
+      14% { opacity: 1; }
+      26% { opacity: 0.7; }
+      42%,
+      100% { opacity: 1; }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .career__bar span,
+    .career__tile,
+    .career__switch span {
+      transition: none;
+    }
+
+    .career__list :global(li) {
+      animation: none;
+    }
+
+    .career__tile:hover {
+      translate: none;
+    }
+
+    :global(.js) .career__light {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  import { initCareers } from '@/scripts/system/career';
+  initCareers();
+</script>

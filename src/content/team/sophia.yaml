@@ -1,0 +1,10 @@
+# Hidden on 2026-11-11: not on slide 15 of Stride's 2026 talent deck, which the team now follows. Set `visible: true`
+# (and give a blue-background photograph) if still at Stride.
+name: Sophia
+role: Talent Manager
+department: talent
+photo:
+  src: /assets/team/blue/d3ce5983-img_0679.jpg
+  alt: Sophia, Talent Manager at Stride
+order: 2
+visible: false

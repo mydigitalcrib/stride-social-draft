@@ -1,0 +1,42 @@
+# Dependencies and build output
+node_modules/
+dist/
+# A second build to work on while dist/ is still serving the approved desktop for the visual tests.
+dist-next/
+dist-a/
+dist-b/
+dist-c/
+dist-d/
+.astro/
+
+# Environment and secrets (set these in the host's dashboard instead)
+.env
+.env.*
+!.env.example
+
+# Local Phase 1 backup copy (kept on disk, never committed; Phase 1 is tagged `phase-1-recreation`)
+duplicade-stride/
+
+# Hosting CLIs
+.vercel/
+.netlify/
+.wrangler/
+
+# Test and tool output
+playwright-report/
+test-results/
+test-results-next/
+test-results-*/
+blob-report/
+playwright/.cache/
+*.log
+
+# The approved desktop's screenshots (hundreds of MB): kept on disk, never committed. Their fingerprints are in
+# tests/baselines.manifest.json, which is; `npm run test:baseline:verify` checks them, `npm run test:baseline:approve`
+# is the only way to replace them.
+tests/__baselines__/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini

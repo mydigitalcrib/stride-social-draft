@@ -1,0 +1,568 @@
+---
+// Our Team: a field of faces, on its own page and, on desktop, under About's story (`level`, `look`). Moving across
+// it, the faces near the pointer swell like a dock and show their second photo, and a glass tag names whoever
+// you're nearest (gliding after the pointer, the name changing over). Filter by team or shuffle, and the faces fly to
+// their new places. On phones and tablets a face grows into a big card; on desktop it doesn't (the owner's call,
+// 2026-11-11: the tag is enough). Desktop: the faces arrive in a wave from the first lead's the first time the field
+// comes into view, and every change travels outwards from where it started (a team pointed at steps the rest back
+// from its word outwards; a filter, a pill or Shuffle flies the faces from the button outwards). The keyboard reaches
+// the faces too: one tab stop, the arrow keys move between faces, Home and End, and the face focused swells and is
+// named as the pointer's would be; a team focused steps the rest back as pointing at it does. Past 1920×1080 the field
+// keeps its 1920 proportions (rem). Behaviour: src/scripts/system/team-field.ts, filters: archive-filter.ts. Names,
+// roles and genuine photos only; bios appear when supplied.
+import BigCard from '../experience/BigCard.astro';
+import Breadcrumbs from '../global/Breadcrumbs.astro';
+import type { Card } from '@/lib/experience';
+import { interfaceCopy } from '@/lib/ui-copy';
+
+export interface Props {
+  copy: { eyebrow?: string; headline?: string; body?: string };
+  people: { id: string; name: string; role: string; department: string; lead: boolean; photo: { src: string; alt: string }; photoAlt?: { src: string; alt: string }; card: Card }[];
+  departments: { id: string; label: string }[];
+  /** `hintDesk`: the hint on desktop, where there's nothing to click. */
+  ui: { all: string; shuffle: string; hint: string; hintDesk?: string };
+  crumbs: { label: string; href?: string }[];
+  /** Where a link to it lands (About: #team). */
+  id?: string;
+  /** Its headline's level: h2 under another page's own. */
+  level?: 'h1' | 'h2';
+  /** The palette colour it lives in. */
+  look?: 'frost' | 'deep';
+  /** The first faces load at once (its own page); under another section they wait until they're near. */
+  eager?: boolean;
+  /** Its brand / creator buttons, its departments and its count (Our Team); About shows the faces alone (the owner,
+      2026-11-13). */
+  tools?: boolean;
+}
+
+const { copy, people, departments, ui, crumbs, id, level = 'h1', look = 'frost', eager = true, tools = true } = Astro.props;
+const Title = level;
+const t = await interfaceCopy();
+---
+
+<section class="tfield" id={id} aria-labelledby="tfield-title" data-tfield data-archive data-tone="group" data-look={look}>
+  <div class="tfield__inner container-wide">
+    <header class="tfield__head">
+      <div class="tfield__title-wrap">
+        {crumbs.length > 0 && <Breadcrumbs items={crumbs} tone="dark" />}
+        <Title class="tfield__title exp-title" id="tfield-title" data-reveal-lines="load">{copy.headline}</Title>
+      </div>
+      <div class="tfield__side">
+        {copy.body && <p class="tfield__body">{copy.body}</p>}
+        {tools && (
+          <>
+            <div class="tfield__needs" role="group" aria-label={`${t('team.brand')} / ${t('team.creator')}`}>
+              <button class="exp-pill exp-pill--ghost" type="button" aria-pressed="false" data-tfield-need="campaigns sales social">{t('team.brand')}</button>
+              <button class="exp-pill exp-pill--ghost" type="button" aria-pressed="false" data-tfield-need="talent">{t('team.creator')}</button>
+            </div>
+            <div class="tfield__chips" role="group" aria-label="Filter by team" data-filter-group="department">
+              <button class="exp-chip" type="button" aria-pressed="true" data-value="all">{ui.all}</button>
+              {departments.map((d) => <button class="exp-chip" type="button" aria-pressed="false" data-value={d.id}>{d.label}</button>)}
+              <button class="exp-chip tfield__shuffle" type="button" data-tfield-shuffle>↻ {ui.shuffle}</button>
+            </div>
+            <p class="exp-label" role="status" aria-live="polite" data-filter-count data-noun="person|people">{people.length} people</p>
+          </>
+        )}
+      </div>
+    </header>
+
+    <div class="tfield__field">
+      {/* Desktop: a soft light over the faces, following the pointer (moved, not redrawn: team-field.ts). */}
+      <span class="tfield__light desk-only" aria-hidden="true"><i data-tfield-light></i></span>
+      <ul class="tfield__grid" role="list" data-archive-grid data-tfield-grid data-grow-row>
+        {people.map((p) => (
+          <li class:list={['tface', { 'tface--lead': p.lead }]} data-filter-department={p.department} data-name={p.name} data-role={p.role}>
+            <a class="tface__link" href={`#${p.id}`} aria-label={`${p.name}, ${p.role}`} data-grow-card={p.id}>
+              {/* Past 1920 wide a face is a share of the screen (a lead, two cells), so big screens fetch big enough files. */}
+              <img class="tface__img" src={p.photo.src} alt={p.photo.alt} sizes={`(max-width: 767px) 33vw, (min-width: 1921px) ${p.lead ? 13 : 6.5}vw, 240px`} loading={eager && p.lead ? 'eager' : 'lazy'} decoding="async" draggable="false" />
+              {p.photoAlt && <img class="tface__img tface__img--alt" src={p.photoAlt.src} alt="" sizes={`(min-width: 1921px) ${p.lead ? 13 : 6.5}vw, 240px`} loading="lazy" decoding="async" draggable="false" />}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <p class="tfield__hint exp-label not-desk" aria-hidden="true">{ui.hint}</p>
+    <p class="tfield__hint exp-label desk-only" aria-hidden="true">{ui.hintDesk ?? ui.hint}</p>
+  </div>
+
+  <div class="tfield__tag glass on-photo" aria-hidden="true" data-tfield-tag>
+    <span class="tfield__tag-name" data-tfield-tag-name></span>
+    <span class="tfield__tag-role" data-tfield-tag-role></span>
+  </div>
+
+  <div class="tfield__details">
+    {people.map((p) => <BigCard card={p.card} growKey={p.id} eyebrow={copy.eyebrow ?? ''} />)}
+  </div>
+</section>
+
+<style>
+  .tfield {
+    position: relative;
+    min-height: 100svh;
+    overflow: clip;
+    color: rgb(var(--ink));
+  }
+
+  .tfield__inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    align-content: start;
+    gap: clamp(var(--space-4), 3vh, var(--space-6));
+    min-height: 100svh;
+    padding-block: calc(var(--header-h) + var(--space-3)) var(--space-5);
+  }
+
+  .tfield__head {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    align-items: end;
+    gap: var(--space-4) var(--gutter);
+  }
+
+  .tfield__title-wrap {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .tfield__title {
+    font-size: clamp(2.25rem, min(5vw, 10vh), 5.5rem);
+  }
+
+  .tfield__side {
+    display: grid;
+    gap: var(--space-3);
+    justify-items: start;
+  }
+
+  .tfield__body {
+    color: rgb(var(--ink) / 0.86);
+  }
+
+  .tfield__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .tfield__shuffle {
+    color: rgb(var(--tone-lit));
+  }
+
+  /* ---------- The field ---------- */
+  .tfield__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(clamp(82px, 7.2vw, 116px), 1fr));
+    grid-auto-flow: dense;
+    gap: clamp(8px, 0.8vw, 12px);
+    padding-block: var(--space-3);
+  }
+
+  .tface {
+    position: relative;
+    aspect-ratio: 4 / 5;
+  }
+
+  .tface[hidden] {
+    display: none;
+  }
+
+  .tface--lead {
+    grid-column: span 2;
+    grid-row: span 2;
+  }
+
+  .tface__link {
+    position: absolute;
+    inset: 0;
+    display: block;
+    overflow: hidden;
+    border-radius: 18px;
+    background: var(--navy-700);
+    box-shadow:
+      inset 0 0 0 1px rgb(var(--hair) / 0.22),
+      0 14px 30px -18px rgb(var(--shade) / 0.8);
+    transform: scale(var(--s, 1));
+    transition:
+      transform 200ms var(--ease-out),
+      box-shadow 300ms var(--ease-out);
+    -webkit-user-drag: none;
+  }
+
+  .tface__link:hover,
+  .tface__link:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 1.5px rgb(var(--tone-lit) / 0.95),
+      0 0 26px -2px rgb(var(--tone-glow) / 0.7),
+      0 14px 30px -18px rgb(var(--shade) / 0.8);
+  }
+
+  /* While a photograph is still on its way, the team's light blue stands in and its name doesn't show. */
+  .tface__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+    color: transparent;
+    background: #bce8f7;
+    pointer-events: none;
+    transition: opacity 400ms var(--ease-out);
+  }
+
+  .tface__img--alt {
+    opacity: 0;
+  }
+
+  .tface__link:hover .tface__img--alt,
+  .tface__link:focus-visible .tface__img--alt {
+    opacity: 1;
+  }
+
+  .tfield__hint {
+    font-size: 0.625rem;
+    color: rgb(var(--ink) / 0.74);
+  }
+
+  /* The name, following the pointer. */
+  .tfield__tag {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 20;
+    display: grid;
+    gap: 2px;
+    max-width: 280px;
+    padding: 10px 14px;
+    border-radius: 16px;
+    background: rgb(var(--navy-900-rgb) / 0.72);
+    opacity: 0;
+    pointer-events: none;
+    transform: translate3d(var(--tx, 0), var(--ty, 0), 0);
+    transition: opacity 200ms var(--ease-out);
+  }
+
+  .tfield.is-over .tfield__tag {
+    opacity: 1;
+  }
+
+  .tfield__tag-name {
+    font-family: var(--font-display);
+    font-size: 1.0625rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .tfield__tag-role {
+    font-size: 0.75rem;
+    color: rgb(var(--ink) / 0.8);
+  }
+
+  .tfield__details {
+    position: fixed;
+    inset: calc(50svh - min(17rem, 44svh)) max(calc((100vw - 60rem) / 2), var(--margin));
+    z-index: 120;
+    pointer-events: none;
+  }
+
+  .tfield__details :global(.bigcard) {
+    pointer-events: auto;
+  }
+
+  /* Their photograph, clear, on the card's right. */
+  .tfield__details :global(.bigcard__image) {
+    width: 50%;
+    height: 100%;
+    opacity: 1;
+    -webkit-mask-image: linear-gradient(to left, #000 62%, transparent);
+    mask-image: linear-gradient(to left, #000 62%, transparent);
+  }
+
+  .tfield__details :global(.bigcard__head),
+  .tfield__details :global(.bigcard__html) {
+    max-width: 54%;
+  }
+
+  .tfield__head,
+  .tfield__grid {
+    transition:
+      opacity 400ms var(--ease-out),
+      filter 400ms var(--ease-out);
+  }
+
+  .tfield.has-big-card .tfield__head,
+  .tfield.has-big-card .tfield__grid {
+    opacity: 0.22;
+    filter: blur(6px);
+  }
+
+  .tfield.has-big-card .tfield__tag {
+    opacity: 0;
+  }
+
+  @media (max-width: 1023px) {
+    .tfield__head {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .tfield__hint,
+    .tfield__tag {
+      display: none;
+    }
+
+    /* The departments as on desktop: big words in outline wrapping over a few lines, the chosen one solid; a tap
+       chooses one (its people stay, the rest step out), as a click does on desktop (the owner, 2026-11-13). */
+    .tfield__chips {
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.125rem 0.875rem;
+    }
+
+    .tfield__chips .exp-chip:not(.tfield__shuffle) {
+      min-height: 2.75rem;
+      padding: 0;
+      border-radius: 0;
+      background: none;
+      box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      font-family: var(--font-display);
+      font-size: clamp(1.375rem, 6.4vw, 2.5rem);
+      font-weight: 850;
+      font-stretch: var(--stretch-wide);
+      line-height: 1.05;
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+      color: transparent;
+      -webkit-text-stroke: 0.0625rem rgb(var(--ink) / 0.6);
+    }
+
+    .tfield__chips .exp-chip:not(.tfield__shuffle)[aria-pressed='true'] {
+      background: none;
+      box-shadow: none;
+      color: rgb(var(--ink));
+      -webkit-text-stroke-color: rgb(var(--ink));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tface__link,
+    .tface__img {
+      transition: none;
+    }
+
+    /* The light doesn't follow the pointer without motion (the tag still names the face). */
+    .tfield__light {
+      display: none;
+    }
+  }
+
+  /* Who you'd work with: they come forward, and the rest step back. */
+  .tfield__needs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .tface__link {
+    transition:
+      transform 200ms var(--ease-out),
+      box-shadow 300ms var(--ease-out),
+      opacity 400ms var(--ease-out),
+      filter 400ms var(--ease-out);
+  }
+
+  .tface.is-dim .tface__link {
+    opacity: 0.2;
+    filter: grayscale(1);
+  }
+
+  .tface.is-lit .tface__link {
+    box-shadow:
+      0 0 0 2px rgb(var(--tone-lit)),
+      0 0 26px -2px rgb(var(--tone-glow) / 0.7);
+  }
+
+  /* ---------- Desktop (the owner, 2026-11-12: "aesthetic / interactive"): the headline lit; the teams as big words
+     across the page, in outline, the chosen one solid; pointing at one lights its people and the rest step back; a
+     soft light follows the pointer over the faces. In rem, so past 1920×1080 the field keeps its proportions (the
+     same up to it) ---------- */
+  @media (min-width: 1024px) {
+    .tfield__grid {
+      grid-template-columns: repeat(auto-fill, minmax(clamp(82px, 7.2vw, 7.25rem), 1fr));
+      gap: clamp(8px, 0.8vw, 0.75rem);
+    }
+
+    .tface__link {
+      border-radius: 1.125rem;
+      box-shadow:
+        inset 0 0 0 1px rgb(var(--hair) / 0.22),
+        0 0.875rem 1.875rem -1.125rem rgb(var(--shade) / 0.8);
+    }
+
+    .tface__link:hover,
+    .tface__link:focus-visible {
+      box-shadow:
+        0 0 0 1.5px rgb(var(--tone-lit) / 0.95),
+        0 0 1.625rem -0.125rem rgb(var(--tone-glow) / 0.7),
+        0 0.875rem 1.875rem -1.125rem rgb(var(--shade) / 0.8);
+    }
+
+    .tface.is-lit .tface__link {
+      box-shadow:
+        0 0 0 2px rgb(var(--tone-lit)),
+        0 0 1.625rem -0.125rem rgb(var(--tone-glow) / 0.7);
+    }
+
+    .tfield__tag {
+      gap: 0.125rem;
+      max-width: 17.5rem;
+      padding: 0.625rem 0.875rem;
+      border-radius: 1rem;
+    }
+
+    .tfield__needs {
+      gap: 0.375rem;
+    }
+
+    .tfield__side {
+      display: contents;
+    }
+
+    .tfield__title-wrap {
+      grid-column: 1;
+      grid-row: 1 / span 3;
+    }
+
+    .tfield__body {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .tfield__needs {
+      grid-column: 2;
+      grid-row: 2;
+    }
+
+    .tfield__side > .exp-label {
+      grid-column: 2;
+      grid-row: 3;
+    }
+
+    .tfield__chips {
+      grid-column: 1 / -1;
+      grid-row: 4;
+      align-items: center;
+      gap: 0.375rem clamp(1.125rem, 2.2vw, 2.25rem);
+      margin-top: var(--space-3);
+    }
+
+    .tfield__chips .exp-chip:not(.tfield__shuffle) {
+      min-height: 0;
+      padding: 0;
+      border-radius: 0;
+      background: none;
+      box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      font-family: var(--font-display);
+      font-size: clamp(1.5rem, 2.6vw, 2.9rem);
+      font-weight: 850;
+      font-stretch: var(--stretch-wide);
+      line-height: 1.05;
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+      color: transparent;
+      -webkit-text-stroke: 0.0625rem rgb(var(--ink) / 0.55);
+      transition:
+        color 260ms var(--ease-out),
+        -webkit-text-stroke-color 260ms var(--ease-out),
+        filter 260ms var(--ease-out);
+    }
+
+    .tfield__chips .exp-chip:not(.tfield__shuffle):hover,
+    .tfield__chips .exp-chip:not(.tfield__shuffle)[aria-pressed='true'] {
+      background: none;
+      box-shadow: none;
+      color: rgb(var(--ink));
+      -webkit-text-stroke-color: rgb(var(--ink));
+      filter: drop-shadow(0 0 0.875rem rgb(var(--ice-rgb) / 0.4));
+    }
+
+    .tfield__chips .exp-chip:not(.tfield__shuffle):focus-visible {
+      outline: 2px solid rgb(var(--tone-lit));
+      outline-offset: 4px;
+    }
+
+    .tface.is-shade .tface__link {
+      opacity: 0.18;
+      filter: grayscale(1) blur(0.0625rem);
+    }
+
+    .tfield__field,
+    .tfield__grid {
+      position: relative;
+    }
+
+    /* The light: a spot of a fixed size, moved to the pointer; drawn within the field and a little around it. */
+    .tfield__light {
+      position: absolute;
+      inset: -3.75rem;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 400ms var(--ease-out);
+    }
+
+    .tfield.is-over .tfield__light {
+      opacity: 1;
+    }
+
+    .tfield__light i {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 47.5rem;
+      height: 47.5rem;
+      margin: -23.75rem 0 0 -23.75rem;
+      background: radial-gradient(closest-side, rgb(var(--ice-rgb) / 0.16), transparent 70%);
+      will-change: transform;
+    }
+  }
+
+  /* Desktop with motion: stepping back ripples out from the team's word (or the pill pressed), each face after its
+     own delay (--wd, team-field.ts); coming back is at once. Until the field first comes into view, its faces wait
+     for their wave (the script sets .is-waiting, so without it nothing is hidden). */
+  @media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+    .tface__link {
+      transition:
+        transform 200ms var(--ease-out),
+        box-shadow 300ms var(--ease-out),
+        opacity 200ms var(--ease-out),
+        filter 200ms var(--ease-out);
+    }
+
+    .tface.is-shade .tface__link,
+    .tface.is-dim .tface__link {
+      transition:
+        transform 200ms var(--ease-out),
+        box-shadow 300ms var(--ease-out),
+        opacity 400ms var(--ease-out) var(--wd, 0ms),
+        filter 400ms var(--ease-out) var(--wd, 0ms);
+    }
+
+    .tfield.is-waiting .tfield__grid > .tface {
+      opacity: 0;
+    }
+  }
+</style>
+
+<script>
+  import { initArchiveFilters } from '@/scripts/system/archive-filter';
+  import { initTeamFields } from '@/scripts/system/team-field';
+  initArchiveFilters();
+  initTeamFields();
+</script>

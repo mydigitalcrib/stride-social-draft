@@ -1,0 +1,9 @@
+# From slide 15 of Stride's talent deck ("Behind Stride Talent", 2026), at the owner's instruction (2026-11-11): the
+# name, the role and the photograph are the slide's. The department is proposed from the role.
+name: Anna
+role: "Head of Creative Department"
+department: campaigns
+photo:
+  src: /assets/team/blue/anna.jpg
+  alt: "Anna, Head of Creative Department at Stride"
+order: 31

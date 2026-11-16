@@ -1,0 +1,417 @@
+---
+// The loading screen (the owner, 2026-11-13: every page, every time, but for the homepage intro): from the first paint Stride's mark
+// builds from its four triangles on the page's own colour, and a percentage counts what has really arrived, while the
+// page loads behind it: the page and everything it asks for up front, the fonts, every picture on the first screen
+// (loaded and decoded, so none pops in), the posters, and the first frame of any video there that's going to play. Then
+// it opens onto the page, settled. It shows for 0.9s at least (the mark builds) and never holds a page longer than 12s.
+// Meanwhile the page's own entrances wait under it (CSS animations paused; scripts through loaded.ts), and scrolling
+// waits too, so they play as it opens. It covers page changes as well: the page transition is skipped, as the loading
+// screen is the arrival. The one exception is the homepage when its intro is about to play: the intro is its loading
+// screen (the owner, 2026-11-13). Not without JavaScript (it's
+// only armed by the script below); a page restored from the browser's back-forward cache is already whole. Reduced
+// motion: the mark stands still and it fades.
+---
+
+<div class="loader" aria-hidden="true" data-loader>
+  <div class="loader__inner">
+    <svg class="loader__mark" viewBox="0 0 106 106">
+      <path class="loader__t loader__t--1" d="M53 53H0L53 0v53Z"></path>
+      <path class="loader__t loader__t--2" d="M106 53H53l53-53v53Z"></path>
+      <path class="loader__t loader__t--3" d="M53 106H0l53-53v53Z"></path>
+      <path class="loader__t loader__t--4" d="M106 106H53l53-53v53Z"></path>
+    </svg>
+    <p class="loader__pct"><span data-loader-pct>0</span><i>%</i></p>
+  </div>
+</div>
+
+<script is:inline>
+  (function () {
+    var root = document.documentElement;
+    var el = document.querySelector('[data-loader]');
+    if (!el) return;
+    // The homepage's intro is its own loading screen (the owner, 2026-11-13): when it's about to play, this steps
+    // aside. On phones and tablets it plays whenever motion is allowed; on desktop on the first visit of a session, or
+    // on a reload (home/CoverHero.astro), unless sent to the three sides.
+    if (location.pathname.replace(/\/index\.html$/, '/') === '/') {
+      var intro = false;
+      if (!matchMedia('(min-width: 1024px)').matches) intro = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+      else if (location.hash !== '#stride-group') {
+        try {
+          var nav = performance.getEntriesByType('navigation')[0];
+          intro = sessionStorage.getItem('stride:intro') !== 'seen' || !!(nav && nav.type === 'reload');
+        } catch (e) {
+          intro = true;
+        }
+      }
+      if (intro) {
+        el.parentNode.removeChild(el);
+        return;
+      }
+    }
+    root.classList.add('is-loading');
+
+    var MIN = 900; // shown at least this long: the mark builds
+    var CAP = 12000; // never longer than this (a page with a wall of photographs on a slow connection needs it)
+    var MAX_MEDIA = 48; // pictures and videos on the first screen it waits for, at most
+    var start = performance.now();
+    var calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var pct = el.querySelector('[data-loader-pct]');
+    var waits = []; // each returns true once its thing has arrived
+    var tracked = [];
+    var domReady = false;
+    var pageLoaded = false;
+    var loadedAt = 0;
+    var fontsIn = false;
+    var over = false;
+    var shown = 0;
+    var raf = 0;
+    waits.push(function () { return domReady; });
+    waits.push(function () { return pageLoaded; });
+    waits.push(function () { return fontsIn; });
+
+    // Scrolling waits with the entrances: nothing moves under the screen while it's up.
+    var KEYS = { ' ': 1, PageDown: 1, PageUp: 1, ArrowDown: 1, ArrowUp: 1, Home: 1, End: 1 };
+    var block = function (e) {
+      if (e.type === 'keydown' && !KEYS[e.key]) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    };
+    ['wheel', 'touchmove', 'keydown'].forEach(function (t) { addEventListener(t, block, { capture: true, passive: false }); });
+
+    // On the first screen as it's drawn now, or where it will stand once its entrance has played (the entrances are
+    // held while this is up, some starting off the screen): its place in the layout, before any transform.
+    var onScreen = function (m) {
+      var r = m.getBoundingClientRect();
+      if (r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth) return true;
+      var w = m.offsetWidth;
+      var h = m.offsetHeight;
+      if (!w || !h) return false;
+      var x = 0;
+      var y = -scrollY;
+      for (var n = m; n; n = n.offsetParent) {
+        x += n.offsetLeft;
+        y += n.offsetTop;
+      }
+      return y + h > 0 && y < innerHeight && x + w > 0 && x < innerWidth;
+    };
+    // The first screen's pictures and videos (looked for again as the page loads, for any its scripts add or move in).
+    var scan = function () {
+      document.querySelectorAll('img, video').forEach(function (m) {
+        if (tracked.length >= MAX_MEDIA || tracked.indexOf(m) > -1 || m.closest('[data-loader]') || !onScreen(m)) return;
+        tracked.push(m);
+        if (m.tagName === 'IMG') {
+          // In once it has loaded and been decoded (so it appears whole). One that failed isn't waited for; one with no
+          // picture asked for yet (a script gives it one) is, while the list is open.
+          var ok = false;
+          var decoding = false;
+          waits.push(function () {
+            if (ok) return true;
+            var asked = !!(m.currentSrc || m.getAttribute('src'));
+            if (m.complete && m.naturalWidth > 0) {
+              if (!decoding) {
+                decoding = true;
+                var settle = function () { ok = true; };
+                (m.decode ? m.decode() : Promise.resolve()).then(settle, settle);
+              }
+              return false;
+            }
+            if (m.complete && asked) return true;
+            if (!asked) return pageLoaded && performance.now() - loadedAt > 1200;
+            return false;
+          });
+          return;
+        }
+        var poster = m.getAttribute('poster');
+        if (poster) {
+          var posterIn = false;
+          var p = new Image();
+          p.onload = p.onerror = function () { posterIn = true; };
+          p.src = poster;
+          waits.push(function () { return posterIn; });
+        }
+        // Its first frame, when it's going to play: one still fetching once the page (and its scripts) have loaded.
+        waits.push(function () {
+          if (m.readyState >= 2 || m.error) return true;
+          return pageLoaded && performance.now() - loadedAt > 300 && m.networkState !== 2;
+        });
+      });
+    };
+
+    var drop = function () {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    };
+    var end = function () {
+      if (over) return;
+      over = true;
+      cancelAnimationFrame(raf);
+      if (pct) pct.textContent = '100';
+      // It opens: the page's entrances start as it fades (loaded.ts), and scrolling is free.
+      ['wheel', 'touchmove', 'keydown'].forEach(function (t) { removeEventListener(t, block, { capture: true }); });
+      el.classList.add('is-done');
+      root.classList.remove('is-loading');
+      window.strideLoaded = true;
+      dispatchEvent(new Event('stride:loaded'));
+      setTimeout(drop, calm ? 220 : 560);
+    };
+    var frame = 0;
+    var tick = function () {
+      var t = performance.now() - start;
+      // Pictures the page's scripts lay out on the first screen after it has loaded (a fanned hand of cards) are
+      // looked for too, for a moment; then the list is settled, so something moving on its own can't hold it forever.
+      if (domReady && frame++ % 15 === 0 && !(pageLoaded && performance.now() - loadedAt > 1200)) scan();
+      var done = 0;
+      for (var i = 0; i < waits.length; i++) if (waits[i]()) done++;
+      var all = done === waits.length;
+      // What has arrived, and a slow creep with the time so it never seems stuck.
+      // Never back down, even when the page's scripts add a picture to wait for.
+      var target = all ? 1 : Math.max(shown, Math.min(0.96, Math.max(done / waits.length, Math.min(0.9, t / CAP))));
+      shown += (target - shown) * (all ? 0.22 : 0.1);
+      if (all && 1 - shown < 0.01) shown = 1;
+      if (pct) pct.textContent = String(Math.floor(shown * 100));
+      if ((shown >= 1 && t >= MIN) || t >= CAP) return end();
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    // If frames stop (a tab in the background), the cap still holds once it's back; and if the script above ever
+    // stalled, the CSS takes it away by itself.
+    setTimeout(function () { if (!over) end(); }, CAP + 400);
+
+    // Arriving through a page transition: the loading screen is the arrival, so the transition is skipped, and the
+    // page plays its entrances as if it had just opened.
+    addEventListener('pagereveal', function (e) {
+      if (!e.viewTransition || over) return;
+      // A skipped transition rejects its promises; they're answered here so nothing reports an error.
+      e.viewTransition.ready.catch(function () {});
+      e.viewTransition.finished.catch(function () {});
+      e.viewTransition.skipTransition();
+    });
+
+    var dom = function () {
+      domReady = true;
+      scan();
+      // The fonts the page has asked for by now.
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { fontsIn = true; }, function () { fontsIn = true; });
+      else fontsIn = true;
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', dom, { once: true });
+    else dom();
+    var onLoad = function () {
+      pageLoaded = true;
+      loadedAt = performance.now();
+      scan();
+    };
+    if (document.readyState === 'complete') onLoad();
+    else addEventListener('load', onLoad, { once: true });
+  })();
+</script>
+
+<style>
+  /* Out of sight and out of the way until the script arms it (html.is-loading, from the first paint); opening, it
+     stays on its own class (.is-done) while it fades. If the script ever stalled, it would go by itself. */
+  .loader {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    display: none;
+    place-items: center;
+    background: rgb(var(--tone-surface, 6 20 43));
+    color: rgb(var(--ink, 255 255 255));
+  }
+
+  :global(html.is-loading) .loader,
+  .loader.is-done {
+    display: grid;
+  }
+
+  :global(html.is-loading) .loader {
+    animation: loader-gone 300ms ease 13s forwards;
+  }
+
+  /* The shared grain, as on the rest of the site. */
+  .loader::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--grain) 0 0 / var(--grain-size) var(--grain-size);
+    opacity: var(--grain-opacity);
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  @keyframes loader-gone {
+    to {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+
+  /* While it's up, the page's own entrances wait under it. */
+  :global(html.is-loading body *:not(.loader, .loader *)) {
+    animation-play-state: paused !important;
+  }
+
+  .loader__inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    justify-items: center;
+    gap: 1.25rem;
+  }
+
+  .loader__mark {
+    width: 3.5rem;
+    height: 3.5rem;
+    overflow: visible;
+  }
+
+  .loader__t {
+    fill: currentColor;
+    transform-box: view-box;
+    transform-origin: 50% 50%;
+  }
+
+  .loader__pct {
+    display: flex;
+    align-items: baseline;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.14em;
+    color: rgb(var(--ink, 255 255 255) / 0.86);
+  }
+
+  .loader__pct span {
+    min-width: 3ch;
+    text-align: right;
+  }
+
+  .loader__pct i {
+    font-style: normal;
+    opacity: 0.6;
+  }
+
+  @media (min-width: 1024px) {
+    .loader__mark {
+      width: 4.5rem;
+      height: 4.5rem;
+    }
+
+    .loader__pct {
+      font-size: 1.125rem;
+    }
+  }
+
+  /* The mark builds: each triangle comes in from its own corner, turning into place, one after another; then, while
+     it waits, a light passes from triangle to triangle. Opening, the mark swells a little and the screen fades. */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(html.is-loading) .loader__t {
+      opacity: 0;
+      animation:
+        loader-t 540ms var(--spring-pop, cubic-bezier(0.2, 1.4, 0.35, 1)) calc(60ms + var(--i) * 80ms) forwards,
+        loader-pulse 1600ms ease-in-out calc(900ms + var(--i) * 200ms) infinite;
+    }
+
+    .loader__t--1 {
+      --i: 0;
+      --dx: -1;
+      --dy: -1;
+    }
+
+    .loader__t--2 {
+      --i: 1;
+      --dx: 1;
+      --dy: -1;
+    }
+
+    .loader__t--3 {
+      --i: 2;
+      --dx: -1;
+      --dy: 1;
+    }
+
+    .loader__t--4 {
+      --i: 3;
+      --dx: 1;
+      --dy: 1;
+    }
+
+    @keyframes loader-t {
+      from {
+        opacity: 0;
+        transform: translate(calc(var(--dx) * 34%), calc(var(--dy) * 34%)) rotate(calc(var(--dx) * var(--dy) * 30deg)) scale(0.6);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    @keyframes loader-pulse {
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.45;
+      }
+    }
+
+    .loader__pct {
+      animation: loader-pct 420ms var(--ease-out) 200ms both;
+    }
+
+    @keyframes loader-pct {
+      from {
+        opacity: 0;
+        transform: translateY(0.5rem);
+      }
+    }
+
+    .loader.is-done {
+      animation: loader-out 480ms var(--ease-in-out) forwards;
+    }
+
+    .loader.is-done .loader__inner {
+      animation: loader-lift 480ms var(--ease-in-out) forwards;
+    }
+
+    @keyframes loader-out {
+      from {
+        opacity: 1;
+      }
+
+      to {
+        opacity: 0;
+        visibility: hidden;
+      }
+    }
+
+    @keyframes loader-lift {
+      to {
+        transform: scale(1.12);
+        filter: blur(0.25rem);
+        opacity: 0;
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .loader.is-done {
+      animation: loader-out-calm 180ms linear forwards;
+    }
+
+    @keyframes loader-out-calm {
+      from {
+        opacity: 1;
+      }
+
+      to {
+        opacity: 0;
+        visibility: hidden;
+      }
+    }
+  }
+</style>

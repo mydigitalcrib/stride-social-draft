@@ -1,0 +1,669 @@
+---
+// A Stride Social service's page on desktop (the owner, 2026-11-12: the picture behind was blurry and the cards out of
+// line), in front of Stride Social's night sky (the page's core/BackVideo). On the left its name, lit, what it is and
+// its words, and what it includes as numbered lines, each one added to the brief with a press (the brief's tray,
+// shortlist.ts, as the cards were); then the way to talk to Stride, carrying the brief. On the right its pictures,
+// sharp, in a tall frame that leans towards the pointer, one after another (its `hero`, then its `gallery`, from
+// Stride's decks); a service without one stands in with a drawn picture, marked as a placeholder. Phones and tablets
+// have the same opening in one column (the owner, 2026-11-13). Behaviour: service-hero.ts.
+// Also: a line added to the brief lands like a meteor (a burst at its tick, a light along its rule); the frame's badge
+// and dots float a little above its picture as it leans, and the dots choose a picture (named by its own alt text);
+// "Read more" opens the words in place, the lines below gliding down. Sized in rem, so it grows with the screen.
+import Breadcrumbs from '../global/Breadcrumbs.astro';
+import { pad } from '@/lib/experience';
+import { interfaceCopy } from '@/lib/ui-copy';
+
+type Pic = { src: string; alt: string; position?: string };
+export interface Props {
+  name: string;
+  number: number;
+  descriptor: string;
+  body: string[];
+  items: string[];
+  pictures: Pic[];
+  crumbs: { label: string; href?: string }[];
+  talk: { label: string; href: string };
+  serviceId: string;
+}
+
+const { name, number, descriptor, body, items, pictures, crumbs, talk, serviceId } = Astro.props;
+const t = await interfaceCopy();
+const mark = '<svg viewBox="0 0 106 106" aria-hidden="true"><path d="M53 53H0L53 0v53Z"/><path d="M53 106H0l53-53v53Z"/><path d="M106 53H53l53-53v53Z"/><path d="M106 106H53l53-53v53Z"/></svg>';
+---
+
+<section class="shero" aria-labelledby="shero-title" data-tone="social" data-look="deep" data-service-hero data-service={serviceId}>
+  <div class="shero__inner">
+    <div class="shero__copy">
+      <Breadcrumbs items={crumbs} tone="dark" />
+      <h1 class="shero__title exp-title" id="shero-title" style={`--len: ${Math.max(6, ...name.split(/\s+/).map((w) => w.length))}`}>{name}</h1>
+      <p class="shero__line">{descriptor}</p>
+      {body.length > 0 && (
+        <div class="shero__body" data-shero-body>
+          {body.map((p, i) => <p class:list={{ 'is-more': i > 0 }}>{p}</p>)}
+          {body.length > 1 && (
+            <button class="shero__more" type="button" aria-expanded="false" data-shero-more data-less={t('service.less')}>
+              <span>{t('service.more')}</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9.5 12 15.5 18 9.5"></path></svg>
+            </button>
+          )}
+        </div>
+      )}
+
+      {items.length > 0 && (
+        <div class="shero__includes">
+          <p class="exp-label">{t('service.includes')}</p>
+          <ol class="shero__items" role="list">
+            {items.map((item, i) => (
+              <li>
+                <button class="shero__item" type="button" aria-pressed="false" data-shero-item={i} data-label={item}>
+                  <span class="shero__no">{pad(i + 1)}</span>
+                  <span class="shero__name">{item}</span>
+                  <span class="shero__tick" aria-hidden="true"></span>
+                  <span class="visually-hidden"> — {t('service.add')}</span>
+                </button>
+              </li>
+            ))}
+          </ol>
+          <p class="shero__hint exp-label">{t('service.hint')}</p>
+        </div>
+      )}
+
+      <p class="shero__ways">
+        <a class="exp-pill" href={talk.href} data-keep-cta="brief" data-keep-base={talk.href} data-magnetic>
+          {talk.label}
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
+        </a>
+      </p>
+    </div>
+
+    <div class="shero__frame" data-shero-frame>
+      {pictures.length > 0 ? (
+        pictures.map((p, i) => (
+          <img class:list={{ 'is-on': i === 0 }} src={p.src} alt={i === 0 ? p.alt : ''} sizes="(min-width: 1024px) 40vw, 100vw" loading={i === 0 ? undefined : 'lazy'} fetchpriority={i === 0 ? 'high' : undefined} decoding="async" draggable="false" style={p.position ? `object-position: ${p.position}` : undefined} data-shero-pic={i} />
+        ))
+      ) : (
+        <span class="shero__none" data-placeholder="service picture">
+          <span class="shero__none-mark" aria-hidden="true" set:html={mark} />
+          <span class="exp-label">{t('stories.picture')}</span>
+        </span>
+      )}
+      <span class="shero__glare" aria-hidden="true"></span>
+      <span class="shero__badge" aria-hidden="true"><b>{pad(number)}</b>Stride Social</span>
+      {pictures.length > 1 && (
+        <span class="shero__dots">
+          {pictures.map((p, i) => (
+            <button class:list={['shero__dot', { 'is-on': i === 0 }]} type="button" aria-label={p.alt} aria-current={i === 0 ? 'true' : undefined} data-shero-dot={i}><i></i></button>
+          ))}
+        </span>
+      )}
+    </div>
+  </div>
+</section>
+
+<style>
+  /* The frame's lean, read by its glare, badge and dots (service-hero.ts); registered so they can ease back. Names of
+     their own: a registered property holds for the whole page, and other parts of it (the header, the decks) use
+     --gx and --gy with lengths and fallbacks of their own. */
+  @property --shero-gx {
+    syntax: '<percentage>';
+    inherits: true;
+    initial-value: 30%;
+  }
+
+  @property --shero-gy {
+    syntax: '<percentage>';
+    inherits: true;
+    initial-value: 20%;
+  }
+
+  @property --shero-nx {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 0;
+  }
+
+  @property --shero-ny {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 0;
+  }
+
+  .shero {
+    position: relative;
+    display: grid;
+    align-items: center;
+    min-height: 100svh;
+    padding: calc(var(--header-h) + var(--space-4)) 0 var(--space-6);
+    color: rgb(var(--ink));
+  }
+
+  .shero__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+    gap: clamp(2rem, 4.5vw, 5.25rem);
+    align-items: center;
+    margin-inline: var(--margin);
+  }
+
+  .shero__copy {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-4);
+    min-width: 0;
+    container-type: inline-size;
+  }
+
+  .shero__title {
+    font-size: min(clamp(3rem, 7vw, 7rem), calc(100cqi / (var(--len) * 0.82)));
+  }
+
+  .shero__line {
+    max-width: 36ch;
+    font-size: var(--type-lead);
+    line-height: 1.35;
+    color: rgb(var(--ink) / 0.92);
+  }
+
+  .shero__body {
+    display: grid;
+    justify-items: start;
+    gap: 0.625rem;
+    max-width: 44rem;
+  }
+
+  .shero__body p {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: rgb(var(--ink) / 0.8);
+  }
+
+  .shero__body p.is-more {
+    display: none;
+  }
+
+  .shero__body.is-open p.is-more {
+    display: block;
+  }
+
+  .shero__more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-family: var(--font-mono);
+    font-size: var(--type-label);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgb(var(--tone-lit));
+  }
+
+  .shero__more svg {
+    width: 0.9375rem;
+    height: 0.9375rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    transition: rotate 300ms var(--ease-out);
+  }
+
+  .shero__body.is-open .shero__more svg {
+    rotate: 180deg;
+  }
+
+  /* What it includes: numbered lines, each added to the brief with a press. Pointed at or focused, its number and
+     name lean in (moved, not laid out again); pressed, they give a little. */
+  .shero__includes {
+    display: grid;
+    gap: 0.625rem;
+    width: 100%;
+    max-width: 44rem;
+  }
+
+  .shero__items {
+    display: grid;
+    border-top: 1px solid rgb(var(--hair) / 0.2);
+  }
+
+  .shero__item {
+    position: relative;
+    display: grid;
+    grid-template-columns: 2.6rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.875rem;
+    width: 100%;
+    padding: 0.8125rem 0.25rem;
+    border-bottom: 1px solid rgb(var(--hair) / 0.2);
+    text-align: left;
+    transition: background-color 220ms var(--ease-out);
+  }
+
+  .shero__item > :is(.shero__no, .shero__name) {
+    transition:
+      translate 320ms var(--ease-out),
+      scale 120ms var(--ease-out);
+  }
+
+  .shero__item:is(:hover, :focus-visible) {
+    background: rgb(var(--white-rgb) / 0.05);
+  }
+
+  .shero__item:is(:hover, :focus-visible) > :is(.shero__no, .shero__name) {
+    translate: 0.5rem 0;
+  }
+
+  .shero__item:active > :is(.shero__no, .shero__name, .shero__tick) {
+    scale: 0.99;
+  }
+
+  .shero__no {
+    font-family: var(--font-mono);
+    font-size: var(--type-label);
+    color: rgb(var(--tone-lit));
+  }
+
+  .shero__name {
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 1.3vw, 1.25rem);
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  /* A round tick: a plus until it's in the brief. */
+  .shero__tick {
+    position: relative;
+    width: 1.875rem;
+    height: 1.875rem;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1px rgb(var(--white-rgb) / 0.4);
+    transition:
+      background-color 260ms var(--ease-out),
+      box-shadow 260ms var(--ease-out),
+      scale 120ms var(--ease-out);
+  }
+
+  .shero__tick::before,
+  .shero__tick::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0.6875rem;
+    height: 0.09375rem;
+    margin: calc(-0.09375rem / 2) 0 0 -0.34375rem;
+    border-radius: 2px;
+    background: currentColor;
+    transition:
+      rotate 320ms var(--spring-pop, cubic-bezier(0.2, 1.4, 0.35, 1)),
+      width 320ms var(--ease-out),
+      translate 320ms var(--ease-out);
+  }
+
+  .shero__tick::after {
+    rotate: 90deg;
+  }
+
+  .shero__item[aria-pressed='true'] .shero__tick {
+    background: rgb(var(--tone-lit));
+    box-shadow: 0 0 1.125rem rgb(var(--tone-glow) / 0.7);
+    color: rgb(var(--tone-on));
+  }
+
+  .shero__item[aria-pressed='true'] .shero__tick::before {
+    width: 0.375rem;
+    translate: -0.1875rem 0.125rem;
+    rotate: 45deg;
+  }
+
+  .shero__item[aria-pressed='true'] .shero__tick::after {
+    width: 0.6875rem;
+    translate: 0.125rem 0;
+    rotate: -50deg;
+  }
+
+  .shero__item[aria-pressed='true'] .shero__name {
+    color: var(--white);
+    text-shadow: 0 0 1.375rem rgb(var(--ice-rgb) / 0.45);
+  }
+
+  .shero__item:focus-visible {
+    outline: 2px solid rgb(var(--tone-lit));
+    outline-offset: 2px;
+  }
+
+  /* A line landing in the brief (service-hero.ts adds these for a moment, then takes them away): rings and sparks at
+     its tick, as the meteors land on Stride Social's planet, and a light running along its rule. */
+  .shero__tick :global(.shero__burst) {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
+
+  .shero__tick :global(.shero__burst i) {
+    position: absolute;
+    top: -2.1875rem;
+    left: -2.1875rem;
+    width: 4.375rem;
+    height: 4.375rem;
+    border: 1.5px solid var(--ice);
+    border-radius: 50%;
+    box-shadow: 0 0 0.75rem rgb(195 242 251 / 0.8);
+    animation: shero-ring 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .shero__tick :global(.shero__burst i + i) {
+    animation-delay: 100ms;
+  }
+
+  .shero__tick :global(.shero__burst b) {
+    position: absolute;
+    top: -0.125rem;
+    left: -0.125rem;
+    width: 0.25rem;
+    height: 0.25rem;
+    border-radius: 50%;
+    background: var(--white);
+    box-shadow: 0 0 0.375rem rgb(195 242 251);
+    animation: shero-spark 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .shero__item :global(.shero__sweep) {
+    position: absolute;
+    right: 0;
+    bottom: -1px;
+    left: 0;
+    height: 1px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .shero__item :global(.shero__sweep i) {
+    display: block;
+    width: 30%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgb(var(--tone-lit)), transparent);
+    animation: shero-sweep 700ms var(--ease-out) both;
+  }
+
+  @keyframes shero-ring {
+    from {
+      opacity: 1;
+      transform: scale(0.05);
+    }
+    to {
+      opacity: 0;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes shero-spark {
+    from {
+      opacity: 1;
+      transform: rotate(var(--a)) translateX(0) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: rotate(var(--a)) translateX(2.125rem) scale(0.2);
+    }
+  }
+
+  @keyframes shero-sweep {
+    from {
+      translate: -100% 0;
+    }
+    to {
+      translate: 334% 0;
+    }
+  }
+
+  .shero__hint {
+    color: rgb(var(--ink) / 0.55);
+  }
+
+  .shero__ways {
+    margin-top: 0.375rem;
+  }
+
+  /* ---------- Its pictures: a tall frame, sharp, leaning towards the pointer; it keeps its place at the top while
+     the words open below ("Read more") and scroll ---------- */
+  .shero__frame {
+    position: sticky;
+    top: calc(var(--header-h) + 1.5rem);
+    align-self: start;
+    aspect-ratio: 4 / 5;
+    max-height: calc(100svh - var(--header-h) - 5rem);
+    overflow: hidden;
+    border-radius: 1.5rem;
+    background: #050c1a;
+    box-shadow:
+      inset 0 0 0 1px rgb(var(--white-rgb) / 0.16),
+      0 0 6.25rem -1.5rem rgb(var(--ice-rgb) / 0.4),
+      0 3.75rem 6.25rem -3.125rem rgb(0 0 0 / 0.95);
+    transform: perspective(75rem) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transition:
+      transform 380ms var(--ease-out),
+      --shero-nx 380ms var(--ease-out),
+      --shero-ny 380ms var(--ease-out),
+      --shero-gx 600ms var(--ease-out),
+      --shero-gy 600ms var(--ease-out);
+  }
+
+  /* Under the pointer the glare follows it exactly; it eases back once the pointer has gone. */
+  .shero__frame:hover {
+    transition:
+      transform 380ms var(--ease-out),
+      --shero-nx 380ms var(--ease-out),
+      --shero-ny 380ms var(--ease-out);
+  }
+
+  /* Wider than 1920 (a 32:9 screen), where its height holds it narrower than its column: 4:5 at the height it may
+     take, against the column's right edge, in line with what's below. Up to 1920 it fills its column, as drawn. */
+  @media (min-width: 1921px) {
+    .shero__frame {
+      justify-self: end;
+      width: min(100%, calc((100svh - var(--header-h) - 5rem) * 0.8));
+    }
+  }
+
+  .shero__frame img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    scale: 1.05;
+    transition:
+      opacity 900ms var(--ease-out),
+      scale 6s linear;
+  }
+
+  .shero__frame img.is-on {
+    opacity: 1;
+    scale: 1;
+  }
+
+  .shero__frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgb(var(--navy-900-rgb) / 0.55), transparent 32%);
+    pointer-events: none;
+  }
+
+  .shero__glare {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: radial-gradient(50% 40% at var(--shero-gx, 30%) var(--shero-gy, 20%), rgb(var(--white-rgb) / 0.28), transparent 70%);
+    mix-blend-mode: soft-light;
+    pointer-events: none;
+  }
+
+  /* The badge and the dots float a little above the picture: as the frame leans they drift with the pointer (--shero-nx,
+     --shero-ny: 0 at rest). */
+  .shero__badge {
+    position: absolute;
+    top: 1.125rem;
+    left: 1.125rem;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.5rem 0.875rem 0.5rem 0.5rem;
+    border-radius: 999px;
+    background: rgb(var(--navy-900-rgb) / 0.62);
+    box-shadow: inset 0 0 0 1px rgb(var(--white-rgb) / 0.25);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    backdrop-filter: blur(0.75rem);
+    -webkit-backdrop-filter: blur(0.75rem);
+    translate: calc(var(--shero-nx, 0) * 0.625rem) calc(var(--shero-ny, 0) * 0.5rem);
+  }
+
+  .shero__badge b {
+    display: grid;
+    place-items: center;
+    width: 1.875rem;
+    height: 1.875rem;
+    border-radius: 50%;
+    background: var(--white);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--navy-900);
+  }
+
+  /* Each dot a button for its picture: its line where it was drawn, the press around it taller. */
+  .shero__dots {
+    position: absolute;
+    bottom: calc(1.125rem - (1.5rem - 0.1875rem) / 2);
+    left: 50%;
+    z-index: 2;
+    display: flex;
+    gap: 0.375rem;
+    translate: calc(-50% + var(--shero-nx, 0) * 0.375rem) calc(var(--shero-ny, 0) * 0.375rem);
+  }
+
+  .shero__dot {
+    display: grid;
+    place-items: center;
+    width: 1.375rem;
+    height: 1.5rem;
+    border-radius: 0.25rem;
+  }
+
+  .shero__dot i {
+    width: 100%;
+    height: 0.1875rem;
+    border-radius: 0.1875rem;
+    background: rgb(var(--white-rgb) / 0.35);
+    transition: background-color 300ms var(--ease-out);
+  }
+
+  .shero__dot:hover i {
+    background: rgb(var(--white-rgb) / 0.7);
+  }
+
+  .shero__dot.is-on i {
+    background: var(--white);
+  }
+
+  .shero__dot:focus-visible {
+    outline: 2px solid rgb(var(--tone-lit));
+    outline-offset: 2px;
+  }
+
+  .shero__none {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 1rem;
+    background:
+      radial-gradient(60% 40% at 30% 25%, rgb(var(--ice-rgb) / 0.32), transparent 70%),
+      radial-gradient(70% 50% at 80% 70%, rgb(80 130 200 / 0.36), transparent 70%),
+      linear-gradient(170deg, #1d3a66, var(--navy-900));
+    color: rgb(var(--ink) / 0.6);
+  }
+
+  .shero__none-mark :global(svg) {
+    width: 6rem;
+    fill: rgb(var(--ice-rgb) / 0.7);
+    filter: drop-shadow(0 0 1.5rem rgb(var(--ice-rgb) / 0.6));
+  }
+
+  /* ---------- Phones and tablets: the same opening (the owner, 2026-11-13) ----------
+     One column: its name and line, then its pictures (a wide frame, not held at the top), then its words and what it
+     includes, to add to the brief. */
+  @media (max-width: 1023px) {
+    .shero {
+      min-height: 0;
+      padding-top: calc(var(--header-h) + var(--space-3));
+    }
+
+    .shero__inner {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-4);
+    }
+
+    .shero__copy {
+      display: contents;
+    }
+
+    .shero__copy > * {
+      order: 2;
+    }
+
+    .shero__copy > :is(:first-child, .shero__title, .shero__line) {
+      order: 0;
+    }
+
+    .shero__title {
+      font-size: min(clamp(2.5rem, 12vw, 5rem), calc((100vw - 2 * var(--margin)) / (var(--len) * 0.84)));
+    }
+
+    .shero__frame {
+      position: relative;
+      top: auto;
+      order: 1;
+      aspect-ratio: 4 / 3;
+      max-height: 56svh;
+      border-radius: 1.25rem;
+      transform: none;
+    }
+
+    .shero__name {
+      font-size: 1.0625rem;
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .shero__frame {
+      aspect-ratio: 16 / 10;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shero__frame,
+    .shero__frame img,
+    .shero__item,
+    .shero__item > *,
+    .shero__tick::before,
+    .shero__tick::after {
+      transition: none;
+    }
+
+    .shero__item:is(:hover, :focus-visible) > :is(.shero__no, .shero__name),
+    .shero__item:active > :is(.shero__no, .shero__name, .shero__tick) {
+      translate: none;
+      scale: none;
+    }
+  }
+</style>
+
+<script>
+  import { initServiceHero } from '@/scripts/system/service-hero';
+  initServiceHero();
+</script>

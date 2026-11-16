@@ -1,0 +1,404 @@
+---
+// The site's radial navigation, after Core-A Studios: no panel and no visible wheel. The Stride
+// mark sits at the left centre of the screen and the areas lie on an invisible circle around
+// it. The circle turns (with a soft spring) so the active area always rests horizontally at
+// 3 o'clock, inside a capsule of liquid glass that stays there and reshapes to fit each label as it
+// arrives; the others sit above and below along the arc, turned with it and fading with distance.
+// Clicking an area goes straight there.
+// Phones and tablets have the same dial at the foot of the screen (the owner, 2026-11-13): the circle turned a quarter,
+// so the active area rests at 12 o'clock in its capsule and the others lie along the arc either side, level and fading
+// with distance; it comes with the header on the way back up, once past the first screen, and steps aside wherever the
+// page has its own bar at the foot or something open over it (edge-nav.ts, .is-away).
+// Its expanded form is the glass menu panel that grows from the header's Menu button
+// (global/SiteHeader.astro); both share the active area. Behaviour: src/scripts/system/edge-nav.ts.
+// From page to page it keeps its spring (desktop): it starts where the last page's arc was and turns on to this
+// page's area (the inline script below draws it there before the first paint), the mark at its hub turning with it
+// and the capsule giving a little as it goes. Hovering or focusing it brings the faded areas up, eased.
+import { modes, type ModeKey } from '@/config/navigation';
+
+export interface Props {
+  current: ModeKey;
+  home?: boolean;
+}
+
+const { current, home = false } = Astro.props;
+// The homepage's hero belongs to no area: there the arc rests with nothing selected, Stride Group one
+// step below the capsule's place, until the three sides arrive (the script).
+const active = home ? -1 : Math.max(0, modes.findIndex((m) => m.key === current));
+// Labels fade with their distance from the active one (as in the script).
+const fade = (d: number) => Math.max(0, 1 - Math.abs(d) * 0.2 - d * d * 0.045).toFixed(3);
+---
+
+<nav class:list={['radial', { 'is-resting': active < 0 }]} id="radial-nav" aria-label="Stride areas" data-radial data-home={home ? '' : undefined} data-current={active}>
+  {/* Somewhere to take hold of the arc between its labels, to drag it (the script). */}
+  <span class="radial__grab" aria-hidden="true"></span>
+  <span class="radial__hub" aria-hidden="true">
+    <svg viewBox="0 0 106 106">
+      <path d="M53 53H0L53 0v53Z" fill="currentColor"></path>
+      <path d="M53 106H0l53-53v53Z" fill="currentColor"></path>
+      <path d="M106 53H53l53-53v53Z" fill="currentColor"></path>
+      <path d="M106 106H53l53-53v53Z" fill="currentColor"></path>
+    </svg>
+  </span>
+  {/* The active area's glass capsule: fixed at 3 o'clock; the script sizes it to the label there. */}
+  <span class="radial__glass" aria-hidden="true" data-radial-glass></span>
+  <ol class="radial__list" role="list">
+    {modes.map((m, i) => (
+      <li class="radial__slot" style={`--i: ${i}; --a: ${(i - active) * 12}deg; --o: ${fade(i - active)}`}>
+        <a
+          class:list={['radial__item', { 'is-active': i === active }]}
+          href={m.href}
+          data-radial-item={m.key}
+          aria-current={!home && i === active ? 'page' : undefined}
+        >{m.label}</a>
+      </li>
+    ))}
+  </ol>
+</nav>
+
+{/* Arriving from another page (motion allowed): the arc is drawn where the last page's was, before the first paint, so
+    it can turn on from there (edge-nav.ts, which puts it straight back while the homepage's opening plays). */}
+<script is:inline>
+  (function () {
+    var nav = document.getElementById('radial-nav');
+    if (!nav || !matchMedia('(prefers-reduced-motion: no-preference)').matches) return;
+    try {
+      var rec = JSON.parse(sessionStorage.getItem('stride:dial') || 'null');
+      if (!rec || Date.now() - rec.t > 2000 || typeof rec.shown !== 'number' || rec.shown === Number(nav.dataset.current)) return;
+      nav.dataset.from = String(rec.shown);
+      nav.dataset.fromSpeed = String(rec.speed || 0);
+      var place = function (at) {
+        nav.querySelectorAll('.radial__slot').forEach(function (slot, i) {
+          var d = i - at;
+          slot.style.setProperty('--a', (d * 12).toFixed(2) + 'deg');
+          slot.style.setProperty('--o', Math.max(0, 1 - Math.abs(d) * 0.2 - d * d * 0.045).toFixed(3));
+        });
+      };
+      place(rec.shown);
+      // If the dial's script never starts (a failed load), the arc still ends up on this page's area.
+      setTimeout(function () {
+        if (!nav.dataset.radialReady) place(Number(nav.dataset.current));
+      }, 3000);
+    } catch (_) {}
+  })();
+</script>
+
+<style>
+  /* ---------- Desktop: the arc on the left ----------
+     The circle's centre sits well off-screen (--hub-x) with a wide radius (--r), so the arc curves
+     gently and the labels above and below tilt only a little: the active label starts 2.25rem (36px)
+     from the edge and the longest ends about 11rem (176px) in, inside the 11.25rem (180px) margin. The
+     Stride mark sits just left of the active pill. It's all in rem (it only shows on desktop), so on a
+     screen larger than 1920×1080 the arc, its labels and the capsule grow together with the root size
+     (styles/system/tokens.css): the same spacing, clear of the margin and the screen's edge at any size. */
+  /* --radial-lift: 1 while the arc is pointed at or focused, eased (it can't be the labels' opacity itself, which the
+     script rewrites every frame of a turn). */
+  @property --radial-lift {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 0;
+  }
+
+  .radial {
+    --hub-x: -20rem;
+    --r: 22.25rem;
+    position: fixed;
+    top: 50%;
+    left: 0;
+    z-index: 101;
+    width: 0;
+    height: 0;
+    color: var(--white);
+    pointer-events: none;
+    transition: --radial-lift 320ms var(--ease-out);
+  }
+
+  /* On a screen wider than 16:9 for its size (21:9, 32:9) the content's margin grows (tokens.css): the arc keeps the
+     same distance from the content as at 1920×1080 rather than staying at the window's edge. Up to 16:9 the margin is
+     11.25rem, so it's at the edge as before. */
+  @media (min-width: 1024px) {
+    .radial {
+      left: max(0px, calc(var(--margin) - 11.25rem));
+    }
+  }
+
+  .radial__grab {
+    display: none;
+  }
+
+  @media (min-width: 1024px) and (hover: hover) {
+    .radial__grab {
+      display: block;
+      position: absolute;
+      left: 0;
+      top: -10.625rem;
+      width: 10.625rem;
+      height: 21.25rem;
+      cursor: grab;
+      pointer-events: auto;
+    }
+  }
+
+  :global(html.is-radial-dragging),
+  :global(html.is-radial-dragging) * {
+    cursor: grabbing !important;
+  }
+
+  /* The mark turns a little with the arc while it moves (--hub-spin, the script), and is level at rest. */
+  .radial__hub {
+    position: absolute;
+    left: 0.75rem;
+    top: -0.5rem;
+    width: 1rem;
+    height: 1rem;
+    opacity: 0.9;
+    rotate: calc(var(--hub-spin, 0) * 1deg);
+  }
+
+  .radial__hub svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .radial__slot {
+    position: absolute;
+    left: var(--hub-x);
+    top: 0;
+    width: max-content;
+    transform-origin: 0 0;
+    rotate: var(--a);
+    opacity: max(var(--o), calc(var(--radial-lift, 0) * 0.55));
+  }
+
+  .radial__item {
+    display: block;
+    padding: 0.5rem 0.625rem;
+    border-radius: 999px;
+    translate: var(--r) -50%;
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 1.2;
+    white-space: nowrap;
+    color: rgb(var(--white-rgb) / 0.84);
+    text-shadow:
+      0 0.0625rem 0.125rem rgb(var(--navy-900-rgb) / 0.45),
+      0 0 1.125rem rgb(var(--navy-900-rgb) / 0.5);
+    pointer-events: auto;
+    transition:
+      background-color 260ms var(--ease-out),
+      color 260ms var(--ease-out);
+  }
+
+  /* Faded far-off labels drop out of reach of the pointer (keyboard users still Tab through all). */
+  .radial__slot.is-far .radial__item {
+    pointer-events: none;
+  }
+
+  .radial__item:hover,
+  .radial__item:focus-visible {
+    color: var(--white);
+    outline: none;
+  }
+
+  .radial__item.is-active {
+    color: var(--white);
+    text-shadow: 0 0.0625rem 0.125rem rgb(var(--navy-900-rgb) / 0.35);
+  }
+
+  .radial__item:focus-visible {
+    box-shadow: inset 0 0 0 1.5px rgb(var(--white-rgb) / 0.75);
+  }
+
+  /* ---------- The capsule: liquid glass ----------
+     A translucent capsule floating over the page where the active label rests: the scene behind
+     strongly blurred, lifted in colour and dimmed a touch (so the white label holds on any footage),
+     a delicate rim, a bright edge where light catches the top, a glow pooling at the base, a soft
+     reflection across the upper half, and a shadow beneath. Its width follows the label in it
+     (--glass-w, set every frame by the script as the arc turns). */
+  .radial__glass {
+    position: absolute;
+    left: calc(var(--hub-x) + var(--r));
+    top: 0;
+    width: var(--glass-w, 5.5rem);
+    height: var(--glass-h, 2.1875rem);
+    translate: 0 -50%;
+    /* A hint of liquid while the arc turns (--squash, the script: 0 at rest). */
+    scale: calc(1 + var(--squash, 0) * 0.015) calc(1 - var(--squash, 0) * 0.02);
+    border-radius: 999px;
+    background: linear-gradient(
+      180deg,
+      rgb(var(--white-rgb) / 0.24) 0%,
+      rgb(var(--white-rgb) / 0.08) 46%,
+      rgb(var(--white-rgb) / 0.03) 54%,
+      rgb(var(--white-rgb) / 0.11) 100%
+    );
+    /* The rim and its lit edges stay hairlines (px); the glow, the shadow and the blur grow with the capsule. */
+    box-shadow:
+      inset 0 0 0 1px rgb(var(--white-rgb) / 0.22),
+      inset 0 1px 0.5px rgb(var(--white-rgb) / 0.65),
+      inset 0 -1px 0.5px rgb(var(--white-rgb) / 0.16),
+      inset 0 -0.625rem 1rem -0.75rem rgb(var(--white-rgb) / 0.3),
+      0 0.875rem 1.875rem -1rem rgb(0 0 0 / 0.55),
+      0 0.125rem 0.375rem -0.125rem rgb(0 0 0 / 0.22);
+    backdrop-filter: blur(1.5rem) saturate(190%) brightness(0.86);
+    -webkit-backdrop-filter: blur(1.5rem) saturate(190%) brightness(0.86);
+    pointer-events: none;
+    transition: opacity 360ms var(--ease-out);
+  }
+
+  /* Nothing selected (the homepage's hero): no capsule. */
+  .radial.is-resting .radial__glass {
+    opacity: 0;
+  }
+
+  .radial__glass::before {
+    content: '';
+    position: absolute;
+    inset: 1.5px 10% 54%;
+    border-radius: 999px;
+    background: linear-gradient(to bottom, rgb(var(--white-rgb) / 0.32), rgb(var(--white-rgb) / 0));
+  }
+
+  /* While the homepage's entrance plays, the capsule skips its blur: it sits over blurred footage
+     anyway, and the graphics card has its hands full. */
+  :global(body:has(.cover.is-entrance)) .radial__glass {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  /* On a light background the labels and mark turn navy, with everything else on the page. */
+  :global(html[data-ink='light']) .radial {
+    color: var(--navy-900);
+  }
+
+  :global(html[data-ink='light']) .radial .radial__item:not(.is-active) {
+    color: rgb(var(--navy-900-rgb) / 0.76);
+    text-shadow: none;
+  }
+
+  :global(html[data-ink='light']) .radial .radial__item:not(.is-active):hover {
+    color: var(--navy-900);
+  }
+
+  /* On paper the glass turns milky, with a navy label, so it still reads as a capsule. */
+  :global(html[data-ink='light']) .radial .radial__glass {
+    background: linear-gradient(180deg, rgb(var(--white-rgb) / 0.9), rgb(var(--white-rgb) / 0.6) 55%, rgb(var(--white-rgb) / 0.72));
+    box-shadow:
+      inset 0 0 0 1px rgb(var(--navy-900-rgb) / 0.1),
+      inset 0 1px 0.5px rgb(var(--white-rgb) / 1),
+      inset 0 -0.5rem 0.875rem -0.75rem rgb(var(--navy-900-rgb) / 0.12),
+      0 0.875rem 1.75rem -1rem rgb(var(--navy-900-rgb) / 0.4),
+      0 0.125rem 0.375rem -0.125rem rgb(var(--navy-900-rgb) / 0.14);
+  }
+
+  :global(html[data-ink='light']) .radial .radial__item.is-active {
+    color: var(--navy-900);
+    text-shadow: none;
+  }
+
+
+  .radial__item {
+    transition:
+      background-color 260ms var(--ease-out),
+      color 400ms var(--ease-out);
+  }
+
+  /* Hovering the arc brings the faded areas up a little. */
+  .radial:hover,
+  .radial:focus-within {
+    --radial-lift: 1;
+  }
+
+  /* ---------- Phones and tablets: the same dial, at the foot of the screen ----------
+     The circle turned a quarter, its centre well below the screen, so the active area rests at 12 o'clock in its
+     capsule; the others lie along the arc either side, fading with distance, every label turned level and centred
+     on its place on the circle. The step between areas is wider (--dial-k), so labels side by side never touch. A
+     soft floor of the page's colour under it keeps them clear of what scrolls past. Away (.is-away, edge-nav.ts) on the
+     way down, on the first screen and where the page has its own bar at the foot; away too while the menu, a case
+     study, a profile or the opening film is open over the page. */
+  @media (max-width: 1023px) {
+    .radial {
+      /* A wider circle than desktop's, so the arc stays as gentle across the foot as it is down the left: the active
+         label 4rem up, its neighbours about 1.4rem lower and 9rem either side. */
+      --hub-x: -26rem;
+      --r: 30rem;
+      --dial-k: 1.45;
+      top: calc(100% - env(safe-area-inset-bottom, 0px));
+      left: 50%;
+      rotate: -90deg;
+      transition:
+        --radial-lift 320ms var(--ease-out),
+        translate 420ms var(--ease-out),
+        opacity 300ms var(--ease-out);
+    }
+
+    /* The floor: from the foot of the screen up, the page's navy fading out (in the dial's turned frame: x is up). */
+    .radial::before {
+      content: '';
+      position: absolute;
+      top: -100vw;
+      left: -1rem;
+      width: 7.5rem;
+      height: 200vw;
+      background: linear-gradient(to right, rgb(var(--navy-900-rgb) / 0.9), rgb(var(--navy-900-rgb) / 0.62) 45%, rgb(var(--navy-900-rgb) / 0.2) 78%, transparent);
+      pointer-events: none;
+    }
+
+    :global(html[data-ink='light']) .radial::before {
+      background: linear-gradient(to right, rgb(var(--white-rgb) / 0.92), rgb(var(--white-rgb) / 0.62) 45%, rgb(var(--white-rgb) / 0.2) 78%, transparent);
+    }
+
+    .radial__hub {
+      rotate: calc(90deg + var(--hub-spin, 0) * 1deg);
+    }
+
+    .radial__slot {
+      rotate: calc(var(--a) * var(--dial-k));
+    }
+
+    .radial__item {
+      font-size: 0.8125rem;
+      transform-origin: 0 50%;
+      rotate: calc(90deg - var(--a) * var(--dial-k));
+      transform: translateX(-50%);
+      touch-action: pan-y;
+    }
+
+    .radial__glass {
+      transform-origin: 0 50%;
+      rotate: 90deg;
+      transform: translateX(-50%);
+    }
+
+    .radial.is-away,
+    .radial.is-resting,
+    :global(html:is(.has-sheet, .wpreview-on, .opening-on, .intro-lock)) .radial,
+    :global(html:has(.menu-panel.is-open, .tray:not([hidden]), .has-big-card)) .radial {
+      translate: 0 7rem;
+      opacity: 0;
+    }
+
+    .radial.is-away .radial__item,
+    .radial.is-resting .radial__item,
+    :global(html:is(.has-sheet, .wpreview-on, .opening-on, .intro-lock)) .radial .radial__item,
+    :global(html:has(.menu-panel.is-open, .tray:not([hidden]), .has-big-card)) .radial .radial__item {
+      pointer-events: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .radial,
+    .radial__slot,
+    .radial__item,
+    .radial__glass {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  import { initEdgeNav } from '@/scripts/system/edge-nav';
+  initEdgeNav();
+</script>

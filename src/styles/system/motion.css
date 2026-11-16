@@ -1,0 +1,255 @@
+/*
+ * Stride motion language (loaded after base.css). Controlled and editorial: things are masked in,
+ * arrive from an unexpected side, settle with a slight turn, and react to the pointer a little.
+ * Nothing loops by itself. Everything here switches off under prefers-reduced-motion.
+ *
+ * Reveal variants (one-shot, set by src/scripts/system/reveal.ts adding .is-revealed):
+ *   data-reveal="wipe"        a mask opens left to right
+ *   data-reveal="from-left"   arrives from the left, slightly turned and blurred
+ *   data-reveal="from-right"  arrives from the right, slightly turned and blurred
+ *   data-reveal="tilt"        rises while straightening from a small tilt
+ * Pointer motion (src/scripts/system/motion.ts, fine pointers only):
+ *   data-parallax="12"        drifts up to 12px against the pointer (more on a screen past 1920×1080)
+ *   data-magnetic             leans towards the pointer while hovered, on a spring (desktop; a page's main calls
+ *                             to action only)
+ * On desktop the distances and blurs are in rem, so past 1920×1080 they grow with the screen (tokens.css).
+ *
+ * The vocabulary on desktop, so new motion speaks it rather than adding another curve (always with the fallback):
+ *   var(--spring-soft, cubic-bezier(0.3, 1.25, 0.45, 1))   for things that slide (pills, capsules, the menu's glass)
+ *   var(--spring-pop, cubic-bezier(0.2, 1.4, 0.35, 1))     for things that land (the tray, prints, notes)
+ *   with --ease-out and --ease-in-out (tokens.css). Durations keep to three bands: feedback 110–180ms, a change of
+ *   state 300–460ms, an entrance 560–900ms.
+ */
+
+@media (min-width: 1024px) {
+  :root {
+    --spring-soft: cubic-bezier(0.3, 1.25, 0.45, 1);
+    --spring-pop: cubic-bezier(0.2, 1.4, 0.35, 1);
+  }
+}
+
+/* Oversized type and side entrances may poke past the edges; never make the page scroll sideways. */
+main {
+  overflow-x: clip;
+}
+
+/* ---------- Reveal variants ---------- */
+.js [data-reveal='wipe'] {
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 900ms var(--ease-out);
+  transition-delay: var(--reveal-delay, 0s);
+}
+
+.js [data-reveal='from-left'],
+.js [data-reveal='from-right'],
+.js [data-reveal='tilt'] {
+  opacity: 0;
+  filter: blur(6px);
+  transition:
+    opacity 600ms var(--ease-out),
+    filter 600ms var(--ease-out),
+    transform 900ms var(--ease-out);
+  transition-delay: var(--reveal-delay, 0s);
+}
+
+.js [data-reveal='from-left'] {
+  transform: translateX(-10vw) rotate(-2deg);
+}
+
+.js [data-reveal='from-right'] {
+  transform: translateX(10vw) rotate(2deg);
+}
+
+.js [data-reveal='tilt'] {
+  transform: translateY(48px) rotate(-3deg);
+  transform-origin: 0 100%;
+}
+
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .js [data-reveal='from-left'],
+  .js [data-reveal='from-right'],
+  .js [data-reveal='tilt'] {
+    filter: blur(0.375rem);
+  }
+
+  .js [data-reveal='tilt'] {
+    transform: translateY(3rem) rotate(-3deg);
+  }
+
+  /* The side entrances travel as far against the page as at 1920×1080 (12rem), not a share of the window's width,
+     which on 21:9 and 32:9 would be twice the design's. Up to 1920 wide, and on any 16:9 screen, the same as 10vw. */
+  .js [data-reveal='from-left'] {
+    transform: translateX(calc(-1 * min(10vw, 12rem))) rotate(-2deg);
+  }
+
+  .js [data-reveal='from-right'] {
+    transform: translateX(min(10vw, 12rem)) rotate(2deg);
+  }
+}
+
+.js [data-reveal='wipe'].is-revealed {
+  clip-path: inset(0);
+}
+
+.js [data-reveal='from-left'].is-revealed,
+.js [data-reveal='from-right'].is-revealed,
+.js [data-reveal='tilt'].is-revealed {
+  opacity: 1;
+  filter: none;
+  transform: none;
+}
+
+/* ---------- Page transitions ----------
+ * Same-site navigation (Chrome, Edge, Safari): the old page drifts and blurs away while the new
+ * one is wiped in from the right. On desktop the header and the dial keep their own layers for the change
+ * (site-chrome, site-nav: named only while it runs, SiteLayout.astro, so their glass keeps its blur the rest of
+ * the time): the header stays put, or slides back down if the last page had put it away, and the dial turns on
+ * from where the last page left it (edge-nav.ts). Going to an area further down the dial, the new page rises from
+ * below (`dial-down`); further up, it comes down from above (`dial-up`).
+ * Leaving through the dial in a browser without these blurs the page first (`html.is-leaving`, edge-nav.ts).
+ */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root) {
+  animation: page-out 260ms var(--ease-in-out) both;
+}
+
+::view-transition-new(root) {
+  animation: page-in 520ms var(--ease-out) both;
+}
+
+@keyframes page-out {
+  to {
+    opacity: 0.25;
+    filter: blur(8px);
+    transform: translateX(-2%);
+  }
+}
+
+@keyframes page-in {
+  from {
+    clip-path: inset(0 0 0 100%);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+
+/* The dial's own layer: the new one, live, turns over the change; the old picture of it goes at once. The header's
+   pair crossfades in place and its box glides, over the same time as the page. */
+::view-transition-group(site-nav),
+::view-transition-old(site-nav),
+::view-transition-new(site-nav) {
+  animation: none;
+}
+
+::view-transition-old(site-nav) {
+  opacity: 0;
+}
+
+::view-transition-group(site-chrome) {
+  animation-duration: 450ms;
+  animation-timing-function: var(--ease-out);
+}
+
+html:active-view-transition-type(dial-down)::view-transition-old(root) {
+  animation: page-up-out 260ms var(--ease-in-out) both;
+}
+
+html:active-view-transition-type(dial-down)::view-transition-new(root) {
+  animation: page-rise 560ms var(--ease-out) both;
+}
+
+html:active-view-transition-type(dial-up)::view-transition-old(root) {
+  animation: page-down-out 260ms var(--ease-in-out) both;
+}
+
+html:active-view-transition-type(dial-up)::view-transition-new(root) {
+  animation: page-fall 560ms var(--ease-out) both;
+}
+
+@keyframes page-rise {
+  from {
+    clip-path: inset(100% 0 0 0);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+
+@keyframes page-fall {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+
+@keyframes page-up-out {
+  to {
+    opacity: 0.25;
+    filter: blur(0.5rem);
+    transform: translateY(-2%);
+  }
+}
+
+@keyframes page-down-out {
+  to {
+    opacity: 0.25;
+    filter: blur(0.5rem);
+    transform: translateY(2%);
+  }
+}
+
+@media (min-width: 1024px) {
+  @keyframes page-out {
+    to {
+      opacity: 0.25;
+      filter: blur(0.5rem);
+      transform: translateX(-2%);
+    }
+  }
+}
+
+html.is-leaving main {
+  opacity: 0.35;
+  filter: blur(8px);
+  transform: translateX(-1.5%);
+  transition:
+    opacity 200ms var(--ease-in-out),
+    filter 200ms var(--ease-in-out),
+    transform 200ms var(--ease-in-out);
+}
+
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  html.is-leaving main {
+    filter: blur(0.5rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js [data-reveal='wipe'],
+  .js [data-reveal='from-left'],
+  .js [data-reveal='from-right'],
+  .js [data-reveal='tilt'] {
+    clip-path: none;
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+
+  html.is-leaving main {
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+}

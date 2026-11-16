@@ -1,0 +1,755 @@
+---
+// A page for a division that needs more than a roster filter: Stride Sport (/sport), Stride Podcasts
+// (/talent/podcasts) and Stride Speakers (/talent/speakers). Its headline, its people (roster entries assigned to the division, with consent),
+// real placements or engagements (as pictures from the copy file, or the division's case studies), and a dedicated
+// enquiry. Whatever Stride hasn't supplied is marked as
+// awaited, never filled in. Copy lives in src/content/pages/{sport,podcasts,speakers}.yaml.
+// Desktop (the owner's choice, 2026-11-12), after Stride Talent's interactions, in front of the same footage: the
+// headline stays lit, with the division counted below it, and each page has scenes of its own. Stride Sport: a stadium's
+// LED board running its athletes' names along the foot of the hero, its athletes as a contact sheet, and the squad the
+// visitor picks lined up on a pitch (SportBoard, SportSquad). Stride Podcasts: an ON AIR sign (PodcastOnAir; no
+// waveform, count or radio dial since 2026-11-13, the owner's call). Stride Speakers: its
+// speakers as a studio's monitor with a broadcast caption, and where they've spoken as slides on the stage's screen
+// with a laser pointer (SpeakerStage). Everywhere a click adds a creator to "Meet our talents" and a name opens their
+// profile over the page (CreatorSheet). Phones and tablets have the same scenes (the owner, 2026-11-13: phones rebuilt
+// from the desktop), laid out for their screens, a tap doing what a click does.
+// As the page first opens (a fresh visit at its top, not with reduced motion), the lights come up on cue:
+// Stride Sport's floodlights clunk on in three banks before its LED board powers up; Stride Speakers' house lights go
+// down for the show (html.spec-cue, set before anything is drawn, cleared by spec-reel.ts). The figures keep their
+// final width while they count up, so the words beside them stay put. Sizes past 1920×1080 grow with the screen.
+import { getEntry } from 'astro:content';
+import Breadcrumbs from '../global/Breadcrumbs.astro';
+import TalentWall from './TalentWall.astro';
+import CreatorCard from './CreatorCard.astro';
+import DraftTag from '../core/DraftTag.astro';
+import PlaceholderNotice from '../core/PlaceholderNotice.astro';
+import { getRoster, divisionsOf } from '@/lib/roster';
+import { creatorView, nicheLabels } from '@/lib/creator-view';
+import { getCollection } from 'astro:content';
+import { routes } from '@/lib/routes';
+import { interfaceCopy } from '@/lib/ui-copy';
+import Tray from '../experience/Tray.astro';
+import CreatorSheet from './CreatorSheet.astro';
+import RosterBrowser from './RosterBrowser.astro';
+import SportBoard from './SportBoard.astro';
+import SportSquad from './SportSquad.astro';
+import PodcastOnAir from './PodcastOnAir.astro';
+import SpeakerStage from './SpeakerStage.astro';
+import VideoWall from './VideoWall.astro';
+
+export interface Props {
+  /** The division and the copy file of the same name. */
+  page: 'sport' | 'podcasts' | 'speakers';
+  crumbs: { label: string; href?: string }[];
+}
+
+const { page, crumbs } = Astro.props;
+const entry = await getEntry('pages', page);
+if (!entry) throw new Error(`Missing src/content/pages/${page}.yaml`);
+const { hero, people, placements, close } = entry.data.sections;
+
+const labels = await nicheLabels();
+// The division's creators: those the copy file puts first (`people.featured`, in its order), then the rest in roster
+// order (the importer can't reorder them).
+const first = people?.featured ?? [];
+const members = (await getRoster())
+  .filter((c) => divisionsOf(c).includes(page))
+  .sort((a, b) => (first.includes(a.id) ? first.indexOf(a.id) : first.length) - (first.includes(b.id) ? first.indexOf(b.id) : first.length))
+  .map((c) => creatorView(c, labels));
+const work = (await getCollection('work', (w) => w.data.visible && w.data.industries.some((i) => i.id === page))).sort((a, b) => a.data.order - b.data.order);
+
+// Where they've spoken, in pictures (the copy file's `placements.items`): what it was, the post it comes from, and
+// who it is (`key`, a roster entry: named and linked only while that creator is published).
+const published = await getRoster();
+const seen = (placements.items ?? [])
+  .filter((item) => item.image)
+  .map((item) => {
+    const who = published.find((c) => c.id === item.key);
+    return { ...item, who: who ? { name: who.data.name, href: routes.creator(who.id) } : null };
+  });
+
+// The footage each of these pages stands in front of (the reel at the foot of the page): its shots, the part of each
+// that plays (seconds), and where each one's subject goes. On desktop a shot is moved to the right (--shift) so its
+// subject stands clear of the headline, and cut around the subject (--at) when the screen is narrower than the
+// footage; on phones it's cut around --focus. The poster is the first shot's opening frame. A reel of one shot plays
+// whole and round again (Stride Sport's is a finished cut). Stock footage never shows a face as if it were
+// Stride's talent; Stride Speakers' comes from one of Stride's own creators' posts. Sources and licences in
+// docs/ASSET-SOURCES.md.
+type Shot = { src: string; from: number; to: number; place: string };
+// A page of this kind without footage stands in front of Stride Talent's wall, as the other Talent pages do.
+const reels: Partial<Record<Props['page'], { poster: string; shots: Shot[] }>> = {
+  // A match seen from the stands, under the floodlights: the owner's own cut (2026-11-11), three shots of the crowd
+  // and the pitch in one clip, with its own cuts. The stadium fills the screen, so it isn't moved aside.
+  sport: {
+    poster: '/assets/site/stride-sport-poster.jpg',
+    shots: [{ src: '/assets/video/stride-sport-stadium.mp4', from: 0, to: 0, place: '--at: 60%; --shift: 0%; --focus: 55%' }],
+  },
+  // One of its shows at work: the Back Side podcast's studio, from an episode on its YouTube channel that the owner
+  // recorded off the screen (2026-11-11): one host, then two, then all three under the neon sign, in one clip with
+  // the show's own cuts, stopped before the player's controls come up.
+  podcasts: {
+    poster: '/assets/site/stride-podcasts-poster.jpg',
+    shots: [{ src: '/assets/video/stride-podcasts-studio.mp4', from: 0, to: 0, place: '--at: 62%; --shift: 0%; --focus: 60%' }],
+  },
+  // A studio's stage seen from behind its audience: three seconds from Jack Durkin's own post of the game show he was
+  // on (the owner's call, 2026-11-11), played forward then back in one file, so it goes round without a jump. The
+  // clip is upright (3:4): a wide screen shows the band of it with the stage (--ay), a phone nearly all of it.
+  speakers: {
+    poster: '/assets/site/stride-speakers-poster.jpg',
+    shots: [{ src: '/assets/video/stride-speakers-studio.mp4', from: 0, to: 0, place: '--shift: 0%; --ay: 40%; --fy: 38%' }],
+  },
+};
+const reel = reels[page];
+
+// Videos from the creators' own YouTube channels (the copy file's `placements.items` whose link is a YouTube video:
+// Stride Podcasts' episodes, Stride Sport's brand videos), shown in place of the pictures or the awaited notice. A
+// link's moment (`t`, as YouTube's share links give it: 165, 165s or 2m45s) is where the video starts when played.
+// Who it's from is the roster entry (`key`, named and linked while published) or, for a show outside the roster, the
+// channel's name (`channel`, no link; Stride Podcasts', the owner, 2026-11-13). `embed: false` opens it on YouTube. A
+// Spotify episode (its link, its `image` by address) goes in the same list, played by Spotify's own player.
+const ytId = (href?: string) => href?.match(/(?:youtube\.com\/(?:watch\?v=|live\/)|youtu\.be\/)([\w-]{11})/)?.[1] ?? null;
+const spotifyId = (href?: string) => href?.match(/open\.spotify\.com\/episode\/([A-Za-z0-9]{22})/)?.[1] ?? null;
+const ytStart = (href?: string) => {
+  let t: string | null = null;
+  try {
+    t = href ? new URL(href).searchParams.get('t') : null;
+  } catch {
+    return undefined;
+  }
+  const m = t?.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s?)?$/);
+  const s = m ? Number(m[1] ?? 0) * 3600 + Number(m[2] ?? 0) * 60 + Number(m[3] ?? 0) : 0;
+  return s > 0 ? s : undefined;
+};
+const videos = (placements.items ?? []).flatMap((item) => {
+  const yt = ytId(item.href);
+  const sp = yt ? null : spotifyId(item.href);
+  if (!yt && !sp) return [];
+  const creator = published.find((c) => c.id === item.key);
+  const who: { name: string; href?: string } | null = creator ? { name: creator.data.name, href: routes.creator(creator.id) } : item.channel ? { name: item.channel } : null;
+  const kind: 'youtube' | 'spotify' = yt ? 'youtube' : 'spotify';
+  return [{
+    kind,
+    id: (yt ?? sp) as string,
+    start: yt ? ytStart(item.href) : undefined,
+    image: yt ? undefined : item.image,
+    embed: !yt || item.embed !== false,
+    title: item.label,
+    who,
+    note: item.copy,
+  }];
+});
+
+// Desktop: the profiles over the page (CreatorSheet), the counts below the headline, and the roster's words.
+const t = await interfaceCopy();
+const sheetData = members.map((v) => ({
+  id: v.id,
+  name: v.name,
+  src: v.portrait?.src ?? null,
+  tag: v.relationship,
+  handle: v.handle,
+  details: [v.niche, v.country].filter(Boolean).join(' · ') || null,
+  line: v.line,
+  figure: v.audience ? `${v.audience.figure}${v.audience.platform ? ` on ${v.audience.platform}` : ''}` : null,
+  platforms: v.platforms,
+  enquire: v.enquire,
+  href: v.href,
+  video: v.videos[0]?.src ?? null,
+}));
+// The counts under the headline, unless the copy file leaves them out (`hero.counts: false`, Stride Speakers').
+const stats = hero?.counts === false
+  ? []
+  : [
+      { n: members.length, label: t(`spec.${page}.count`) },
+      ...(page === 'speakers' ? [{ n: seen.length, label: t('spec.speakers.stages') }] : []),
+    ].filter((s) => s.n > 0);
+const talentCopy = (await getEntry('pages', 'talent'))?.data.sections;
+const browserWords = Object.fromEntries((talentCopy?.browser?.items ?? []).map((i) => [i.key ?? '', i.label]));
+// Desktop has its own scenes for the people (all three) and for where they've spoken (Stride Speakers').
+const deskPeople = members.length > 0;
+const deskPlacements = page === 'speakers' && seen.length > 0;
+---
+
+{/* The opening's lighting cues, decided before the hero is drawn so nothing shows lit first: a fresh visit (not a
+    reload, a return or a link to somewhere down the page) at the top, motion allowed. Stride Podcasts has none of its
+    own in the styles: its cue is the ON AIR sign. */}
+<script is:inline>
+  (() => {
+    const nav = performance.getEntriesByType('navigation')[0];
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if ((nav && nav.type !== 'navigate') || location.hash || scrollY > innerHeight * 0.4) return;
+    document.documentElement.classList.add('spec-cue');
+  })();
+</script>
+
+<section class="spec spec--hero" aria-labelledby="spec-title" data-tone="talent" data-look="deep" data-page={page}>
+  <div class="spec__inner">
+    <Breadcrumbs items={crumbs} tone="dark" />
+    <p class="exp-label">{hero.eyebrow}</p>
+    {page === 'podcasts' && <PodcastOnAir />}
+    <h1 class="spec__title exp-title" id="spec-title">{hero.headline}</h1>
+    <p class="spec__lead">{hero.body}</p>
+    {stats.length > 0 && (
+      /* The division, counted from the roster (counting up as the page opens: spec-scenes.ts). */
+      <p class="spec__stats">
+        {stats.map((s) => <span class="spec__stat"><b data-spec-count={s.n}>{s.n}</b> {s.label}</span>)}
+      </p>
+    )}
+    {hero.cta && (
+      <a class="exp-pill" href={hero.cta.href}>
+        {hero.cta.label}
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
+      </a>
+    )}
+    <DraftTag status={hero.status} />
+  </div>
+  {page === 'sport' && members.length > 0 && <SportBoard athletes={members} profile={routes.creator('')} />}
+</section>
+
+{/* The people, in scenes of their own. */}
+{deskPeople && (
+  <div data-spec-desk>
+    {page === 'sport' && (
+      <>
+        <RosterBrowser eyebrow={people.eyebrow} headline={people.headline} creators={members.slice(0, 17)} totals={{ '': members.length }} divisions={[]} niches={[]} copy={browserWords} tools={false} pageSize={17} sizes="(min-width: 1024px) 16vw, 50vw" cta={{ label: t('spec.sport.all'), href: '/talent/roster?division=sport' }} />
+        <SportSquad profile={routes.creator('')} />
+      </>
+    )}
+    {/* Stride Podcasts has no people scene (the owner, 2026-11-13: the radio dial is gone and its section with it). */}
+    {page === 'speakers' && <SpeakerStage profile={routes.creator('')} people={{ eyebrow: people.eyebrow, headline: people.headline }} placements={{ eyebrow: placements.eyebrow, headline: placements.headline }} speakers={members} seen={seen} />}
+  </div>
+)}
+
+{/* Only while the division has no one yet (its scenes stand in for this otherwise). */}
+{!deskPeople && (
+<section class="spec" aria-labelledby="spec-people" data-tone="talent" data-look="deep" data-page={page}>
+  <div class="spec__inner">
+    <p class="exp-label">{people.eyebrow}</p>
+    <h2 class="spec__head exp-title" id="spec-people">{people.headline}</h2>
+    {members.length > 0 ? (
+      <div class="spec__grid">
+        {members.map((c) => <CreatorCard creator={c} />)}
+      </div>
+    ) : (
+      <PlaceholderNotice variant="block" label="Awaiting Stride">{people.awaiting?.join(', ')}</PlaceholderNotice>
+    )}
+  </div>
+</section>
+)}
+
+{videos.length > 0 && <VideoWall id="spec-videos" eyebrow={placements.eyebrow} headline={placements.headline} body={placements.body} videos={videos} />}
+
+{videos.length === 0 && !deskPlacements && (
+<section class="spec" aria-labelledby="spec-placements" data-tone="talent" data-look="deep">
+  <div class="spec__inner">
+    <p class="exp-label">{placements.eyebrow}</p>
+    <h2 class="spec__head exp-title" id="spec-placements">{placements.headline}</h2>
+    {seen.length > 0 ? (
+      <ul class="spec__seen" role="list">
+        {seen.map((item) => (
+          <li>
+            <a class="spec__seen-pic" href={item.href} target="_blank" rel="noopener">
+              <img src={item.image} alt={item.alt ?? ''} loading="lazy" decoding="async" sizes="(min-width: 1024px) 22vw, 46vw" style={item.position ? `object-position: ${item.position}` : undefined} />
+              <span class="visually-hidden">: the post on Instagram, in a new tab</span>
+            </a>
+            {item.who && <a class="spec__seen-who exp-label" href={item.who.href}>{item.who.name}</a>}
+            <h3 class="spec__seen-what">{item.label}</h3>
+            {item.copy && <p class="spec__seen-text">{item.copy}</p>}
+          </li>
+        ))}
+      </ul>
+    ) : work.length > 0 ? (
+      <ul class="spec__work" role="list">
+        {work.map((w) => (
+          <li>
+            <a href={routes.caseStudy(w.id)}>
+              <span class="spec__work-title">{w.data.title}</span>
+              <span class="spec__work-text">{w.data.summary}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <PlaceholderNotice variant="block" label="Awaiting Stride">{placements.awaiting?.join(', ')}</PlaceholderNotice>
+    )}
+  </div>
+</section>
+)}
+
+<section class="spec spec--close" aria-labelledby="spec-close" data-tone="talent" data-look="deep">
+  <div class="spec__inner">
+    <h2 class="spec__title exp-title" id="spec-close">{close.headline}</h2>
+    <p class="spec__lead">{close.body}</p>
+    {close.cta && (
+      <a class="exp-pill" href={close.cta.href}>
+        {close.cta.label}
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
+      </a>
+    )}
+  </div>
+</section>
+
+{/* Instead of Stride Talent's wall, these pages stand in front of their own footage, on every screen (the
+    frontmatter's `reels`), fixed behind everything, sharp, under the grain and a navy that is deepest behind the
+    words. Two shots of one moment each play their part (data-from, data-to) and dissolve into the other; one shot
+    alone plays whole and goes round (spec-reel.ts). */}
+{/* The creators picked ("Meet our talents") and their profiles over the page. */}
+<Tray list="creators" />
+<CreatorSheet data={sheetData} />
+
+{reel ? (
+  <div class="exp-haze spec-reel" aria-hidden="true" data-page={page}>
+    {reel.shots.map((shot, i) => (
+      <video muted playsinline preload="none" poster={i === 0 ? reel.poster : undefined} tabindex="-1" data-spec-reel data-from={shot.from} data-to={shot.to} style={shot.place}>
+        <source src={shot.src} type="video/mp4" />
+      </video>
+    ))}
+    <span class="spec-reel__deep"></span>
+    {page === 'sport' && <span class="spec-reel__cue"></span>}
+  </div>
+) : (
+  <TalentWall />
+)}
+
+<style>
+  /* The footage: behind the whole page, sharp (no blur), under a dark navy and the grain. */
+  .spec-reel {
+    --haze-blur: 0px;
+    --haze-mask: none;
+    position: fixed;
+    z-index: -1;
+  }
+
+  /* The navy over it: dark all over (the owner's call), deepest on the left behind the words, lighter on the
+     right where the play is. As the page scrolls on it deepens further (--deep, from the script), so what follows
+     the hero reads on it too: on desktop that's a layer of its own over this one (.spec-reel__deep, below), so a
+     scroll only changes how much of it shows and nothing screen-sized is repainted. The grain is the shared one, at
+     its usual strength. */
+  .spec-reel::before {
+    background: linear-gradient(90deg, rgb(var(--navy-900-rgb) / 0.95), rgb(var(--navy-900-rgb) / 0.9) 30%, rgb(var(--navy-900-rgb) / 0.74) 50%, rgb(var(--navy-900-rgb) / 0.56) 68%, rgb(var(--navy-900-rgb) / 0.5));
+  }
+
+  /* Stride Speakers' studio is dark as it is, lit only on its stage, so its navy is lighter on the right, and
+     deepens more as the page scrolls on. */
+  .spec-reel[data-page='speakers']::before {
+    background: linear-gradient(90deg, rgb(var(--navy-900-rgb) / 0.95), rgb(var(--navy-900-rgb) / 0.9) 30%, rgb(var(--navy-900-rgb) / 0.66) 50%, rgb(var(--navy-900-rgb) / 0.4) 68%, rgb(var(--navy-900-rgb) / 0.3));
+  }
+
+  .spec-reel__deep,
+  .spec-reel__cue {
+    display: none;
+  }
+
+  @media (min-width: 1024px) {
+    .spec-reel__deep,
+    .spec-reel__cue {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: var(--navy-900);
+      pointer-events: none;
+    }
+
+    .spec-reel__deep {
+      display: block;
+      opacity: calc(var(--deep, 0) * 0.4);
+      will-change: opacity;
+    }
+
+    .spec-reel[data-page='speakers'] .spec-reel__deep {
+      opacity: calc(var(--deep, 0) * 0.6);
+    }
+
+    /* The camera (spec-reel.ts): moving in a little over the first screen of scrolling, around the shot's subject, and
+       drifting a touch against the pointer. Both are nothing until the page moves. */
+    .spec-reel video {
+      transform-origin: var(--at, 50%) var(--ay, 50%);
+      scale: var(--push, 1);
+      translate: var(--drift, 0 0);
+    }
+  }
+
+  /* The opening's lighting cues (html.spec-cue, set as the page starts; cleared by spec-reel.ts once they've played).
+     Stride Sport: the floodlights come on in three banks, the second flickering as it catches, before the LED board
+     powers up (SportBoard.astro). Stride Speakers: the house lights go down for the show, the studio a little
+     brighter at first, then as it is. */
+  @media (prefers-reduced-motion: no-preference) {
+    :global(html.spec-cue) .spec-reel__cue {
+      display: block;
+      animation: spec-floods 1020ms ease-out both;
+    }
+
+    :global(html.spec-cue) .spec-reel[data-page='speakers']::before {
+      animation: spec-house 1800ms cubic-bezier(0.4, 0, 0.2, 1) 300ms both;
+    }
+
+    @keyframes spec-floods {
+      0%,
+      29.4% {
+        opacity: 0.8;
+      }
+      41.2% {
+        opacity: 0.52;
+      }
+      44.1% {
+        opacity: 0.4;
+      }
+      47.1%,
+      58.8% {
+        opacity: 0.52;
+      }
+      70.6%,
+      88.2% {
+        opacity: 0.26;
+      }
+      100% {
+        opacity: 0;
+      }
+    }
+
+    @keyframes spec-house {
+      from {
+        opacity: 0.55;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+  }
+
+  /* The two shots take turns (the script): the next one comes in over the one that's ending, both under the navy,
+     so a cut is a dissolve and nothing behind ever shows through. Without the script, the first one's picture
+     stands. Each is moved to the right (--shift, set per shot), which puts its subject clear of the headline, and
+     cut around that subject (--at) on screens narrower than the footage, so it stays put whatever the screen's
+     shape; its left edge melts into the navy, so no edge shows where it starts. */
+  .spec-reel video {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-position: var(--at, 0%) var(--ay, 50%);
+    filter: saturate(1.06) contrast(1.04);
+    transform: translateX(var(--shift, 0%));
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%);
+    mask-image: linear-gradient(90deg, transparent, #000 22%);
+    opacity: 0;
+  }
+
+  .spec-reel:not(.is-live) video:first-child,
+  .spec-reel video.is-under {
+    opacity: 1;
+  }
+
+  .spec-reel video.is-under {
+    z-index: -1;
+  }
+
+  .spec-reel video.is-on {
+    z-index: 0;
+    opacity: 1;
+    transition: opacity 450ms linear;
+  }
+
+  /* Phones and tablets: the words sit in the lower half of the screen, so the footage takes the upper part (cut
+     around the play, --focus per shot) and melts into the navy before the words begin. */
+  @media (max-width: 1023px) {
+    .spec-reel::before {
+      background:
+        linear-gradient(rgb(var(--navy-900-rgb) / calc(var(--deep, 0) * 0.6)), rgb(var(--navy-900-rgb) / calc(var(--deep, 0) * 0.6))),
+        linear-gradient(180deg, rgb(var(--navy-900-rgb) / 0.62), rgb(var(--navy-900-rgb) / 0.5) 24%, rgb(var(--navy-900-rgb) / 0.78) 46%, rgb(var(--navy-900-rgb) / 0.96) 60%);
+    }
+
+    .spec-reel[data-page='speakers']::before {
+      background:
+        linear-gradient(rgb(var(--navy-900-rgb) / calc(var(--deep, 0) * 0.7)), rgb(var(--navy-900-rgb) / calc(var(--deep, 0) * 0.7))),
+        linear-gradient(180deg, rgb(var(--navy-900-rgb) / 0.42), rgb(var(--navy-900-rgb) / 0.3) 24%, rgb(var(--navy-900-rgb) / 0.7) 46%, rgb(var(--navy-900-rgb) / 0.96) 60%);
+    }
+
+    .spec-reel video {
+      inset: 0 0 auto;
+      height: 56svh;
+      object-position: var(--focus, 50%) var(--fy, 50%);
+      transform: none;
+      -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent);
+      mask-image: linear-gradient(180deg, #000 60%, transparent);
+    }
+  }
+
+  .spec {
+    position: relative;
+    padding-block: clamp(56px, 9vh, 110px);
+    color: rgb(var(--ink));
+  }
+
+  /* Desktop: the same up to 1080px tall, growing on a taller screen as the type does (before the hero's own top). */
+  @media (min-width: 1024px) {
+    .spec {
+      padding-block: clamp(3.5rem, 9vh, 6.875rem);
+    }
+  }
+
+  .spec--hero {
+    display: grid;
+    align-items: end;
+    min-height: 88svh;
+    padding-top: calc(var(--header-h) + var(--space-6));
+  }
+
+  .spec__inner {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-4);
+    min-width: 0;
+    margin-inline: var(--margin);
+  }
+
+  .spec__title {
+    font-size: clamp(3rem, 8.4vw, 9rem);
+  }
+
+  /* The headline keeps to two lines on wide screens too (as it sets at 1440), so the footage's subject stays clear
+     of it on the right. It stands alone, on both pages: no breadcrumb trail and no label above it (the owner's call;
+     the label only repeated the headline). The trail's structured data stays in the page. Every screen. */
+  @media all {
+    .spec--hero .spec__title {
+      max-width: 8em;
+    }
+
+    .spec--hero :global(.crumbs),
+    .spec--hero .exp-label {
+      display: none;
+    }
+  }
+
+  .spec--close .spec__title {
+    font-size: clamp(2.5rem, 5.6vw, 6rem);
+  }
+
+  /* Desktop: the headline stays lit, as Stride Talent's does: a soft glow of ice around the letters and a sheen of
+     light crossing them every few seconds. Below it, the division counted. */
+  .spec__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem 1.75rem;
+  }
+
+  .spec__stat {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5625rem;
+    font-family: var(--font-mono);
+    font-size: var(--type-label);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgb(var(--ink) / 0.74);
+  }
+
+  .spec__stat b {
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 2.6vw, 2.5rem);
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    color: rgb(var(--ink));
+    text-shadow: 0 0 1.375rem rgb(var(--ice-rgb) / 0.45);
+  }
+
+  /* While a figure counts up it keeps its final width (the same number, unseen, under it), so the words beside it
+     don't move along as digits are added. */
+  .spec__stat b {
+    display: inline-flex;
+    flex-direction: column;
+  }
+
+  .spec__stat b::after {
+    content: attr(data-spec-count);
+    height: 0;
+    overflow: hidden;
+    visibility: hidden;
+  }
+
+  @media (min-width: 1024px) {
+    .spec--hero {
+      padding-bottom: clamp(6rem, 14vh, 9.375rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .spec--hero .spec__title {
+      background: var(--title-sheen) 100% 0 / 300% 100% no-repeat;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: spec-sheen 6.5s ease-in-out 1.6s infinite;
+    }
+
+    @keyframes spec-sheen {
+      0%,
+      62% {
+        background-position: 100% 0;
+      }
+      100% {
+        background-position: 0% 0;
+      }
+    }
+  }
+
+  .spec__lead {
+    max-width: 44ch;
+    font-size: clamp(1.0625rem, 1.3vw, 1.3125rem);
+    color: rgb(var(--ink) / 0.84);
+  }
+
+  .spec__head {
+    font-size: clamp(2rem, 3.4vw, 3.5rem);
+  }
+
+  .spec__grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(8px, 1vw, 14px);
+    width: 100%;
+    margin-top: var(--space-3);
+  }
+
+  /* Stride Podcasts' pictures are its shows' own channel pictures: square, and often a name or a mark. They show
+     whole, at the top of the card, not cut to its shape. */
+  .spec[data-page='podcasts'] .spec__grid :global(.ccc__photo) {
+    background: rgb(4 12 28 / 0.72);
+  }
+
+  .spec[data-page='podcasts'] .spec__grid :global(.ccc__photo img) {
+    object-fit: contain;
+    object-position: 50% 0;
+  }
+
+  /* Where they've spoken, in pictures: photographs without frames, four to a row; under each, who it is, what it
+     was and when. The picture opens the post it comes from. */
+  .spec__seen {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(24px, 2.4vw, 40px) clamp(8px, 1vw, 14px);
+    width: 100%;
+    margin-top: var(--space-3);
+  }
+
+  .spec__seen li {
+    display: grid;
+    align-content: start;
+    justify-items: start;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .spec__seen-pic {
+    display: block;
+    overflow: hidden;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    margin-bottom: 8px;
+    border-radius: 14px;
+    background: rgb(14 24 42);
+  }
+
+  .spec__seen-pic img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: scale 900ms var(--ease-out);
+  }
+
+  .spec__seen-pic:hover img {
+    scale: 1.04;
+  }
+
+  .spec__seen-who {
+    text-decoration: underline;
+    text-decoration-color: rgb(var(--hair) / 0.4);
+    text-underline-offset: 4px;
+    transition: color 220ms var(--ease-out);
+  }
+
+  .spec__seen-who:hover {
+    color: rgb(var(--ink));
+  }
+
+  .spec__seen-what {
+    font-family: var(--font-display);
+    font-size: clamp(1.125rem, 1.5vw, 1.5rem);
+    font-weight: 800;
+    line-height: 1.1;
+  }
+
+  .spec__seen-text {
+    font-size: 0.9375rem;
+    color: rgb(var(--ink) / 0.8);
+  }
+
+  .spec__seen-pic:focus-visible,
+  .spec__seen-who:focus-visible {
+    outline: 2px solid rgb(var(--tone-lit));
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .spec__seen-pic img {
+      transition: none;
+    }
+  }
+
+  .spec__work {
+    display: grid;
+    width: 100%;
+    margin-top: var(--space-3);
+  }
+
+  .spec__work a {
+    display: grid;
+    gap: 4px;
+    padding-block: var(--space-4);
+    border-top: 1px solid rgb(var(--hair) / 0.16);
+  }
+
+  .spec__work-title {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 800;
+  }
+
+  .spec__work-text {
+    max-width: 60ch;
+    color: rgb(var(--ink) / 0.78);
+  }
+
+  /* ---------- Phones and tablets ---------- */
+  @media (max-width: 1023px) {
+    .spec__grid,
+    .spec__seen {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* The floodlights' cue (Stride Sport) over the footage here too. */
+    .spec-reel__cue {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: var(--navy-900);
+      pointer-events: none;
+    }
+
+    /* The words stand clear of Stride Sport's board along the hero's foot. */
+    .spec--hero:has(:global(.board)) {
+      padding-bottom: 5rem;
+    }
+
+    .spec__stat b {
+      font-size: 2rem;
+    }
+  }
+</style>
+
+<script>
+  import { initSpecReel } from '@/scripts/system/spec-reel';
+  import { initSpecScenes } from '@/scripts/system/spec-scenes';
+  initSpecReel();
+  initSpecScenes();
+</script>

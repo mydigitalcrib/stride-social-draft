@@ -1,0 +1,13 @@
+# Our History copy. The brief asks for a timeline with verified milestones and photography (PDF §7); the
+# milestones are Stride's own history, from the owner (2026-11-13, src/content/history/milestones.yaml).
+sections:
+  hero:
+    status: draft
+    eyebrow: Our group
+    headline: Our history.
+    body: How two friends, a camera and an online shop became a group of three businesses.
+
+  # The road: interface copy written by us.
+  road:
+    status: draft
+    body: Scroll or drag along the road

@@ -1,0 +1,1688 @@
+---
+// The menu that ends a page (first built for Stride Social): a row of glass cards above a bar of tabs at
+// the foot of the screen. Tabs swap the cards; choosing a card grows its big card (BigCard) over the row.
+// The last item of the bar can be a plain link. Behaviour: src/scripts/system/deck.ts, grow.ts. Without
+// the script, the first tab shows and cards are plain links. `variant` is each division's own way on desktop:
+// `spines` (Stride Social: full photos, one open and the rest narrowed), `lineup` (Stride Talent: a row of
+// posters in black and white, the nearest stepping forward in colour), `stairs` (Stride Academy: a staircase with a lit line
+// along its tops). `row` is the plain row. Since 2026-11-13 phones and tablets have the variants too (a phone's spines
+// stacked one above another).
+import BigCard from './BigCard.astro';
+import type { DeckTab, DeckVariant, Tone, Look } from '@/lib/experience';
+import { pad } from '@/lib/experience';
+
+export interface Props {
+  id: string;
+  label: string;
+  tabs: DeckTab[];
+  /** `keep` counts that list on the link, and carries it to the form (shortlist.ts). */
+  link?: { label: string; href: string; icon?: string; keep?: 'brief' | 'creators' };
+  variant?: DeckVariant;
+  tone?: Tone;
+  /** The palette colour it lives in. */
+  look?: Look;
+  /** Desktop: a few words above the cards, when the menu opens the page. */
+  intro?: string;
+  /** Desktop: the division's name above the cards instead, margin to margin ("Stride" in outline, as on the
+   *  homepage's rows), with its line on the left and the intro on the right. */
+  title?: { pre: string; name: string; line?: string };
+  /** Desktop: a silent looping video behind the whole section, blurred, with noise (deck.ts plays it). `stars`: the
+   *  Social globe's starfield, as sharp and lightly shaded as the globe has it, running on under the next section's
+   *  top, where the globe's own fades in over it, so the two read as one sky. */
+  background?: { video: string; poster: string; speed?: number; stars?: boolean };
+}
+
+const { id, label, tabs: allTabs, link, tone = 'group', look = 'deep', variant = 'row', intro, title, background } = Astro.props;
+const opens = variant === 'spines';
+const lineup = variant === 'lineup';
+// A line-up with one tab of quotes (Stride Talent's creator stories): no tab bar, the quote written large beside.
+const said = lineup && allTabs.filter((t) => t.cards.length > 0).length === 1 && allTabs.some((t) => t.cards.some((c) => c.quote));
+const stairs = variant === 'stairs';
+const tabs = allTabs.filter((t) => t.cards.length > 0);
+
+const icons: Record<string, string> = {
+  megaphone: '<path d="M3 10v4l11 4V6L3 10Z"/><path d="M7 15.5V19h3v-2.4"/><path d="M17.5 9.5a3.5 3.5 0 0 1 0 5"/><path d="M20 7a7 7 0 0 1 0 10"/>',
+  layers: '<path d="M12 3.5 3 8l9 4.5L21 8l-9-4.5Z"/><path d="m3 12 9 4.5 9-4.5"/><path d="m3 16 9 4.5 9-4.5"/>',
+  bag: '<path d="M5.5 8h13l1 12.5h-15L5.5 8Z"/><path d="M9 10.5V7a3 3 0 0 1 6 0v3.5"/>',
+  wave: '<path d="M3 12h1"/><path d="M7 9v6"/><path d="M10.5 5v14"/><path d="M14 8v8"/><path d="M17.5 10v4"/><path d="M20.5 12h.5"/>',
+  grid: '<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
+  play: '<circle cx="12" cy="12" r="9"/><path d="m10 8.5 5.5 3.5-5.5 3.500v-7Z"/>',
+  target: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4"/><path d="m12 12 8-8"/>',
+  mail: '<rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="m3.5 7 8.5 6 8.5-6"/>',
+  people: '<circle cx="9" cy="8" r="3.2"/><path d="M3.2 19.5c0-3.2 2.6-5.8 5.8-5.800s5.8 2.6 5.8 5.8"/><circle cx="16.8" cy="9" r="2.5"/><path d="M15.8 14c2.8.3 5 2.6 5 5.5"/>',
+  quote: '<path d="M5 18.5V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H8.500L5 18.5Z"/>',
+  star: '<path d="m12 3.5 2.6 5.5 6 .8-4.4 4.1 1.1 6L12 17l-5.3 2.9 1.1-6L3.4 9.800l6-.800L12 3.500Z"/>',
+  cap: '<path d="M12 4.5 1.8 9.2 12 14l10.2-4.800L12 4.500Z"/><path d="M6.2 11.400v4.400c0 1.4 2.6 3 5.8 3s5.8-1.6 5.8-3v-4.4"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 3.8 5.5 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.5-3.8-9S9.5 5.5 12 3Z"/>',
+  book: '<path d="M4 5.500A2.5 2.5 0 0 1 6.5 3H20v15H6.500A2.5 2.5 0 0 0 4 20.500v-15Z"/><path d="M4 20.500A2.5 2.5 0 0 0 6.5 21H20"/>',
+  chat: '<path d="M4 12a8 8 0 0 1 8-8 8 8 0 0 1 8 8 8 8 0 0 1-8 8H4l1.8-3A8 8 0 0 1 4 12Z"/>',
+};
+---
+
+<section class:list={['deck', { 'deck--made': variant !== 'row', 'deck--open': opens, 'deck--lineup': lineup, 'deck--said': said, 'deck--stairs': stairs }]} id={id} aria-label={label} data-deck data-variant={variant} data-tone={tone} data-look={look}>
+  {background && (
+    <div class:list={['exp-haze', { 'deck__haze--stars': background.stars }]} aria-hidden="true">
+      <video muted loop playsinline preload="none" poster={background.poster} tabindex="-1" data-haze-video data-speed={background.speed}>
+        <source src={background.video} type="video/mp4" />
+      </video>
+    </div>
+  )}
+  <div class="deck__inner container-wide">
+    {title ? (
+      <header class="deck__head">
+        <p class="deck__title" id={`${id}-title`} data-deck-title><span class="deck__title-pre">{title.pre}</span> <span class="deck__title-name">{title.name}</span></p>
+        {(title.line || intro) && (
+          <div class="deck__head-row">
+            {title.line && <p class="deck__line">{title.line}</p>}
+            {intro && <p class="deck__lede">{intro}</p>}
+          </div>
+        )}
+      </header>
+    ) : (
+      intro && <p class="deck__intro exp-title desk-only">{intro}</p>
+    )}
+    <div class="deck__panels">
+      {tabs.map((t, ti) => (
+        <div class="deck__panel" id={`${id}-panel-${t.key}`} role="tabpanel" aria-labelledby={`${id}-tab-${t.key}`} hidden={ti !== 0} data-deck-panel={t.key} data-grow-row>
+          {stairs && t.cards.length > 1 && (
+            <>
+              <p class="deck__stair-title" aria-hidden="true">{t.label}</p>
+              <svg class="deck__stair-line" aria-hidden="true" data-stair-line>
+                <path class="deck__stair-base"></path>
+                <path class="deck__stair-lit" pathLength="1"></path>
+              </svg>
+              <span class="deck__climber" aria-hidden="true" data-stair-climber></span>
+            </>
+          )}
+          <ul class="deck__cards" role="list" style={`--n: ${t.cards.length}`}>
+            {t.cards.map((c, i) => (
+              <li class:list={{ 'is-open': opens && i === 0 }} style={`--i: ${i}`} data-quote={said ? c.quote : undefined} data-who={said ? (c.attribution ?? c.name) : undefined}>
+                <a class:list={['deck__card', { 'on-photo': c.image || opens || lineup }]} href={c.href} draggable="false" data-grow-card={c.direct ? undefined : `${t.key}-${i}`} data-desk={c.direct ? undefined : t.atDesk}>
+                  {/* Past 1920 wide the cards grow with the screen (tokens.css), so the width there is a share of it. A
+                      plain row's cards share the content's width (about 84vw on desktop) four at most to a screen. */}
+                  {c.image && <img class="deck__image" src={c.image.src} alt="" style={c.image.position ? `object-position: ${c.image.position}` : undefined} sizes={opens ? '(min-width: 1921px) 33.4vw, 640px' : lineup ? '(min-width: 1921px) 18.75vw, 360px' : `(min-width: 1024px) ${Math.ceil(84 / Math.min(4, t.cards.length))}vw, 300px`} loading="lazy" decoding="async" draggable="false" />}
+                  {c.mark ? (
+                    <>
+                      {/* Desktop: one triangle on all of them, standing as the Stride mark's do (its foot flat, its upright
+                          side on the right). Phones and tablets keep their icons. */}
+                      <svg class="deck__mark desk-only" viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 19.5H4.5L19.5 4.5Z"></path></svg>
+                      <svg class="deck__mark deck__mark--small" viewBox="0 0 24 24" aria-hidden="true" set:html={icons[c.mark]} />
+                    </>
+                  ) : t.numbered ? (
+                    <span class="deck__number" aria-hidden="true">{pad(i + 1)}</span>
+                  ) : null}
+                  <span class="deck__text">
+                    <h2 class="deck__name" style={lineup ? `--len: ${Math.max(...c.name.split(/\s+/).map((w) => w.length))}` : undefined}>{c.name}</h2>
+                    {lineup && c.quote ? <span class="deck__copy">{c.quote}</span> : c.text && <span class="deck__copy">{c.text}</span>}
+                    {stairs && c.chips?.[0] && <span class="deck__chip">{c.chips[0]}</span>}
+                    {stairs && c.html && <span class="deck__html" set:html={c.html} />}
+                  </span>
+                  {opens && <span class="deck__spine" aria-hidden="true">{c.name}</span>}
+                  <span class="deck__arrow" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+
+      {tabs.flatMap((t) =>
+        t.cards.flatMap((c, i) => (c.direct ? [] : [<BigCard card={c} growKey={`${t.key}-${i}`} eyebrow={t.label} index={i} total={t.cards.length} opens={opens} />])),
+      )}
+    </div>
+
+    {/* The chosen poster's words, large (deck-lineup.ts fills it in); the card keeps them for screen readers. */}
+    {said && (
+      <blockquote class="deck__said" aria-hidden="true" data-lineup-said>
+        <p class="deck__said-text"></p>
+        <footer class="deck__said-who exp-label"></footer>
+      </blockquote>
+    )}
+
+    <div class="deck__bar">
+      {variant !== 'row' && <span class="deck__pill" aria-hidden="true" data-deck-pill></span>}
+      <div class="deck__tabs" role="tablist" aria-label={label} data-deck-tabs>
+        {tabs.map((t, i) => (
+          <button class="deck__tab" type="button" role="tab" id={`${id}-tab-${t.key}`} aria-controls={`${id}-panel-${t.key}`} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-deck-tab={t.key} data-deck-anchor={t.anchor}>
+            <svg viewBox="0 0 24 24" aria-hidden="true" set:html={icons[t.icon]} />
+            {t.label}
+          </button>
+        ))}
+      </div>
+      {link && (
+        <a class="deck__tab deck__tab--link" href={link.href} data-keep-cta={link.keep} data-keep-base={link.keep ? link.href : undefined}>
+          <svg viewBox="0 0 24 24" aria-hidden="true" set:html={icons[link.icon ?? 'mail']} />
+          {link.label}
+          {link.keep && <span class="deck__count" data-tray={link.keep} hidden><span data-tray-count>0</span></span>}
+        </a>
+      )}
+    </div>
+  </div>
+  {tabs.flatMap((t) => (t.anchor ? [<span class="deck__anchor" id={t.anchor}></span>] : []))}
+</section>
+
+<style>
+  .deck {
+    position: relative;
+    display: grid;
+    min-height: 100svh;
+    padding-block: var(--space-8) clamp(24px, 4.5vh, 44px);
+    overflow: hidden;
+    background:
+      radial-gradient(70% 28% at 50% 72%, rgb(var(--tone-wash) / 0.2), transparent),
+      radial-gradient(60% 30% at 50% 30%, rgb(var(--tone-depth) / 0.4), transparent);
+    color: rgb(var(--ink));
+  }
+
+  /* The lit horizon along the foot. */
+  .deck::after {
+    content: '';
+    position: absolute;
+    inset: auto 12% 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgb(var(--tone-lit) / 0.8), transparent);
+    box-shadow: 0 0 22px 2px rgb(var(--tone-glow) / 0.5);
+  }
+
+  /* Desktop: no line, so the page runs on into the footer with nothing between them. */
+  @media (min-width: 1024px) {
+    .deck::after {
+      display: none;
+    }
+  }
+
+  .deck__anchor {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .deck__inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-rows: 1fr auto; /* the cards centred in the room above, the tabs at the foot */
+    gap: clamp(var(--space-5), 4vh, var(--space-7));
+    width: 100%;
+  }
+
+  /* Desktop: the words above the cards. The cards give up the room, so it all still fits one screen. */
+  @media (min-width: 1024px) {
+    .deck__inner:has(> .deck__intro),
+    .deck__inner:has(> .deck__head) {
+      grid-template-rows: auto minmax(0, 1fr) auto;
+    }
+
+    /* The name starts clear of the logo. */
+    .deck:has(> .deck__inner > .deck__head) {
+      padding-top: calc(var(--header-h) + var(--space-4));
+    }
+  }
+
+  /* The division's name, margin to margin, the way the homepage's rows set it, and no taller than the screen
+     allows; its line on the left and what it does on the right, along one baseline. Desktop only, so in rem: it
+     grows with the screen past 1920×1080 (tokens.css). */
+  .deck__head {
+    display: grid;
+    gap: clamp(0.625rem, 1.8vh, 1.25rem);
+    min-width: 0;
+  }
+
+  /* 9.85: "STRIDE SOCIAL" is 9.7 of its own font size wide in this type, with a little to spare. */
+  .deck__title {
+    font-family: var(--font-display);
+    font-size: min(calc((100vw - 2 * var(--margin)) / 9.85), 15vh);
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    line-height: 0.86;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: rgb(var(--ink));
+  }
+
+  /* A sheen of light crosses the name every few seconds, as across a lit sign (the owner, 2026-11-12); no glow round
+     the letters, as on every title (the owner, 2026-11-13). */
+  /* Both words solid and lit alike, "Stride" as bright as "Social" (the owner, 2026-11-13): one sheen crosses the
+     whole name. */
+  @media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+    .deck__title {
+      background: var(--title-sheen) 100% 0 / 300% 100% no-repeat;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: deck-sheen 6.5s ease-in-out 2.4s infinite;
+    }
+
+    /* Three times the name's width, so it always covers it: at 100% its light is off to the left, at 0% off to the
+       right. */
+    @keyframes deck-sheen {
+      0%,
+      62% {
+        background-position: 100% 0;
+      }
+      100% {
+        background-position: 0% 0;
+      }
+    }
+  }
+
+  .deck__head-row {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: var(--space-6);
+  }
+
+  .deck__line {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 2.1vw, 2.375rem);
+    font-weight: 800;
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+  }
+
+  .deck__lede {
+    max-width: 31rem;
+    font-size: clamp(0.9375rem, 1vw, 1.0625rem);
+    line-height: 1.45;
+    text-align: right;
+    text-wrap: balance;
+    color: rgb(var(--ink) / 0.78);
+  }
+
+  /* Phones and tablets: the name above the cards too (the owner, 2026-11-13), clear of the logo; on a phone its two
+     words one above the other, margin to margin ("SOCIAL" is about 4.6 of its own size wide); its line, then what it
+     does. */
+  @media (max-width: 1023px) {
+    .deck:has(> .deck__inner > .deck__head) {
+      padding-top: calc(var(--header-h) + var(--space-3));
+    }
+
+    .deck__head {
+      gap: var(--space-3);
+    }
+
+    .deck__head-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-3);
+    }
+
+    .deck__line {
+      font-size: clamp(1.375rem, 6vw, 2rem);
+    }
+
+    .deck__lede {
+      text-align: left;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .deck__title {
+      font-size: calc((100vw - 2 * var(--margin)) / 4.7);
+      white-space: normal;
+    }
+
+    .deck__title-pre,
+    .deck__title-name {
+      display: block;
+    }
+  }
+
+  /* Over a video (every screen since 2026-11-13): the tab bar has no glass of its own, a plain line and the chosen tab
+     a plain outline. The video clips itself, so the section needn't: Social's photos fall out of it (meteors.ts). */
+  @media all {
+    .deck:has(> .exp-haze) {
+      overflow: visible;
+    }
+
+    .deck:has(> .exp-haze) .deck__bar {
+      background: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+
+    .deck:has(> .exp-haze) .deck__pill {
+      background: none;
+      box-shadow: inset 0 0 0 1.5px rgb(var(--ink));
+    }
+
+    .deck > .deck__haze--stars {
+      --haze-blur: 0.0375rem;
+      --haze-shade: 0.16;
+      --haze-mask: none;
+      bottom: -10svh;
+    }
+
+    .deck.is-falling .deck__cards > li {
+      pointer-events: none;
+      will-change: transform;
+    }
+  }
+
+  /* In the headline type, as long as it can be and still leave room for the cards (desktop only: rem). */
+  .deck__intro {
+    margin-top: 0.25rem;
+    margin-bottom: calc(-1 * var(--space-2));
+    font-size: clamp(1.25rem, 1.95vw, 2.125rem);
+    line-height: 1;
+    letter-spacing: -0.015em;
+    color: rgb(var(--ink));
+  }
+
+  .deck__panels {
+    position: relative;
+    display: grid;
+    align-items: center;
+  }
+
+  /* ---------- The cards ---------- */
+  .deck__panel[hidden] {
+    display: none;
+  }
+
+  .deck__cards {
+    --gap: clamp(12px, 1.3vw, 20px);
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: var(--gap);
+    animation: deck-in 500ms var(--ease-out);
+  }
+
+  /* More than four: the row slides sideways. */
+  .deck__panel:has(li:nth-child(5)) .deck__cards {
+    grid-auto-columns: calc((100% - 3 * var(--gap)) / 4);
+    padding-block: 8px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+
+  .deck__panel:has(li:nth-child(5)) li {
+    scroll-snap-align: start;
+  }
+
+  .deck__panel:has(li:nth-child(5)) .deck__cards {
+    cursor: grab;
+  }
+
+  .deck__image,
+  .deck__card {
+    -webkit-user-drag: none;
+  }
+
+  @keyframes deck-in {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+  }
+
+  .deck__card {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    height: 100%;
+    min-height: clamp(300px, 54svh, 560px);
+    padding: clamp(18px, 1.6vw, 24px);
+    padding-bottom: 66px;
+    overflow: hidden;
+    border-radius: 22px;
+    background: linear-gradient(165deg, rgb(var(--white-rgb) / calc(0.1 * var(--fill-k))), rgb(var(--white-rgb) / calc(0.03 * var(--fill-k))) 55%, rgb(var(--tone-depth) / 0.2));
+    box-shadow:
+      inset 0 0 0 1px rgb(var(--hair) / 0.18),
+      0 24px 50px -30px rgb(var(--shade) / 0.8);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    transition:
+      box-shadow 400ms var(--ease-out),
+      translate 400ms var(--ease-out);
+  }
+
+  /* Lit: the one under the pointer, or the first while none is. */
+  .deck__cards:not(:hover) li:first-child .deck__card,
+  .deck__card:hover,
+  .deck__card:focus-visible {
+    box-shadow:
+      inset 0 0 0 1.5px rgb(var(--tone-lit) / 0.95),
+      0 0 26px -2px rgb(var(--tone-glow) / 0.6),
+      0 24px 50px -30px rgb(var(--shade) / 0.8);
+  }
+
+  .deck__card:hover,
+  .deck__card:focus-visible {
+    translate: 0 -4px;
+    outline: none;
+  }
+
+  .deck__card:hover .deck__arrow {
+    background: rgb(var(--press));
+    color: rgb(var(--press-on));
+  }
+
+  .deck__card.on-photo {
+    background:
+      linear-gradient(165deg, rgb(var(--white-rgb) / 0.1), rgb(var(--white-rgb) / 0.03) 55%),
+      var(--navy-700);
+  }
+
+  .deck__image {
+    position: absolute;
+    inset: 0 0 0 auto;
+    z-index: -1;
+    width: 62%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+    opacity: 0.6;
+    mask-image: linear-gradient(to left, #000 25%, transparent 95%);
+    transition: opacity 400ms var(--ease-out);
+  }
+
+  .deck__card:hover .deck__image {
+    opacity: 0.85;
+  }
+
+  /* Stride Talent's plain row on desktop (a creator's profile: their work, more creators like them): the photograph
+     is the card, edge to edge, black and white until the pointer brings it to colour, as on the roster
+     (talent/CreatorCard.astro), with a shade rising from the foot for the name. */
+  @media (min-width: 1024px) {
+    .deck[data-tone='talent']:not(.deck--made) .deck__card.on-photo {
+      background: var(--navy-900);
+    }
+
+    .deck[data-tone='talent']:not(.deck--made) .deck__image {
+      inset: 0;
+      width: 100%;
+      opacity: 1;
+      mask-image: none;
+      filter: grayscale(1) contrast(1.04);
+      transition:
+        filter 500ms var(--ease-out),
+        scale 900ms var(--ease-out);
+    }
+
+    .deck[data-tone='talent']:not(.deck--made) .deck__card:hover .deck__image,
+    .deck[data-tone='talent']:not(.deck--made) .deck__card:focus-visible .deck__image {
+      opacity: 1;
+      filter: none;
+      scale: 1.04;
+    }
+
+    .deck[data-tone='talent']:not(.deck--made) .deck__card.on-photo::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: linear-gradient(to top, rgb(var(--navy-900-rgb) / 0.9), rgb(var(--navy-900-rgb) / 0.45) 34%, transparent 58%);
+      pointer-events: none;
+    }
+
+    .deck[data-tone='talent']:not(.deck--made) .deck__name {
+      font-size: clamp(1.375rem, 1.9vw, 2rem);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .deck__mark--small {
+      display: none;
+    }
+  }
+
+  .deck__mark {
+    flex: none;
+    width: 34px;
+    height: 34px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .deck__number {
+    font-family: var(--font-mono);
+    font-size: var(--type-label);
+    letter-spacing: 0.14em;
+    color: rgb(var(--tone-lit));
+  }
+
+  .deck__text {
+    display: grid;
+    gap: var(--space-2);
+    margin-top: auto;
+  }
+
+  .deck__name {
+    font-family: var(--font-display);
+    font-size: clamp(1.25rem, 1.75vw, 1.875rem);
+    font-weight: 800;
+    line-height: 1.08;
+    overflow-wrap: anywhere;
+  }
+
+  .deck__copy {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 5;
+    font-size: 0.8125rem;
+    line-height: 1.38;
+    color: rgb(var(--ink) / 0.84);
+  }
+
+  .deck__arrow {
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgb(var(--navy-900-rgb) / 0.45);
+    color: var(--white);
+    box-shadow: inset 0 0 0 1px rgb(var(--hair) / 0.45);
+    transition:
+      background-color 400ms var(--ease-out),
+      color 400ms var(--ease-out);
+  }
+
+  .deck__arrow svg {
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ---------- The tabs ---------- */
+  .deck__bar {
+    display: flex;
+    padding: 5px;
+    border-radius: 999px;
+    background: rgb(var(--white-rgb) / calc(0.04 * var(--fill-k)));
+    box-shadow: inset 0 0 0 1px rgb(var(--hair) / 0.14);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  .deck__tabs {
+    display: contents;
+  }
+
+  .deck__tab {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 48px;
+    padding-inline: var(--space-3);
+    border-radius: 999px;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    white-space: nowrap;
+    color: rgb(var(--ink) / 0.86);
+    transition:
+      background-color 300ms var(--ease-out),
+      box-shadow 300ms var(--ease-out),
+      color 300ms var(--ease-out);
+  }
+
+  .deck__tab svg {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .deck__tab:hover {
+    color: rgb(var(--ink));
+    background: rgb(var(--white-rgb) / calc(0.05 * var(--fill-k)));
+  }
+
+  .deck__tab[aria-selected='true'] {
+    background: linear-gradient(180deg, rgb(var(--tone-depth) / 0.6), rgb(var(--tone-glow) / 0.16));
+    box-shadow:
+      inset 0 0 0 1.5px rgb(var(--tone-lit) / 0.95),
+      0 0 22px -4px rgb(var(--tone-glow) / 0.7);
+    color: rgb(var(--ink));
+  }
+
+  .deck__tab:focus-visible {
+    outline: 2px solid rgb(var(--tone-lit));
+    outline-offset: 2px;
+  }
+
+  /* ---------- The version that opens (Stride Social; phones and tablets too, 2026-11-13) ----------
+     Full photos, navy under them. One card is open; the others narrow to spines with their names
+     running up them, so nothing reflows as the widths change: the open card's text has a fixed width,
+     worked out from the row's and the number of cards. */
+  .deck__spine {
+    display: none;
+  }
+
+  .deck__count[hidden] {
+    display: none;
+  }
+
+  .deck__count {
+    display: grid;
+    place-items: center;
+    min-width: 22px;
+    height: 22px;
+    padding-inline: 5px;
+    border-radius: 999px;
+    background: rgb(var(--press-on));
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: rgb(var(--press));
+  }
+
+  /* Only desktop adds to the brief (the big cards' keep buttons are .desk-only), so it's in rem. */
+  :global(.deck__fly) {
+    position: fixed;
+    z-index: 200;
+    padding: 0.5rem 0.875rem;
+    border-radius: 999px;
+    background: var(--navy-900);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--white);
+    pointer-events: none;
+  }
+
+  /* (Every screen since 2026-11-13: phones and tablets have the desktop's deck, a phone's spines stacked, below.) */
+  @media all {
+    :global(.js) .deck--made.is-waiting .deck__cards > li {
+      opacity: 0;
+    }
+
+    :global(.js) .deck--made .deck__panels {
+      align-items: stretch;
+    }
+
+    :global(.js) .deck--made .deck__panel:not([hidden]) {
+      display: grid;
+    }
+
+    :global(.js) .deck--open .deck__panel .deck__cards {
+      --grow: 3.2;
+      --pad: clamp(1.125rem, 1.7vw, 1.625rem);
+      display: flex;
+      container-type: inline-size;
+      padding-block: 0;
+      overflow: visible;
+      animation: none;
+      cursor: auto;
+    }
+
+    :global(.js) .deck--open .deck__panel .deck__cards > li {
+      flex: 1 1 0;
+      min-width: 0;
+      transition: flex-grow 680ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    :global(.js) .deck--open .deck__panel .deck__cards > li.is-open {
+      flex-grow: var(--grow);
+    }
+
+    /* A narrow desktop with many cards (eight in a 664px row at 1024): the open card takes a bigger share, so its
+       words get a readable column and the names don't break; the spines still hold theirs. 1280 and wider as drawn
+       (there the open card already reads, so the deck keeps its approved proportions). */
+    @media (max-width: 1279px) {
+      :global(.js) .deck--open .deck__panel .deck__cards {
+        --grow: max(3.2, calc(var(--n) * 0.75));
+      }
+    }
+
+    :global(.js) .deck--open .deck__panel .deck__cards .deck__card {
+      min-height: 0;
+      padding: var(--pad);
+      background: linear-gradient(170deg, var(--navy-500), var(--navy-900));
+      box-shadow:
+        inset 0 0 0 1px rgb(var(--white-rgb) / 0.14),
+        0 1.5rem 3.125rem -1.875rem rgb(var(--shade) / 0.8);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      translate: none;
+      outline: none;
+    }
+
+    :global(.js) .deck--open .deck__panel .deck__cards > li.is-open .deck__card {
+      box-shadow:
+        inset 0 0 0 1.5px rgb(var(--white-rgb) / 0.55),
+        0 1.875rem 3.75rem -1.75rem rgb(var(--shade) / 0.9);
+    }
+
+    :global(.js) .deck--open .deck__panel .deck__cards .deck__card:focus-visible {
+      outline: 2px solid rgb(var(--tone-lit));
+      outline-offset: 3px;
+    }
+
+    /* The shade the words sit on. */
+    :global(.js) .deck--open .deck__card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: linear-gradient(to top, rgb(var(--navy-900-rgb) / 0.9), rgb(var(--navy-900-rgb) / 0.55) 26%, rgb(var(--navy-900-rgb) / 0.12) 52%, rgb(var(--navy-900-rgb) / 0.25));
+      pointer-events: none;
+    }
+
+    :global(.js) .deck--open .deck__image {
+      inset: 0;
+      width: 100%;
+      opacity: 1;
+      mask-image: none;
+      filter: saturate(0.72) brightness(0.8);
+      transition: filter 680ms var(--ease-out);
+    }
+
+    :global(.js) .deck--open li.is-open .deck__image {
+      filter: none;
+    }
+
+    :global(.js) .deck--open .deck__number {
+      font-family: var(--font-display);
+      font-size: clamp(2.5rem, 4vw, 4rem);
+      font-weight: 850;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      color: rgb(var(--white-rgb) / 0.9);
+    }
+
+    :global(.js) .deck--open .deck__text {
+      position: absolute;
+      left: var(--pad);
+      bottom: var(--pad);
+      /* The open card's width, whatever this card's is right now. */
+      width: calc((100cqi - (var(--n) - 1) * var(--gap)) * var(--grow) / (var(--grow) + var(--n) - 1) - 2 * var(--pad) - 3.25rem);
+      margin: 0;
+      opacity: 0;
+      transition: opacity 260ms var(--ease-out);
+    }
+
+    :global(.js) .deck--open li.is-open .deck__text {
+      opacity: 1;
+      transition: opacity 420ms var(--ease-out) 180ms;
+    }
+
+    :global(.js) .deck--open .deck__name {
+      font-size: clamp(1.5rem, 2.3vw, 2.5rem);
+    }
+
+    :global(.js) .deck--open .deck__copy {
+      display: block;
+      overflow: visible;
+      font-size: 0.9375rem;
+      line-height: 1.42;
+      -webkit-line-clamp: none;
+      color: rgb(var(--white-rgb) / 0.9);
+    }
+
+    :global(.js) .deck--open .deck__spine {
+      position: absolute;
+      left: 50%;
+      bottom: var(--pad);
+      display: block;
+      font-family: var(--font-display);
+      font-size: clamp(1.125rem, 1.5vw, 1.5rem);
+      font-weight: 800;
+      line-height: 1;
+      white-space: nowrap;
+      writing-mode: vertical-rl;
+      transform: translateX(-50%) rotate(180deg);
+      transition: opacity 420ms var(--ease-out) 180ms;
+    }
+
+    :global(.js) .deck--open li.is-open .deck__spine {
+      opacity: 0;
+      transition: opacity 180ms var(--ease-out);
+    }
+
+    :global(.js) .deck--open .deck__arrow {
+      opacity: 0;
+      transition:
+        opacity 300ms var(--ease-out),
+        background-color 400ms var(--ease-out),
+        color 400ms var(--ease-out);
+    }
+
+    :global(.js) .deck--open li.is-open .deck__arrow {
+      opacity: 1;
+    }
+
+    :global(.js) .deck--made .deck__card[data-desk='still'] {
+      cursor: default;
+    }
+
+    :global(.js) .deck--made .deck__card[data-desk='still'] .deck__arrow {
+      display: none;
+    }
+
+    /* The row's shadows don't show round a big card. */
+    :global(.js) .deck--open.has-big-card .deck__panel .deck__cards .deck__card {
+      box-shadow: none;
+    }
+
+    /* The bar: one pill slides between the tabs, and Start a Campaign is the button it is. */
+    :global(.js) .deck--made .deck__bar {
+      position: relative;
+      align-items: center;
+    }
+
+    .deck__pill {
+      position: absolute;
+      top: 0.3125rem;
+      bottom: 0.3125rem;
+      left: 0;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgb(var(--tone-depth) / 0.6), rgb(var(--tone-glow) / 0.16));
+      box-shadow:
+        inset 0 0 0 1.5px rgb(var(--tone-lit) / 0.95),
+        0 0 1.375rem -0.25rem rgb(var(--tone-glow) / 0.7);
+      transition:
+        transform 560ms cubic-bezier(0.3, 1.3, 0.45, 1),
+        width 560ms cubic-bezier(0.3, 1.3, 0.45, 1);
+    }
+
+    :global(.js) .deck--made .deck__tab {
+      position: relative;
+    }
+
+    :global(.js) .deck--made.has-pill .deck__tab[aria-selected='true'] {
+      background: none;
+      box-shadow: none;
+    }
+
+    /* The deck's own link is glass, as every button on desktop: the recipe, its easing, light and press come from
+       styles/system/glass.css; here only its place in the bar. */
+    :global(.js) .deck--made .deck__tab--link {
+      flex: none;
+      margin-left: var(--space-2);
+      padding-inline: var(--space-5);
+    }
+
+    /* Stride Talent's card arrows are frosted glass on desktop. */
+    .deck[data-tone='talent'] .deck__card:hover .deck__arrow {
+      background: linear-gradient(135deg, rgb(var(--white-rgb) / calc(0.17 * var(--fill-k))), rgb(var(--white-rgb) / calc(0.05 * var(--fill-k))));
+      box-shadow:
+        inset 0 0 0 1px rgb(var(--hair) / 0.38),
+        inset 0 1px 0 rgb(var(--hair) / 0.5),
+        0 0.75rem 1.75rem -0.875rem rgb(3 10 24 / 0.85);
+      color: rgb(var(--ink));
+      backdrop-filter: blur(0.875rem) saturate(1.4);
+      -webkit-backdrop-filter: blur(0.875rem) saturate(1.4);
+    }
+
+    /* Stride Social, opening its page: no box. The tabs are words, the chosen one lit, with a line of light
+       under it that slides from tab to tab (the pill, drawn as a line); Start a Campaign stays the one button. */
+    :global(.js) .deck--open:has(> .deck__inner > .deck__head) .deck__bar {
+      padding-inline: 0;
+      box-shadow: none;
+    }
+
+    :global(.js) .deck--open:has(> .deck__inner > .deck__head) .deck__tabs .deck__tab {
+      background: none;
+      box-shadow: none;
+      font-size: 1rem;
+      color: rgb(var(--ink) / 0.58);
+    }
+
+    :global(.js) .deck--open:has(> .deck__inner > .deck__head) .deck__tabs .deck__tab svg {
+      display: none;
+    }
+
+    :global(.js) .deck--open:has(> .deck__inner > .deck__head) .deck__tabs .deck__tab:hover,
+    :global(.js) .deck--open:has(> .deck__inner > .deck__head) .deck__tabs .deck__tab[aria-selected='true'] {
+      color: rgb(var(--ink));
+    }
+
+    .deck.deck--open:has(> .deck__inner > .deck__head) .deck__pill {
+      top: auto;
+      bottom: 0.1875rem;
+      height: 0.125rem;
+      border-radius: 0.125rem;
+      background: linear-gradient(90deg, transparent, rgb(var(--tone-lit)) 30%, rgb(var(--tone-lit)) 70%, transparent) center / 64% 100% no-repeat;
+      box-shadow: none;
+      filter: drop-shadow(0 0 0.375rem rgb(var(--tone-glow) / 0.95));
+    }
+  }
+
+  /* Phones and tablets: with its name above, the deck gives the name its own row and the cards the room left, as on
+     desktop; on a tablet the row of spines is as tall as a laptop's would be. */
+  @media (max-width: 1023px) {
+    .deck__inner:has(> .deck__head) {
+      grid-template-rows: auto minmax(0, 1fr) auto;
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) {
+    :global(.js) .deck--open .deck__panel .deck__cards {
+      height: clamp(26rem, 52svh, 36rem);
+    }
+  }
+
+  /* ---------- Phones: Stride Social's open card and its spines, stacked (the owner, 2026-11-13) ----------
+     A phone is taller than wide, so the spines run one above another: the open card takes most of the height, the
+     others narrow to bands with their names across them; a tap opens one, and a tap on the open one grows its big card
+     (deck.ts). A tablet keeps the desktop's row. */
+  @media (max-width: 767px) {
+    :global(.js) .deck--open .deck__panel .deck__cards {
+      --grow: max(3.2, calc(var(--n) * 0.9));
+      flex-direction: column;
+      height: min(74svh, 42rem);
+    }
+
+    :global(.js) .deck--open .deck__panel .deck__cards > li {
+      min-height: 2.75rem;
+    }
+
+    :global(.js) .deck--open .deck__text {
+      right: var(--pad);
+      width: auto;
+    }
+
+    :global(.js) .deck--open .deck__spine {
+      left: var(--pad);
+      right: 3.25rem;
+      bottom: 50%;
+      overflow: hidden;
+      font-size: 1.125rem;
+      text-overflow: ellipsis;
+      writing-mode: horizontal-tb;
+      transform: translateY(50%);
+    }
+
+    :global(.js) .deck--open .deck__number {
+      font-size: 2.25rem;
+    }
+
+    :global(.js) .deck--open .deck__name {
+      font-size: 1.5rem;
+    }
+
+    :global(.js) .deck--open .deck__copy {
+      font-size: 0.875rem;
+    }
+  }
+
+  /* ---------- Stride Talent: the line-up (phones and tablets too, 2026-11-13) ----------
+     A row of posters, spread evenly and leaning very slightly, in black and white. The one nearest the
+     pointer (a tap on touch) steps forward in colour and the rest lean away (--d, --a: deck-lineup.ts). */
+  @media all {
+
+
+
+    :global(.js) .deck--lineup .deck__bar {
+      z-index: 70;
+    }
+
+    :global(.js) .deck--lineup .deck__panel {
+      position: relative;
+      z-index: 1;
+    }
+
+    :global(.js) .deck--lineup .deck__panel .deck__cards {
+      position: relative;
+      display: block;
+      height: 100%;
+      min-height: 26.25rem;
+      padding: 0;
+      overflow: visible;
+      container-type: inline-size;
+      animation: none;
+      cursor: auto;
+    }
+
+    :global(.js) .deck--lineup .deck__panel .deck__cards > li {
+      --w: min(calc((100cqi - (var(--n) - 1) * 0.875rem) / var(--n)), 21.25rem);
+      position: absolute;
+      bottom: 2.125rem;
+      left: calc(var(--i) * (100cqi - var(--w)) / (var(--n) - 1));
+      width: var(--w);
+      height: min(calc(100% - 2.75rem), max(calc(var(--w) * 1.55), 30rem));
+      z-index: calc(40 - var(--a, 0));
+      transform: translateY(calc(var(--a, 0) * 0.3125rem + 0.875rem)) rotate(calc(var(--d, 0) * 0.5deg));
+      transform-origin: 50% 100%;
+      transition: transform 480ms cubic-bezier(0.25, 1.25, 0.4, 1);
+    }
+
+    :global(.js) .deck--lineup .deck__panel .deck__cards > li.is-open {
+      z-index: 60;
+      transform: translateY(-0.5rem) scale(1.05);
+    }
+
+    :global(.js) .deck--lineup .deck__panel .deck__cards .deck__card {
+      min-height: 0;
+      padding: 1.25rem;
+      background: linear-gradient(170deg, rgb(41 67 104 / 0.9), var(--navy-900));
+      box-shadow:
+        inset 0 0 0 1px rgb(var(--white-rgb) / 0.16),
+        -0.875rem 0 2.125rem -0.875rem rgb(0 0 0 / 0.75);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      translate: none;
+      outline: none;
+    }
+
+    :global(.js) .deck--lineup .deck__panel .deck__cards > li.is-open .deck__card {
+      box-shadow:
+        inset 0 0 0 1.5px rgb(var(--white-rgb) / 0.7),
+        0 0 3.75rem -0.375rem rgb(var(--white-rgb) / 0.28),
+        0 2.125rem 3.75rem -1.5rem rgb(0 0 0 / 0.9);
+    }
+
+    :global(.js) .deck--lineup .deck__panel .deck__cards .deck__card:focus-visible {
+      outline: 2px solid var(--white);
+      outline-offset: 3px;
+    }
+
+    :global(.js) .deck--lineup .deck__image {
+      inset: 0;
+      width: 100%;
+      object-position: 50% 18%;
+      opacity: 1;
+      mask-image: none;
+      filter: grayscale(1) brightness(0.62) contrast(1.08);
+      transition: filter 480ms var(--ease-out);
+    }
+
+    :global(.js) .deck--lineup li.is-open .deck__image {
+      filter: none;
+    }
+
+    :global(.js) .deck--lineup .deck__card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: linear-gradient(to top, rgb(var(--navy-900-rgb) / 0.94), rgb(var(--navy-900-rgb) / 0.55) 24%, transparent 46%);
+      pointer-events: none;
+    }
+
+    /* The chosen poster leans towards the pointer, a glare crossing it (deck-lineup.ts). */
+    :global(.js) .deck--lineup .deck__panel .deck__cards > li.is-open .deck__card {
+      transform: perspective(62.5rem) rotateX(var(--ty, 0deg)) rotateY(var(--tx, 0deg));
+      transition: transform 260ms var(--ease-out);
+    }
+
+    :global(.js) .deck--lineup .deck__panel .deck__cards > li.is-open .deck__card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      border-radius: inherit;
+      background: radial-gradient(55% 40% at var(--gx, 50%) var(--gy, 30%), rgb(var(--white-rgb) / 0.28), transparent 70%);
+      mix-blend-mode: soft-light;
+      pointer-events: none;
+    }
+
+    :global(.js) .deck--lineup .deck__text {
+      opacity: 0;
+      transition: opacity 200ms var(--ease-out);
+    }
+
+    :global(.js) .deck--lineup li.is-open .deck__text {
+      opacity: 1;
+      transition: opacity 360ms var(--ease-out) 90ms;
+    }
+
+    :global(.js) .deck--lineup .deck__name {
+      font-size: min(clamp(1.25rem, 1.9vw, 1.875rem), calc((var(--w) - 2.5rem) / (var(--len) * 1.08)));
+      line-height: 1.02;
+      font-stretch: var(--stretch-wide);
+      text-transform: uppercase;
+    }
+
+    :global(.js) .deck--lineup .deck__copy {
+      display: block;
+      overflow: visible;
+      font-size: 0.875rem;
+      -webkit-line-clamp: none;
+      color: rgb(var(--white-rgb) / 0.92);
+    }
+
+
+    :global(.js) .deck--lineup .deck__arrow {
+      top: 0.875rem;
+      right: 0.875rem;
+      bottom: auto;
+      opacity: 0;
+      transition:
+        opacity 300ms var(--ease-out),
+        background-color 400ms var(--ease-out),
+        color 400ms var(--ease-out);
+    }
+
+    :global(.js) .deck--lineup li.is-open .deck__arrow {
+      opacity: 1;
+    }
+
+    /* With quotes (creator stories): no tab bar for its one tab, the posters overlapping on the left, the chosen
+       one's words large on the right, and Apply for management under them. */
+    :global(.js) .deck--said .deck__tabs,
+    :global(.js) .deck--said .deck__pill {
+      display: none;
+    }
+
+    :global(.js) .deck--said .deck__bar {
+      justify-content: flex-end;
+      padding: 0;
+      background: none;
+      box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+
+    /* No wider than at 1920×1080 against the posters (874px), so on 21:9 and 32:9 they still overlap as drawn. */
+    :global(.js) .deck--said .deck__panel .deck__cards {
+      width: min(56%, 54.625rem);
+    }
+
+    :global(.js) .deck--said .deck__panel .deck__cards > li {
+      --w: min(18.75rem, 44cqi);
+      height: min(calc(100% - 2.75rem), calc(var(--w) * 1.5));
+    }
+
+    :global(.js) .deck--said .deck__copy {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    /* As drawn at 1920×1080 and below (against the right edge, 38% of the width); on a screen wider than the content
+       needs, the margin grows beyond its 11.25rem, and the quote moves in by that much, keeping its share of the rest. */
+    :global(.js) .deck--said .deck__said {
+      --said-in: max(0px, var(--margin) - 11.25rem);
+      position: absolute;
+      top: 42%;
+      right: var(--said-in);
+      z-index: 2;
+      display: grid;
+      gap: 1.25rem;
+      width: calc((100% - 2 * var(--said-in)) * 0.38);
+      margin: 0;
+      translate: 0 -50%;
+    }
+
+    .deck__said-text {
+      font-family: var(--font-display);
+      font-size: clamp(1.3rem, 1.75vw, 2rem);
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.012em;
+      text-wrap: pretty;
+    }
+
+    .deck__said-text::before {
+      content: '\201C';
+      display: block;
+      height: 0.62em;
+      font-size: 4em;
+      line-height: 1;
+      color: rgb(var(--tone-lit));
+    }
+
+    .deck__said-who {
+      color: rgb(var(--ink) / 0.7);
+    }
+
+    :global(.deck__said-word),
+    .deck__said-who {
+      display: inline-block;
+      animation: said-word 560ms cubic-bezier(0.2, 0.9, 0.3, 1) calc(var(--w, 0) * 24ms) both;
+    }
+
+    @keyframes said-word {
+      from {
+        opacity: 0;
+        translate: 0 0.45em;
+        filter: blur(0.375rem);
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(.deck__said-word),
+    .deck__said-who {
+      animation: none;
+    }
+  }
+
+  .deck__said {
+    display: none;
+  }
+
+  /* ---------- Phones and tablets: the line-up laid out for the screen ----------
+     The posters keep a height of their own (the deck isn't a screen tall here). On a phone they fan across its width,
+     overlapping, and the chosen poster's words come under them, large, before the way to apply. */
+  @media (max-width: 1023px) {
+    :global(.js) .deck--lineup .deck__panel .deck__cards {
+      height: clamp(24rem, 62svh, 34rem);
+    }
+  }
+
+  @media (max-width: 767px) {
+    :global(.js) .deck--lineup .deck__panel .deck__cards {
+      height: clamp(20rem, 58vw + 6rem, 28rem);
+    }
+
+    :global(.js) .deck--said .deck__panel .deck__cards {
+      width: 100%;
+    }
+
+    :global(.js) .deck--said .deck__panel .deck__cards > li {
+      --w: min(48vw, 13rem);
+    }
+
+    :global(.js) .deck--lineup .deck__name {
+      font-size: min(1.25rem, calc((var(--w) - 2.5rem) / (var(--len) * 1.08)));
+    }
+
+    :global(.js) .deck--said .deck__said {
+      position: relative;
+      top: auto;
+      right: auto;
+      width: auto;
+      gap: 0.75rem;
+      translate: none;
+    }
+
+    .deck__said-text {
+      font-size: clamp(1.25rem, 5.4vw, 1.625rem);
+    }
+
+    .deck__said-text::before {
+      font-size: 3em;
+    }
+  }
+
+  /* ---------- Stride Academy: the climb (desktop) ----------
+     The cards are a staircase, rising left to right, with the tab's name in the room above the first
+     steps. A line runs along the tops, lit as far as the step you're on, with a dot on it (deck-stairs.ts).
+     A tab with one card is one wide step: the whole statement, in large type. */
+  .deck__stair-title,
+  .deck__stair-line,
+  .deck__climber,
+  .deck__chip,
+  .deck__html {
+    display: none;
+  }
+
+  @media (min-width: 1024px) {
+    :global(.js) .deck--stairs .deck__panel:not([hidden]) {
+      position: relative;
+    }
+
+    :global(.js) .deck--stairs .deck__panel .deck__cards {
+      align-items: flex-end;
+      display: flex;
+      height: 100%;
+      min-height: 28.75rem;
+      padding: 1.75rem 0 0;
+      overflow: visible;
+      animation: none;
+      cursor: auto;
+    }
+
+    :global(.js) .deck--stairs .deck__panel .deck__cards > li {
+      flex: 1 1 0;
+      min-width: 0;
+      height: max(16.875rem, calc(46% + var(--i) * 54% / max(1, var(--n) - 1)));
+    }
+
+    :global(.js) .deck--stairs .deck__panel .deck__cards .deck__card {
+      min-height: 0;
+      padding: 1rem;
+      background: linear-gradient(170deg, rgb(var(--white-rgb) / 0.12), rgb(var(--white-rgb) / 0.05) 60%, rgb(var(--navy-900-rgb) / 0.16));
+      box-shadow:
+        inset 0 0 0 1px rgb(var(--white-rgb) / 0.2),
+        0 1.5rem 3.125rem -1.875rem rgb(0 0 0 / 0.8);
+      translate: none;
+      outline: none;
+      transition:
+        background-color 360ms var(--ease-out),
+        box-shadow 360ms var(--ease-out);
+    }
+
+    :global(.js) .deck--stairs .deck__panel .deck__cards > li.is-climbed .deck__card {
+      background: linear-gradient(170deg, rgb(var(--white-rgb) / 0.18), rgb(var(--white-rgb) / 0.08) 60%, rgb(var(--navy-900-rgb) / 0.1));
+    }
+
+    :global(.js) .deck--stairs .deck__panel .deck__cards > li.is-open .deck__card {
+      background: linear-gradient(170deg, rgb(var(--white-rgb) / 0.28), rgb(var(--white-rgb) / 0.12) 60%, rgb(var(--white-rgb) / 0.06));
+      box-shadow:
+        inset 0 0 0 1.5px rgb(var(--white-rgb) / 0.85),
+        0 0 2.5rem -0.375rem rgb(var(--ice-rgb) / 0.45),
+        0 1.5rem 3.125rem -1.875rem rgb(0 0 0 / 0.8);
+    }
+
+    :global(.js) .deck--stairs .deck__panel .deck__cards .deck__card:focus-visible {
+      outline: 2px solid var(--white);
+      outline-offset: 3px;
+    }
+
+    :global(.js) .deck--stairs .deck__number {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 3.2vw, 3.25rem);
+      font-weight: 850;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      color: rgb(var(--white-rgb) / 0.55);
+      transition: color 300ms var(--ease-out);
+    }
+
+    :global(.js) .deck--stairs li.is-open .deck__number,
+    :global(.js) .deck--stairs li.is-climbed .deck__number {
+      color: var(--white);
+    }
+
+    :global(.js) .deck--stairs .deck__text {
+      margin-top: 0;
+    }
+
+    :global(.js) .deck--stairs .deck__name {
+      font-size: clamp(0.9375rem, 1.2vw, 1.25rem);
+      line-height: 1.12;
+      hyphens: auto;
+      overflow-wrap: break-word;
+    }
+
+    :global(.js) .deck--stairs .deck__copy {
+      display: block;
+      overflow: visible;
+      font-size: 0.8125rem;
+      -webkit-line-clamp: none;
+    }
+
+    :global(.js) .deck--stairs .deck__chip {
+      display: inline-block;
+      justify-self: start;
+      margin-top: var(--space-1, 0.25rem);
+      padding: 0.25rem 0.5625rem;
+      border-radius: 999px;
+      box-shadow: inset 0 0 0 1px rgb(var(--white-rgb) / 0.32);
+      font-family: var(--font-mono);
+      font-size: 0.625rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    :global(.js) .deck--stairs .deck__stair-title {
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: block;
+      max-width: 52%;
+      font-family: var(--font-display);
+      font-size: clamp(2.25rem, 4.2vw, 4.25rem);
+      font-weight: 850;
+      font-stretch: var(--stretch-wide);
+      line-height: 0.94;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    :global(.js) .deck--stairs .deck__stair-line {
+      position: absolute;
+      inset: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      pointer-events: none;
+      fill: none;
+    }
+
+    /* The line's dots and its width in rem (5 and 3 px up to 1920×1080), so they keep pace with the steps. The lit
+       line's dash stays 1: it's measured along the path (pathLength). */
+    .deck__stair-base {
+      stroke: rgb(var(--white-rgb) / 0.3);
+      stroke-width: 0.3125rem;
+      stroke-linecap: round;
+      stroke-dasharray: 0.03125rem 0.75rem;
+    }
+
+    .deck__stair-lit {
+      stroke: var(--white);
+      stroke-width: 0.1875rem;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      filter: drop-shadow(0 0 0.5rem rgb(var(--ice-rgb) / 0.9));
+      transition: stroke-dashoffset 620ms cubic-bezier(0.3, 0.8, 0.3, 1);
+    }
+
+    :global(.js) .deck--stairs .deck__climber {
+      position: absolute;
+      top: -0.6875rem;
+      left: -0.6875rem;
+      display: block;
+      width: 1.375rem;
+      height: 1.375rem;
+      border-radius: 50%;
+      background: var(--white);
+      box-shadow:
+        0 0 0 0.3125rem rgb(var(--white-rgb) / 0.22),
+        0 0 1.625rem 0.25rem rgb(var(--ice-rgb) / 0.8);
+      pointer-events: none;
+      transition: transform 620ms var(--spring-soft, cubic-bezier(0.3, 1.25, 0.45, 1));
+    }
+
+    /* One step: the whole statement. */
+    :global(.js) .deck--stairs .deck__panel .deck__cards > li:only-child {
+      height: 100%;
+    }
+
+    :global(.js) .deck--stairs li:only-child .deck__card {
+      justify-content: flex-end;
+      padding: clamp(1.75rem, 4vw, 4rem);
+    }
+
+    :global(.js) .deck--stairs li:only-child .deck__text {
+      margin-top: auto;
+      gap: var(--space-5);
+    }
+
+    :global(.js) .deck--stairs li:only-child .deck__name {
+      font-size: clamp(2.75rem, 7vw, 7rem);
+      font-weight: 850;
+      font-stretch: var(--stretch-wide);
+      line-height: 0.92;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+    }
+
+    :global(.js) .deck--stairs li:only-child .deck__copy {
+      max-width: 44rem;
+      font-size: clamp(1.125rem, 1.7vw, 1.625rem);
+      line-height: 1.32;
+    }
+
+    :global(.js) .deck--stairs li:only-child .deck__html {
+      display: grid;
+      gap: var(--space-3);
+      max-width: 44rem;
+      font-size: 1rem;
+      line-height: 1.45;
+      color: rgb(var(--ink) / 0.86);
+    }
+  }
+
+  /* ---------- Desktop sizes ----------
+     The pixel sizes of the plain row and the tab bar above, in rem: the same up to 1920×1080, and on a larger
+     screen they grow with it as the rest of the page does (tokens.css). Each variant's own sizes are in rem where
+     they're set. Hairlines stay fine lines. */
+  @media (min-width: 1024px) {
+    .deck {
+      padding-block: var(--space-8) clamp(1.5rem, 4.5vh, 2.75rem);
+    }
+
+    .deck__cards {
+      --gap: clamp(0.75rem, 1.3vw, 1.25rem);
+    }
+
+    .deck__panel:has(li:nth-child(5)) .deck__cards {
+      padding-block: 0.5rem;
+    }
+
+    @keyframes deck-in {
+      from {
+        opacity: 0;
+        transform: translateY(0.875rem);
+      }
+    }
+
+    .deck__card {
+      min-height: clamp(18.75rem, 54svh, 35rem);
+      padding: clamp(1.125rem, 1.6vw, 1.5rem);
+      padding-bottom: 4.125rem;
+      border-radius: 1.375rem;
+      box-shadow:
+        inset 0 0 0 1px rgb(var(--hair) / 0.18),
+        0 1.5rem 3.125rem -1.875rem rgb(var(--shade) / 0.8);
+      backdrop-filter: blur(1rem);
+      -webkit-backdrop-filter: blur(1rem);
+    }
+
+    .deck__cards:not(:hover) li:first-child .deck__card,
+    .deck__card:hover,
+    .deck__card:focus-visible {
+      box-shadow:
+        inset 0 0 0 1.5px rgb(var(--tone-lit) / 0.95),
+        0 0 1.625rem -0.125rem rgb(var(--tone-glow) / 0.6),
+        0 1.5rem 3.125rem -1.875rem rgb(var(--shade) / 0.8);
+    }
+
+    .deck__card:hover,
+    .deck__card:focus-visible {
+      translate: 0 -0.25rem;
+    }
+
+    .deck__mark {
+      width: 2.125rem;
+      height: 2.125rem;
+    }
+
+    .deck__arrow {
+      right: 1rem;
+      bottom: 1rem;
+      width: 2.25rem;
+      height: 2.25rem;
+    }
+
+    .deck__arrow svg {
+      width: 0.9375rem;
+      height: 0.9375rem;
+    }
+
+    .deck__bar {
+      padding: 0.3125rem;
+      backdrop-filter: blur(0.875rem);
+      -webkit-backdrop-filter: blur(0.875rem);
+    }
+
+    .deck__tab {
+      gap: 0.75rem;
+      min-height: 3rem;
+    }
+
+    .deck__tab svg {
+      width: 1.375rem;
+      height: 1.375rem;
+    }
+
+    .deck__tab[aria-selected='true'] {
+      box-shadow:
+        inset 0 0 0 1.5px rgb(var(--tone-lit) / 0.95),
+        0 0 1.375rem -0.25rem rgb(var(--tone-glow) / 0.7);
+    }
+
+    /* Its number rolls like a counter as the list changes (shortlist.ts): the old one leaves through the top. */
+    .deck__count {
+      min-width: 1.375rem;
+      height: 1.375rem;
+      padding-inline: 0.3125rem;
+      overflow: hidden;
+    }
+  }
+
+  /* ---------- Below desktop ---------- */
+  @media (max-width: 1023px) {
+    .deck__cards,
+    .deck__panel:has(li:nth-child(5)) .deck__cards {
+      grid-auto-flow: row;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-auto-columns: auto;
+      overflow: visible;
+    }
+
+    .deck__bar {
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .deck__tab {
+      flex: none;
+      padding-inline: var(--space-4);
+    }
+  }
+
+  @media (max-width: 767px) {
+    .deck__cards,
+    .deck__panel:has(li:nth-child(5)) .deck__cards {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .deck__cards {
+      animation: none;
+    }
+
+    .deck__card,
+    .deck__image,
+    .deck__tab,
+    .deck__pill,
+    .deck__text,
+    .deck__spine,
+    .deck__arrow,
+    .deck__climber,
+    .deck__stair-lit,
+    .deck__cards > li {
+      transition: none !important;
+    }
+
+    .deck__card:hover,
+    .deck__card:focus-visible {
+      translate: none;
+    }
+  }
+</style>
+
+<script>
+  import { initDecks } from '@/scripts/system/deck';
+  initDecks();
+</script>

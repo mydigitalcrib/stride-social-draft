@@ -1,0 +1,584 @@
+---
+// A creator's profile: their portrait as a big holographic card that leans towards the pointer, its sheen
+// following, beside their name, biography and platforms in glass.
+// Desktop: the lean is eased (it glides to the pointer and settles), and as the card turns, Stride's triangles printed
+// in foil round its border and along its name strip catch the light, in Talent's blues (none when it's still); a flip
+// glints as the card goes edge on. The arrow keys move to the creator before or after, the card thrown off as a swipe
+// throws it. The biography fades at its foot while there's more of it to scroll to. Sizes in rem, so it all grows with
+// a large screen. Phones and tablets have the same card, foil and all (the owner, 2026-11-13), the lean following a finger
+// on it; a swipe still goes to the next creator, a tap flips it.
+import Breadcrumbs from '../global/Breadcrumbs.astro';
+import { interfaceCopy } from '@/lib/ui-copy';
+
+export interface Props {
+  name: string;
+  portrait?: { src: string; alt: string } | null;
+  label: string;
+  bio?: string;
+  fallback: string;
+  platforms: { label: string; href: string }[];
+  enquire: { label: string; href: string };
+  creatorId: string;
+  /** The creators either side, for swiping through. */
+  prev?: string;
+  next?: string;
+  crumbs: { label: string; href?: string }[];
+}
+
+const { name, portrait, label, bio, fallback, platforms, enquire, crumbs, creatorId, prev, next } = Astro.props;
+const t = await interfaceCopy();
+---
+
+<section class="holo" aria-labelledby="holo-title" data-holo data-tone="talent" data-look="deep">
+  <div class="holo__inner container-wide">
+    <div class="holo__copy" data-reveal="from-left">
+      <Breadcrumbs items={crumbs} tone="dark" />
+      <p class="exp-label">{label}</p>
+      <h1 class="holo__name exp-title" id="holo-title" style={`--len: ${Math.max(5, ...name.split(/\s+/).map((w) => w.length))}`}>{name}</h1>
+      <div class="holo__bio glass" data-lenis-prevent>
+        {bio ? <div class="holo__text" set:html={bio} /> : <p class="holo__text">{fallback}</p>}
+      </div>
+      {platforms.length > 0 && (
+        <ul class="holo__platforms" role="list" aria-label="Platforms">
+          {platforms.map((p) => <li><a class="exp-chip" href={p.href} target="_blank" rel="noopener">{p.label}<span class="visually-hidden"> (opens in a new tab)</span></a></li>)}
+        </ul>
+      )}
+      <a class="exp-pill" href={enquire.href}>
+        {enquire.label}
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
+      </a>
+    </div>
+
+    <div class="holo__stage" data-holo-stage data-prev={prev} data-next={next}>
+      <div class="holo__card on-photo" data-holo-card>
+        <div class="holo__flip">
+          <div class="holo__face holo__face--front">
+            {portrait ? (
+              <img src={portrait.src} alt={portrait.alt} sizes="(max-width: 1023px) 80vw, 34vw" fetchpriority="high" decoding="async" draggable="false" />
+            ) : (
+              <span class="holo__initial" aria-hidden="true">{name.replace(/[^a-z0-9]/gi, '').charAt(0)}</span>
+            )}
+            <span class="holo__sheen" aria-hidden="true"></span>
+            <span class="holo__tag" aria-hidden="true"><span class="exp-label">Stride Talent</span><span class="holo__tag-name">{name}</span></span>
+            <span class="holo__foil" aria-hidden="true" data-holo-foil><span class="holo__foil-mark"><span class="holo__foil-light"></span></span></span>
+          </div>
+          <div class="holo__face holo__face--back" data-holo-back inert>
+            <p class="exp-label">{t('profile.platforms')}</p>
+            <p class="holo__back-name exp-title" style={`--len: ${Math.max(5, ...name.split(/\s+/).map((w) => w.length))}`}>{name}</p>
+            {platforms.length > 0 && (
+              <ul class="holo__back-links" role="list">
+                {platforms.map((p) => <li><a class="exp-chip" href={p.href} target="_blank" rel="noopener">{p.label}<span class="visually-hidden"> (opens in a new tab)</span></a></li>)}
+              </ul>
+            )}
+            <button class="exp-pill" type="button" aria-pressed="false" data-keep="creators" data-keep-id={creatorId} data-keep-label={name}>
+              <span class="keep-off">+ {t('hand.keep')}</span><span class="keep-on">{t('hand.kept')}</span>
+            </button>
+          </div>
+        </div>
+        <button class="holo__turn exp-round" type="button" aria-label={t('profile.flip')} data-holo-flip>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 9"></path><path d="M20 4v5h-5"></path><path d="M20 12a8 8 0 0 1-13.7 5.6L4 15"></path><path d="M4 20v-5h5"></path></svg>
+        </button>
+      </div>
+      {(prev || next) && (
+        <div class="holo__nav">
+          {prev && <a class="exp-round" href={prev} aria-label={t('profile.prev')}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5.5M11 6.5 5.5 12l5.5 5.5"></path></svg></a>}
+          <p class="exp-label" aria-hidden="true">{t('profile.hint')}</p>
+          {next && <a class="exp-round" href={next} aria-label={t('profile.next')}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg></a>}
+        </div>
+      )}
+    </div>
+  </div>
+  <slot />
+</section>
+
+<style>
+  .holo {
+    position: relative;
+    display: grid;
+    align-items: center;
+    min-height: 100svh;
+    padding-block: calc(var(--header-h) + var(--space-3)) var(--space-6);
+    overflow: hidden;
+    color: rgb(var(--ink));
+  }
+
+  .holo__inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+    gap: var(--space-6) var(--gutter);
+    align-items: center;
+    width: 100%;
+  }
+
+  .holo__copy {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-4);
+    container-type: inline-size;
+  }
+
+  .holo__name {
+    font-size: min(5.5rem, calc(100cqi / (var(--len) * 0.84)));
+  }
+
+  .holo__bio {
+    width: 100%;
+    max-height: 34svh;
+    padding: clamp(18px, 1.8vw, 28px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--hair) / 0.3) transparent;
+  }
+
+  .holo__text {
+    display: grid;
+    gap: var(--space-3);
+    color: rgb(var(--ink) / 0.88);
+  }
+
+  .holo__platforms {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  /* ---------- The card ---------- */
+  .holo__stage {
+    display: grid;
+    place-items: center;
+    perspective: 1400px;
+  }
+
+  .holo__card {
+    position: relative;
+    width: min(100%, 26rem, 52svh);
+    aspect-ratio: 5 / 7;
+    cursor: grab;
+    transform:
+      translateX(var(--drag-x, 0px))
+      rotate(var(--drag-r, 0deg))
+      rotateX(var(--rx, 0deg))
+      rotateY(var(--ry, 0deg));
+    transform-style: preserve-3d;
+    transition: transform 220ms var(--ease-out);
+    will-change: transform;
+  }
+
+  .holo__card.is-held {
+    cursor: grabbing;
+    transition: none;
+  }
+
+  /* Two sides: the portrait, and where to find them. */
+  .holo__flip {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    transition: transform 720ms cubic-bezier(0.3, 1.2, 0.4, 1);
+  }
+
+  .holo__card.is-flipped .holo__flip {
+    transform: rotateY(180deg);
+  }
+
+  .holo__face {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: 28px;
+    background: var(--navy-700);
+    box-shadow:
+      0 0 0 1.5px rgb(var(--tone-lit) / 0.95),
+      0 0 50px -6px rgb(var(--tone-glow) / 0.6),
+      0 40px 80px -30px rgb(var(--shade) / 0.85);
+    backface-visibility: hidden;
+  }
+
+  .holo__face--back {
+    display: grid;
+    align-content: center;
+    justify-items: start;
+    gap: var(--space-4);
+    padding: clamp(22px, 2.4vw, 36px);
+    background:
+      radial-gradient(90% 70% at 20% 0%, rgb(var(--tone-wash) / 0.36), transparent 70%),
+      var(--navy-700);
+    transform: rotateY(180deg);
+    container-type: inline-size;
+  }
+
+  .holo__back-name {
+    font-size: min(2.75rem, calc(100cqi / (var(--len) * 0.9)));
+  }
+
+  .holo__back-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .holo__turn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+    width: 40px;
+    height: 40px;
+    transform: translateZ(2px);
+  }
+
+  .holo__nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+  }
+
+  .holo__card img {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+  }
+
+  .holo__initial {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-display);
+    font-size: 8rem;
+    font-weight: 850;
+    text-transform: uppercase;
+    color: rgb(var(--tone-lit));
+  }
+
+  .holo__sheen {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at var(--gx, 40%) var(--gy, 25%), rgb(var(--white-rgb) / calc(0.42 * var(--fill-k))), transparent 44%),
+      linear-gradient(115deg, transparent 30%, rgb(var(--tone-lit) / 0.3) 46%, rgb(var(--ice-rgb) / 0.28) 52%, transparent 70%);
+    background-size: 100% 100%, 240% 240%;
+    background-position: 0 0, var(--gx, 40%) var(--gy, 25%);
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  .holo__tag {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: grid;
+    gap: 4px;
+    padding: 48px 22px 20px;
+    background: linear-gradient(to top, rgb(var(--navy-900-rgb) / 0.92), transparent);
+    container-type: inline-size;
+  }
+
+  .holo__tag-name {
+    font-family: var(--font-display);
+    font-size: min(1.75rem, 8cqi);
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 1023px) {
+    .holo__inner {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .holo__stage {
+      grid-row: 1;
+    }
+
+    .holo__card {
+      width: min(70vw, 40svh);
+    }
+  }
+
+  /* ---------- Every screen (desktop's sizes; phones' and tablets' after) ---------- */
+  @media all {
+    /* The name fits its column: Archivo this wide runs about 0.9em a letter. */
+    .holo__name {
+      font-size: min(5.5rem, calc(100cqi / (var(--len) * 0.92)));
+    }
+
+    /* The biography: the panel stays where it is, and its words scroll inside it, running to its edges as before; at its
+       foot they fade while there's more below (.is-more), so a line cut in half says there's more. No wider than a
+       comfortable line on a very wide screen. */
+    .holo__bio {
+      --pad: clamp(1.125rem, 1.8vw, 1.75rem);
+      max-width: 52.5rem;
+      max-height: none;
+      padding: var(--pad);
+      overflow: hidden;
+    }
+
+    .holo__text {
+      max-height: 34svh;
+      margin: calc(-1 * var(--pad));
+      padding: var(--pad);
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgb(var(--hair) / 0.3) transparent;
+    }
+
+    .holo__text.is-more {
+      -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 2rem), transparent);
+      mask-image: linear-gradient(to bottom, #000 calc(100% - 2rem), transparent);
+    }
+
+    .holo__platforms,
+    .holo__back-links {
+      gap: 0.375rem;
+    }
+
+    .holo__stage {
+      perspective: 87.5rem;
+    }
+
+    /* The lean is the script's, eased (no transition on it); a swipe's throw and its spring back keep theirs. The same
+       order of turns as below 1024px: the throw, then the lean. */
+    .holo__card {
+      translate: var(--drag-x, 0px) 0;
+      rotate: var(--drag-r, 0deg);
+      transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+      transition:
+        translate 220ms var(--ease-out),
+        rotate 220ms var(--ease-out);
+      will-change: auto;
+    }
+
+    .holo__card.is-moving {
+      will-change: transform;
+    }
+
+    .holo__face {
+      border-radius: 1.75rem;
+      box-shadow:
+        0 0 0 1.5px rgb(var(--tone-lit) / 0.95),
+        0 0 3.125rem -0.375rem rgb(var(--tone-glow) / 0.6),
+        0 2.5rem 5rem -1.875rem rgb(var(--shade) / 0.85);
+    }
+
+    .holo__face--back {
+      padding: clamp(1.375rem, 2.4vw, 2.25rem);
+    }
+
+    .holo__turn {
+      top: 0.75rem;
+      right: 0.75rem;
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+
+    .holo__tag {
+      gap: 0.25rem;
+      padding: 3rem 1.375rem 1.25rem;
+    }
+
+    /* The foil: Stride's mark, printed small round the card's border and over its name strip (the face stays clear),
+       showing only as the card turns (--foil, the script), a band of light in Talent's blues crossing it with the
+       pointer. */
+    .holo__foil {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      opacity: calc(var(--foil, 0) * 0.35);
+      mix-blend-mode: color-dodge;
+      pointer-events: none;
+      -webkit-mask-image:
+        linear-gradient(to right, #000 6%, transparent 6% 94%, #000 94%),
+        linear-gradient(to bottom, #000 6%, transparent 6% 80%, #000 80%);
+      mask-image:
+        linear-gradient(to right, #000 6%, transparent 6% 94%, #000 94%),
+        linear-gradient(to bottom, #000 6%, transparent 6% 80%, #000 80%);
+    }
+
+    .holo__foil-mark {
+      position: absolute;
+      inset: 0;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-30 -30 166 166'%3E%3Cpath d='M53 53H0L53 0v53ZM53 106H0l53-53v53ZM106 53H53l53-53v53ZM106 106H53l53-53v53Z'/%3E%3C/svg%3E") 0 0 / 1.4rem 1.4rem repeat;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-30 -30 166 166'%3E%3Cpath d='M53 53H0L53 0v53ZM53 106H0l53-53v53ZM106 53H53l53-53v53ZM106 106H53l53-53v53Z'/%3E%3C/svg%3E") 0 0 / 1.4rem 1.4rem repeat;
+    }
+
+    .holo__foil-light {
+      position: absolute;
+      inset: -50%;
+      background: linear-gradient(115deg, transparent 35%, rgb(var(--ice-rgb) / 0.9) 45%, rgb(var(--tone-lit)) 50%, var(--white) 53%, rgb(150 188 245 / 0.8) 58%, transparent 66%);
+      transform: translate3d(var(--fx, 0%), var(--fy, 0%), 0);
+    }
+  }
+
+  /* Reduced motion: the card turns over at once. */
+  /* Phones and tablets: the biography runs on down the page instead of scrolling in its panel. */
+  @media (max-width: 1023px) {
+    .holo__text {
+      max-height: none;
+      overflow: visible;
+    }
+
+    .holo__text.is-more {
+      -webkit-mask-image: none;
+      mask-image: none;
+    }
+
+    .holo__face--back {
+      padding: 1.25rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .holo__flip {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  import { reduced } from '@/scripts/system/env';
+  const TILT = 18; // deg: how far the card leans, at most
+  const FOLLOW = 0.12; // per frame (at 60 a second), the share of the way the eased lean covers (desktop)
+  document.querySelectorAll<HTMLElement>('[data-holo]').forEach((root) => {
+    if (root.dataset.holoReady) return;
+    root.dataset.holoReady = 'true';
+    const card = root.querySelector<HTMLElement>('[data-holo-card]');
+    const stage = root.querySelector<HTMLElement>('[data-holo-stage]');
+    const back = root.querySelector<HTMLElement>('[data-holo-back]');
+    const foil = root.querySelector<HTMLElement>('[data-holo-foil]');
+    if (card && !reduced()) {
+      // The lean glides to the pointer (or the finger) a share of the way each frame and settles; the foil shows as it turns.
+      const now = { rx: 0, ry: 0, gx: 40, gy: 25 };
+      const to = { ...now };
+      let raf = 0;
+      let last = 0;
+      const frame = (t: number) => {
+        raf = 0;
+        const dt = last ? Math.min(3, (t - last) / (1000 / 60)) : 1;
+        last = t;
+        const k = 1 - Math.pow(1 - FOLLOW, dt);
+        (Object.keys(now) as (keyof typeof now)[]).forEach((p) => (now[p] += (to[p] - now[p]) * k));
+        const settled = Math.abs(to.rx - now.rx) + Math.abs(to.ry - now.ry) < 0.02 && Math.abs(to.gx - now.gx) + Math.abs(to.gy - now.gy) < 0.1;
+        if (settled) Object.assign(now, to);
+        card.style.setProperty('--rx', `${now.rx.toFixed(2)}deg`);
+        card.style.setProperty('--ry', `${now.ry.toFixed(2)}deg`);
+        card.style.setProperty('--gx', `${now.gx.toFixed(1)}%`);
+        card.style.setProperty('--gy', `${now.gy.toFixed(1)}%`);
+        if (foil) {
+          foil.style.setProperty('--foil', Math.min(1, (Math.hypot(now.rx, now.ry) / TILT) * 1.6).toFixed(3));
+          foil.style.setProperty('--fx', `${((now.gx / 100 - 0.5) * 40).toFixed(1)}%`);
+          foil.style.setProperty('--fy', `${((now.gy / 100 - 0.5) * 40).toFixed(1)}%`);
+        }
+        card.classList.toggle('is-moving', !settled);
+        if (!settled) raf = requestAnimationFrame(frame);
+      };
+      const lean = (rx: number, ry: number, gx = to.gx, gy = to.gy) => {
+        Object.assign(to, { rx, ry, gx, gy });
+        if (!raf) {
+          last = 0;
+          raf = requestAnimationFrame(frame);
+        }
+      };
+      root.addEventListener(
+        'pointermove',
+        (e) => {
+          const r = card.getBoundingClientRect();
+          const fx = (e.clientX - r.left) / r.width;
+          const fy = (e.clientY - r.top) / r.height;
+          if (fx < -0.15 || fx > 1.15 || fy < -0.15 || fy > 1.15) return lean(0, 0);
+          lean((0.5 - fy) * TILT, (fx - 0.5) * TILT, fx * 100, fy * 100);
+        },
+        { passive: true },
+      );
+      root.addEventListener('pointerleave', () => lean(0, 0), { passive: true });
+    }
+
+    // A click flips the card; a swipe goes to the next creator.
+    if (!card || !stage) return;
+    const flip = () => {
+      const flipped = card.classList.toggle('is-flipped');
+      back?.toggleAttribute('inert', !flipped);
+      // Desktop: a glint on the foil as the card goes edge on.
+      if (foil && !reduced()) foil.animate([{ opacity: 0 }, { opacity: 0.8, offset: 0.22 }, { opacity: 0, offset: 0.6 }, { opacity: 0 }], { duration: 720 });
+    };
+    root.querySelector('[data-holo-flip]')?.addEventListener('click', flip);
+    let startX = 0;
+    let pressed = false;
+    let moved = false;
+    card.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0 || (e.target as HTMLElement).closest('a, button')) return;
+      pressed = true;
+      moved = false;
+      startX = e.clientX;
+    });
+    window.addEventListener('pointermove', (e) => {
+      if (!pressed) return;
+      const dx = e.clientX - startX;
+      if (!moved && Math.abs(dx) < 6) return;
+      moved = true;
+      card.classList.add('is-held');
+      card.style.setProperty('--drag-x', `${dx.toFixed(0)}px`);
+      card.style.setProperty('--drag-r', `${(dx * 0.03).toFixed(2)}deg`);
+    });
+    window.addEventListener('pointerup', (e) => {
+      if (!pressed) return;
+      pressed = false;
+      card.classList.remove('is-held');
+      const dx = e.clientX - startX;
+      const to = dx < -110 ? stage.dataset.next : dx > 110 ? stage.dataset.prev : undefined;
+      if (moved && to) {
+        card.style.setProperty('--drag-x', `${dx < 0 ? -120 : 120}vw`);
+        window.setTimeout(() => (location.href = to), 220);
+        return;
+      }
+      card.style.removeProperty('--drag-x');
+      card.style.removeProperty('--drag-r');
+      if (!moved) flip();
+    });
+    card.addEventListener('dragstart', (e) => e.preventDefault());
+
+    // The arrow keys to the creator before or after (the card thrown off the way a swipe throws it), unless the
+    // keys are busy elsewhere: in the biography, a field, or a set of tabs.
+    let inView = true;
+    let leaving = false;
+    new IntersectionObserver(([entry]) => (inView = entry.isIntersecting)).observe(root);
+    document.addEventListener('keydown', (e) => {
+      if ((e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') || e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || !inView) return;
+      const here = document.activeElement;
+      if (here instanceof HTMLElement && here !== document.body && (here.isContentEditable || here.closest('input, textarea, select, [role="tablist"], [role="slider"], [role="listbox"], [role="dialog"], .holo__bio'))) return;
+      const to = e.key === 'ArrowRight' ? stage.dataset.next : stage.dataset.prev;
+      if (!to) return;
+      e.preventDefault();
+      // Once on its way (a key held down repeats), it goes once.
+      if (leaving) return;
+      leaving = true;
+      if (reduced()) return void (location.href = to);
+      card.style.setProperty('--drag-x', `${e.key === 'ArrowRight' ? -120 : 120}vw`);
+      window.setTimeout(() => (location.href = to), 220);
+    });
+    // Back to this creator from the next one (the browser keeps the page as it was left): the card is back in its place,
+    // not still thrown off the screen.
+    window.addEventListener('pageshow', (e) => {
+      if (!e.persisted) return;
+      leaving = false;
+      card.style.removeProperty('--drag-x');
+      card.style.removeProperty('--drag-r');
+    });
+
+    // The biography fades at its foot while there's more of it below.
+    const text = root.querySelector<HTMLElement>('.holo__text');
+    if (!text) return;
+    const more = () => text.classList.toggle('is-more', text.scrollTop + text.clientHeight < text.scrollHeight - 2);
+    text.addEventListener('scroll', more, { passive: true });
+    window.addEventListener('resize', more, { passive: true });
+    more();
+    document.fonts?.ready.then(more);
+  });
+</script>

@@ -1,0 +1,923 @@
+---
+// Our Sponsorships on desktop (the owner, 2026-11-12: redesigned as a whole, interactive and aesthetic): an exhibition
+// of the moments. It opens on the headline, the events listed beside it, and a pile of their photographs, dealt onto
+// the page one after another, that fans out under the pointer (the event pointed at in the list comes to the top).
+// Then each event is a chapter of its own: its name huge, lighting up from the left as it comes into view, its date
+// and place, and its photographs as a collage that develops the first time it's seen, drifts at different depths as
+// the page scrolls and leans towards the pointer; any photograph lifts off the wall and opens large over the page
+// (and goes back to its place when closed), to go through the event's pictures one by one (the arrow keys, a drag or a
+// sideways swipe, Escape). The list and the pile glide to their chapter. Entries come from the sponsorships collection
+// (only those Stride confirmed), newest first. Past 1920×1080 it grows with the screen (rem), and on a very wide
+// screen the collage keeps its 1920 height. Behaviour: src/scripts/system/sponsor-gallery.ts. Phones and tablets have
+// the same exhibition laid out for their screens (the owner, 2026-11-13): the pile fanned from the start, each chapter
+// one column, its photographs two (three on tablets) across.
+import Breadcrumbs from '../global/Breadcrumbs.astro';
+import { pad } from '@/lib/experience';
+
+type Pic = { src: string; alt: string };
+export interface Props {
+  copy: { eyebrow?: string; headline?: string; body?: string };
+  events: { id: string; name: string; when: string; year: number; kind: string; place?: string; images: Pic[]; summary: string }[];
+  crumbs: { label: string; href?: string }[];
+  ui: { hint: string; open: string; prev: string; next: string; close: string; of: string; photos: string };
+}
+
+const { copy, events, crumbs, ui } = Astro.props;
+// The pile: each event's first photograph, newest on top.
+const pile = events.map((e, i) => ({ id: e.id, pic: e.images[0], i })).reverse();
+// The collage's arrangement by how many photographs an event has (more than six use the six-up arrangement and the
+// rest follow in the viewer).
+const layoutOf = (n: number) => (n >= 6 ? 6 : n >= 3 ? 3 : n === 2 ? 2 : 1);
+// How wide a print shows, for the file the browser picks: the six-up's second print spans most of the width.
+const printSizes = (layout: number, k: number) => (layout === 6 && k === 1 ? '(min-width: 1024px) 50vw, 100vw' : '(min-width: 1024px) 40vw, 100vw');
+---
+
+{events.length > 0 && (
+  <div class="sgal" data-sgal data-of={ui.of}>
+    {/* ---------- The opening ---------- */}
+    <section class="sgal__hero" aria-labelledby="sgal-title" data-tone="group" data-look="deep" data-sgal-hero>
+      <div class="sgal__hero-inner container-wide">
+        <div class="sgal__lead">
+          <Breadcrumbs items={crumbs} tone="dark" />
+          {copy.eyebrow && <p class="exp-label">{copy.eyebrow}</p>}
+          <h1 class="sgal__title exp-title" id="sgal-title">{copy.headline}</h1>
+          {copy.body && <p class="sgal__body">{copy.body}</p>}
+          <ol class="sgal__index" role="list">
+            {events.map((e, i) => (
+              <li>
+                <a class="sgal__index-link" href={`#${e.id}`} data-sgal-index={e.id} data-sgal-go={e.id}>
+                  <span class="sgal__index-no">{pad(i + 1)}</span>
+                  <span class="sgal__index-name">{e.name}</span>
+                  <span class="sgal__index-when exp-label">{e.when}</span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <div class="sgal__pile" data-sgal-pile aria-hidden="true">
+          {pile.map((p, k) => (
+            <a class="sgal__pile-print" href={`#${p.id}`} tabindex="-1" style={`--k: ${k}; --n: ${pile.length}`} data-sgal-pile-print={p.id} data-sgal-go={p.id}>
+              <img src={p.pic.src} alt="" sizes="(min-width: 1921px) 16vw, 360px" decoding="async" draggable="false" />
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    {/* ---------- A chapter per event ---------- */}
+    {events.map((e, i) => (
+      <section class:list={['sgal__chapter', `sgal__chapter--${layoutOf(e.images.length)}`, { 'sgal__chapter--flip': i % 2 === 1 }]} id={e.id} aria-labelledby={`${e.id}-name`} data-tone="group" data-look="deep" data-sgal-chapter>
+        <div class="sgal__chapter-inner container-wide">
+          <span class="sgal__year" aria-hidden="true">{e.year}</span>
+          <header class="sgal__head">
+            <p class="sgal__no exp-label">{pad(i + 1)} · {e.kind}</p>
+            <h2 class="sgal__name" id={`${e.id}-name`} tabindex="-1" style={`--len: ${Math.max(...e.name.split(/\s+/).map((w) => w.length))}`}>{e.name}</h2>
+            <p class="sgal__when exp-label">{[e.when, e.place].filter(Boolean).join(' · ')}{e.images.length > 1 && ` · ${ui.photos.replace('{n}', String(e.images.length))}`}</p>
+            <p class="sgal__summary">{e.summary}</p>
+          </header>
+          <ul class="sgal__prints" role="list">
+            {e.images.slice(0, 6).map((pic, k) => (
+              <li class={`sgal__print sgal__print--${k + 1}`} style={`--depth: ${[60, -40, 90, -70, 40, -90][k]}; --tilt: ${[-1.6, 1.2, -0.8, 2, 1.4, -1.2][k]}deg`}>
+                <button class="sgal__print-btn" type="button" aria-label={`${ui.open}: ${pic.alt}`} data-sgal-open={e.id} data-sgal-at={k}>
+                  <img src={pic.src} alt={pic.alt} sizes={printSizes(layoutOf(e.images.length), k)} loading="lazy" decoding="async" draggable="false" />
+                  <span class="sgal__glare" aria-hidden="true"><i></i></span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <script type="application/json" data-sgal-pics={e.id} set:html={JSON.stringify({ name: e.name, when: e.when, pics: e.images })} />
+      </section>
+    ))}
+
+    {/* ---------- A photograph, large ---------- */}
+    <div class="sgal__viewer" role="dialog" aria-modal="true" aria-label={ui.open} hidden data-sgal-viewer>
+      <button class="sgal__viewer-back" type="button" tabindex="-1" aria-hidden="true" data-sgal-close></button>
+      <figure class="sgal__viewer-frame">
+        {/* Two layers, so the next photograph slides in over the last instead of replacing it in place. */}
+        <div class="sgal__viewer-stage" data-sgal-stage>
+          <img class="sgal__viewer-photo" data-sgal-viewer-img alt="" draggable="false" />
+          <img class="sgal__viewer-photo" data-sgal-viewer-img alt="" draggable="false" hidden />
+        </div>
+        <figcaption class="sgal__viewer-caption" data-sgal-caption>
+          <span class="sgal__viewer-name" data-sgal-viewer-name></span>
+          <span class="exp-label" data-sgal-viewer-count></span>
+        </figcaption>
+      </figure>
+      <button class="exp-round sgal__viewer-prev" type="button" aria-label={ui.prev} data-sgal-prev>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5.5M11 6.5 5.5 12 11 17.5"></path></svg>
+      </button>
+      <button class="exp-round sgal__viewer-next" type="button" aria-label={ui.next} data-sgal-next>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
+      </button>
+      <button class="exp-round sgal__viewer-close" type="button" aria-label={ui.close} data-sgal-close>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+      </button>
+    </div>
+  </div>
+)}
+
+<style>
+  .sgal {
+    color: rgb(var(--ink));
+  }
+
+  /* ---------- The opening: the headline, the events, the pile ---------- */
+  .sgal__hero {
+    position: relative;
+    min-height: 100svh;
+    overflow: clip;
+  }
+
+  .sgal__hero-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: var(--gutter);
+    align-items: center;
+    min-height: 100svh;
+    padding-block: calc(var(--header-h) + var(--space-3)) var(--space-6);
+  }
+
+  .sgal__lead {
+    display: grid;
+    /* One track as wide as the column: the headline can't widen it under the pile (a narrow laptop). */
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    justify-items: start;
+    container-type: inline-size;
+  }
+
+  .sgal__title {
+    font-size: clamp(2rem, 9.2cqi, 6.25rem);
+  }
+
+  .sgal__body {
+    max-width: 44ch;
+    font-size: var(--type-lead);
+    color: rgb(var(--ink) / 0.86);
+  }
+
+  .sgal__index {
+    display: grid;
+    width: 100%;
+    margin-top: var(--space-3);
+    border-top: 1px solid rgb(var(--white-rgb) / 0.14);
+  }
+
+  .sgal__index-link {
+    display: grid;
+    grid-template-columns: 2.6rem minmax(0, 1fr) auto;
+    gap: var(--space-3);
+    align-items: baseline;
+    padding: 0.875rem 0;
+    border-bottom: 1px solid rgb(var(--white-rgb) / 0.14);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .sgal__index-no {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: rgb(var(--ink) / 0.6);
+  }
+
+  .sgal__index-name {
+    font-family: var(--font-display);
+    font-size: clamp(1.25rem, 3.6cqi, 2rem);
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    line-height: 1;
+    text-transform: uppercase;
+    color: transparent;
+    -webkit-text-stroke: 0.0625rem rgb(var(--white-rgb) / 0.6);
+    transition:
+      color 300ms var(--ease-out),
+      -webkit-text-stroke-color 300ms var(--ease-out),
+      translate 400ms var(--spring-soft, cubic-bezier(0.3, 1.25, 0.45, 1));
+  }
+
+  .sgal__index-when {
+    color: rgb(var(--ink) / 0.6);
+  }
+
+  .sgal__index-link:hover .sgal__index-name,
+  .sgal__index-link:focus-visible .sgal__index-name {
+    color: var(--white);
+    -webkit-text-stroke-color: var(--white);
+    translate: 0.5rem 0;
+  }
+
+  .sgal__index-link:focus-visible {
+    outline: 2px solid rgb(var(--tone-lit));
+    outline-offset: 4px;
+  }
+
+  /* The pile of prints: stacked a little askew; under the pointer they fan out; the event pointed at comes on top. */
+  .sgal__pile {
+    position: relative;
+    height: min(64svh, 35rem);
+  }
+
+  .sgal__pile-print {
+    --r: calc((var(--k) - (var(--n) - 1) / 2) * 7deg);
+    --x: 0px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: var(--k);
+    width: min(20vw, 18.75rem);
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    border-radius: 1.125rem;
+    background: #050c1a;
+    box-shadow:
+      inset 0 0 0 1px rgb(var(--white-rgb) / 0.2),
+      0 1.875rem 3.75rem -1.75rem rgb(0 0 0 / 0.85);
+    translate: calc(-50% + var(--x)) -50%;
+    rotate: var(--r);
+    transition:
+      translate 700ms cubic-bezier(0.2, 1.2, 0.3, 1),
+      rotate 700ms cubic-bezier(0.2, 1.2, 0.3, 1),
+      scale 500ms var(--ease-out),
+      filter 400ms var(--ease-out);
+  }
+
+  .sgal__pile-print img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    /* It breathes inside its print (so the print's own scale stays free for the lift); paused while off screen. */
+    animation: sgal-breathe 7s ease-in-out infinite;
+    animation-delay: calc(var(--k) * -2.1s);
+  }
+
+  .sgal__pile.is-away .sgal__pile-print img {
+    animation-play-state: paused;
+  }
+
+  /* Until the pile has been dealt (sponsor-gallery.ts), its prints wait off the table. */
+  .sgal__pile.is-dealing .sgal__pile-print {
+    opacity: 0;
+  }
+
+  @keyframes sgal-breathe {
+    50% {
+      scale: 1.015;
+    }
+  }
+
+  .sgal__pile.is-open .sgal__pile-print {
+    --x: calc((var(--k) - (var(--n) - 1) / 2) * min(7vw, 6rem));
+    --r: calc((var(--k) - (var(--n) - 1) / 2) * 9deg);
+  }
+
+  .sgal__pile .sgal__pile-print.is-top {
+    z-index: 10;
+    --r: 0deg;
+    scale: 1.05;
+  }
+
+  .sgal__pile.has-top .sgal__pile-print:not(.is-top) {
+    filter: brightness(0.55) saturate(0.6);
+  }
+
+  /* ---------- A chapter ---------- */
+  .sgal__chapter {
+    --p: 0.5;
+    --fill: 100%;
+    position: relative;
+    padding-block: clamp(5rem, 12svh, 8.75rem);
+    overflow: clip;
+  }
+
+  .sgal__chapter-inner {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: var(--space-6) var(--gutter);
+    align-items: center;
+  }
+
+  .sgal__chapter--flip .sgal__chapter-inner {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  }
+
+  .sgal__chapter--flip .sgal__head {
+    order: 2;
+  }
+
+  /* Its year, huge and faint, drifting slower than the page. */
+  .sgal__year {
+    position: absolute;
+    top: -0.2em;
+    right: -0.04em;
+    z-index: -1;
+    font-family: var(--font-display);
+    font-size: clamp(10rem, 22vw, 24rem);
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    line-height: 0.8;
+    letter-spacing: -0.04em;
+    color: transparent;
+    -webkit-text-stroke: 0.09375rem rgb(var(--white-rgb) / 0.1);
+    translate: 0 calc((var(--p) - 0.5) * -7.5rem);
+    pointer-events: none;
+  }
+
+  .sgal__chapter--flip .sgal__year {
+    right: auto;
+    left: -0.04em;
+  }
+
+  .sgal__head {
+    display: grid;
+    gap: var(--space-3);
+    align-content: center;
+    container-type: inline-size;
+  }
+
+  .sgal__no {
+    color: rgb(var(--tone-lit));
+  }
+
+  /* The name lights up from the left as the chapter comes into view (--fill, the script). */
+  /* Its size: as large as the layout gives it, but no wider than the column for its longest word (--len, its letters;
+     about 0.8em each in this type). */
+  .sgal__name {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: min(clamp(1.75rem, 10.6cqi, 6rem), 100cqi / (var(--len, 8) * 0.8));
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    text-wrap: balance;
+    color: transparent;
+    background: linear-gradient(90deg, var(--white) 0 var(--fill), transparent var(--fill));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-stroke: 0.0625rem rgb(var(--white-rgb) / 0.7);
+  }
+
+  /* Arrived at from the list: the heading takes the focus (so the keyboard carries on from here), not a ring. */
+  .sgal__name:focus {
+    outline: none;
+  }
+
+  .sgal__when {
+    color: rgb(var(--ink) / 0.72);
+  }
+
+  .sgal__summary {
+    max-width: 38ch;
+    font-size: var(--type-lead);
+    color: rgb(var(--ink) / 0.86);
+  }
+
+  /* The six-up collage takes the whole width, the name above it. */
+  .sgal__chapter--6 .sgal__chapter-inner,
+  .sgal__chapter--3 .sgal__chapter-inner {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sgal__chapter--6 .sgal__head,
+  .sgal__chapter--3 .sgal__head {
+    order: 0;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    align-items: end;
+    column-gap: var(--gutter);
+  }
+
+  .sgal__chapter--6 .sgal__head > *,
+  .sgal__chapter--3 .sgal__head > * {
+    grid-column: 1;
+  }
+
+  .sgal__chapter--6 .sgal__head .sgal__summary,
+  .sgal__chapter--3 .sgal__head .sgal__summary {
+    grid-column: 2;
+    grid-row: 2 / span 2;
+    align-self: end;
+  }
+
+  .sgal__chapter--6 .sgal__name,
+  .sgal__chapter--3 .sgal__name {
+    font-size: min(clamp(3rem, 9cqi, 9rem), 100cqi / (var(--len, 8) * 0.8));
+  }
+
+  /* ---------- The prints ---------- */
+  .sgal__prints {
+    position: relative;
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .sgal__chapter--1 .sgal__prints {
+    justify-items: center;
+  }
+
+  .sgal__chapter--1 .sgal__print {
+    width: min(100%, 27.5rem);
+    aspect-ratio: 3 / 4;
+  }
+
+  /* The gaps (and the six-up's rows) are a share of the screen's width up to the content's own 1920 proportions: on
+     a 21:9 or 32:9 screen they'd otherwise grow faster than the columns and stretch the collage. */
+  .sgal__chapter--2 .sgal__prints {
+    grid-template-columns: 1fr 1fr;
+    gap: min(3vw, 3.6rem);
+    align-items: center;
+  }
+
+  .sgal__chapter--2 .sgal__print {
+    aspect-ratio: 3 / 4;
+  }
+
+  .sgal__chapter--2 .sgal__print--2 {
+    margin-top: 12vh;
+  }
+
+  .sgal__chapter--3 .sgal__prints {
+    grid-template-columns: 5fr 4fr 4fr;
+    gap: min(2.4vw, 2.88rem);
+    align-items: center;
+  }
+
+  .sgal__chapter--3 .sgal__print {
+    aspect-ratio: 4 / 5;
+  }
+
+  .sgal__chapter--3 .sgal__print--2 {
+    margin-top: 10vh;
+  }
+
+  /* Six up: an arrangement across twelve columns, the pictures overlapping a little, each at its own depth. */
+  .sgal__chapter--6 .sgal__prints {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-auto-rows: min(5.6vw, 6.72rem);
+    gap: min(1.2vw, 1.44rem);
+  }
+
+  .sgal__chapter--6 .sgal__print--1 {
+    grid-area: 1 / 1 / 7 / 6;
+  }
+
+  .sgal__chapter--6 .sgal__print--2 {
+    grid-area: 1 / 6 / 4 / 13;
+  }
+
+  .sgal__chapter--6 .sgal__print--3 {
+    grid-area: 4 / 6 / 8 / 10;
+  }
+
+  .sgal__chapter--6 .sgal__print--4 {
+    grid-area: 4 / 10 / 10 / 13;
+  }
+
+  .sgal__chapter--6 .sgal__print--5 {
+    grid-area: 7 / 2 / 13 / 5;
+  }
+
+  .sgal__chapter--6 .sgal__print--6 {
+    grid-area: 8 / 5 / 12 / 10;
+  }
+
+  .sgal__print {
+    position: relative;
+    translate: 0 calc((var(--p) - 0.5) * var(--depth) * 0.0625rem);
+    rotate: var(--tilt);
+    transition: rotate 500ms var(--ease-out), scale 500ms var(--ease-out), opacity 400ms var(--ease-out), filter 400ms var(--ease-out);
+  }
+
+  /* Lifted off the wall into the viewer (or flying back to it): the photograph flying stands in for it. */
+  .sgal__print.is-lifted {
+    visibility: hidden;
+  }
+
+  .sgal__print-btn {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    padding: 0;
+    border-radius: 1rem;
+    background: #050c1a;
+    box-shadow:
+      inset 0 0 0 1px rgb(var(--white-rgb) / 0.18),
+      0 2.125rem 4rem -1.875rem rgb(0 0 0 / 0.85);
+    /* Leaning towards the pointer: sponsor-gallery.ts eases it there each frame. */
+    transform: perspective(62.5rem);
+    transition: box-shadow 400ms var(--ease-out);
+    cursor: zoom-in;
+  }
+
+  .sgal__print-btn img {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+    pointer-events: none;
+    transition: scale 900ms var(--ease-out);
+  }
+
+  /* The glare: a soft spot of a fixed size, moved to the pointer (not redrawn). At rest (and focused) it sits up and
+     to the middle. */
+  .sgal__glare {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    mix-blend-mode: soft-light;
+    opacity: 0;
+    transition: opacity 400ms var(--ease-out);
+    pointer-events: none;
+  }
+
+  .sgal__glare i {
+    position: absolute;
+    top: -25%;
+    left: -20%;
+    width: 140%;
+    height: 110%;
+    /* No will-change: a layer per print at rest would be large on a big screen; moved, its translate3d gives it one. */
+    background: radial-gradient(closest-side, rgb(var(--white-rgb) / 0.24), transparent 62%);
+  }
+
+  /* Pointed at: it straightens and comes forward, the rest step back. */
+  .sgal__prints:has(.sgal__print-btn:hover) .sgal__print:not(:has(.sgal__print-btn:hover)) {
+    filter: brightness(0.62) saturate(0.75);
+  }
+
+  .sgal__print:has(.sgal__print-btn:hover),
+  .sgal__print:has(.sgal__print-btn:focus-visible) {
+    z-index: 2;
+    rotate: 0deg;
+    scale: 1.03;
+  }
+
+  .sgal__print-btn:hover img {
+    scale: 1.04;
+  }
+
+  .sgal__print-btn:hover .sgal__glare,
+  .sgal__print-btn:focus-visible .sgal__glare {
+    opacity: 1;
+  }
+
+  .sgal__print-btn:hover,
+  .sgal__print-btn:focus-visible {
+    box-shadow:
+      inset 0 0 0 1.5px rgb(var(--tone-lit) / 0.8),
+      0 0 2.125rem -0.5rem rgb(var(--ice-rgb) / 0.4),
+      0 2.5rem 4.375rem -1.875rem rgb(0 0 0 / 0.9);
+    outline: none;
+  }
+
+  /* ---------- The viewer ---------- */
+  .sgal__viewer {
+    position: fixed;
+    inset: 0;
+    z-index: 130;
+    display: grid;
+    place-items: center;
+    padding: 6svh 9vw 12svh;
+  }
+
+  .sgal__viewer[hidden] {
+    display: none;
+  }
+
+  .sgal__viewer-back {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    background: rgb(4 10 26 / 0.72);
+    backdrop-filter: blur(1.375rem) saturate(140%);
+    -webkit-backdrop-filter: blur(1.375rem) saturate(140%);
+    cursor: zoom-out;
+    animation: sgal-fade 300ms var(--ease-out) both;
+  }
+
+  .sgal__viewer-frame {
+    position: relative;
+    display: grid;
+    gap: 0.875rem;
+    justify-items: center;
+    max-width: 100%;
+    max-height: 100%;
+    margin: 0;
+    pointer-events: none;
+  }
+
+  .sgal__viewer-stage {
+    position: relative;
+    display: grid;
+    place-items: center;
+  }
+
+  /* The photograph: drag it sideways to go to the next (a press without a drag closes, as the backdrop does). As
+     large as fits the box, whichever file is in it (sponsor-gallery.ts sets its shape, --ar, once it's decoded), so
+     the full photograph can take over from the print's own file without a jump. */
+  .sgal__viewer-photo {
+    display: block;
+    grid-area: 1 / 1;
+    max-width: 82vw;
+    max-height: 76svh;
+    width: min(82vw, calc(76svh * var(--ar, 1)));
+    height: auto;
+    aspect-ratio: var(--ar, auto);
+    border-radius: 0.875rem;
+    box-shadow:
+      inset 0 0 0 1px rgb(var(--white-rgb) / 0.2),
+      0 3.125rem 6.25rem -2.5rem rgb(0 0 0 / 0.9);
+    pointer-events: auto;
+    cursor: grab;
+    touch-action: pan-y;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  .sgal__viewer-photo[hidden] {
+    display: none;
+  }
+
+  .sgal__viewer.is-single .sgal__viewer-photo {
+    cursor: zoom-out;
+  }
+
+  .sgal__viewer.is-dragging .sgal__viewer-photo {
+    cursor: grabbing;
+  }
+
+  /* The one leaving: out of the way of the layout, where it was, while it slides off. */
+  .sgal__viewer-photo.is-out {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+    pointer-events: none;
+  }
+
+  @keyframes sgal-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  .sgal__viewer-caption {
+    display: flex;
+    gap: 1rem;
+    align-items: baseline;
+  }
+
+  .sgal__viewer-name {
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    text-transform: uppercase;
+  }
+
+  .sgal__viewer-prev,
+  .sgal__viewer-next,
+  .sgal__viewer-close {
+    position: absolute;
+    z-index: 1;
+  }
+
+  .sgal__viewer-prev {
+    top: 50%;
+    left: 3vw;
+    translate: 0 -50%;
+  }
+
+  .sgal__viewer-next {
+    top: 50%;
+    right: 3vw;
+    translate: 0 -50%;
+  }
+
+  .sgal__viewer-close {
+    top: 3svh;
+    right: 3vw;
+  }
+
+  .sgal__viewer.is-single .sgal__viewer-prev,
+  .sgal__viewer.is-single .sgal__viewer-next {
+    display: none;
+  }
+
+  /* ---------- Phones and tablets: the same exhibition, laid out for the screen (the owner, 2026-11-13) ----------
+     The opening stacks: the headline and the events, then the pile, fanned out from the start (there's no pointer to
+     fan it). Each chapter is its name, its words, then its photographs in a two-column collage, the first one wide;
+     they still drift a little as the page scrolls and still open large, to go through with a swipe. */
+  @media (max-width: 1023px) {
+    .sgal__hero,
+    .sgal__hero-inner {
+      min-height: 0;
+    }
+
+    .sgal__hero-inner {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-6);
+      padding-block: calc(var(--header-h) + var(--space-4)) var(--space-5);
+    }
+
+    .sgal__pile {
+      height: clamp(19rem, 92vw, 26rem);
+    }
+
+    .sgal__pile-print {
+      --x: calc((var(--k) - (var(--n) - 1) / 2) * min(13vw, 5.5rem));
+      --r: calc((var(--k) - (var(--n) - 1) / 2) * 8deg);
+      width: min(46vw, 15rem);
+      border-radius: 0.875rem;
+    }
+
+    .sgal__chapter {
+      padding-block: clamp(3.5rem, 9svh, 5rem);
+    }
+
+    .sgal__chapter-inner,
+    .sgal__chapter--flip .sgal__chapter-inner,
+    .sgal__chapter--6 .sgal__chapter-inner,
+    .sgal__chapter--3 .sgal__chapter-inner {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-5);
+    }
+
+    .sgal__chapter--flip .sgal__head {
+      order: 0;
+    }
+
+    .sgal__chapter--6 .sgal__head,
+    .sgal__chapter--3 .sgal__head {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .sgal__chapter--6 .sgal__head .sgal__summary,
+    .sgal__chapter--3 .sgal__head .sgal__summary {
+      grid-column: 1;
+      grid-row: auto;
+    }
+
+    /* As large as the column allows for its longest word (this type is about 0.88 of its size per letter). */
+    .sgal__name,
+    .sgal__chapter--6 .sgal__name,
+    .sgal__chapter--3 .sgal__name {
+      font-size: min(clamp(2.25rem, 12cqi, 5rem), 100cqi / (var(--len, 8) * 0.94));
+    }
+
+    .sgal__year {
+      font-size: clamp(6rem, 34vw, 13rem);
+      -webkit-text-stroke-width: 0.0625rem;
+      translate: 0 calc((var(--p) - 0.5) * -3rem);
+    }
+
+    .sgal__prints,
+    .sgal__chapter--2 .sgal__prints,
+    .sgal__chapter--3 .sgal__prints,
+    .sgal__chapter--6 .sgal__prints {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-auto-rows: auto;
+      gap: clamp(0.625rem, 3vw, 1.25rem);
+      align-items: start;
+    }
+
+    .sgal__print,
+    .sgal__chapter--6 .sgal__print--1,
+    .sgal__chapter--6 .sgal__print--2,
+    .sgal__chapter--6 .sgal__print--3,
+    .sgal__chapter--6 .sgal__print--4,
+    .sgal__chapter--6 .sgal__print--5,
+    .sgal__chapter--6 .sgal__print--6 {
+      grid-area: auto;
+      margin-top: 0;
+      aspect-ratio: 4 / 5;
+      translate: 0 calc((var(--p) - 0.5) * var(--depth) * 0.025rem);
+    }
+
+    /* The first photograph wide across both columns (and an odd one out at the end, too). */
+    .sgal__chapter--3 .sgal__print--1,
+    .sgal__chapter--6 .sgal__print--1,
+    .sgal__chapter--6 .sgal__print--6 {
+      grid-column: 1 / -1;
+      aspect-ratio: 4 / 3;
+    }
+
+    .sgal__chapter--2 .sgal__print--2 {
+      margin-top: clamp(2rem, 10vw, 4rem);
+    }
+
+    .sgal__chapter--1 .sgal__prints {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .sgal__chapter--1 .sgal__print {
+      width: 100%;
+    }
+
+    /* The photograph, large: as wide as the screen allows, the arrows along the foot within reach of a thumb. */
+    .sgal__viewer {
+      padding: 12svh 4vw 16svh;
+    }
+
+    .sgal__viewer-photo {
+      max-width: 92vw;
+      width: min(92vw, calc(68svh * var(--ar, 1)));
+    }
+
+    .sgal__viewer-prev,
+    .sgal__viewer-next {
+      top: auto;
+      bottom: max(3svh, env(safe-area-inset-bottom));
+      translate: none;
+    }
+
+    .sgal__viewer-prev {
+      left: 4vw;
+    }
+
+    .sgal__viewer-next {
+      right: 4vw;
+    }
+
+    .sgal__viewer-close {
+      top: max(2.5svh, env(safe-area-inset-top));
+      right: 4vw;
+    }
+  }
+
+  /* Tablets: the opening's two sides next to each other again, the pile beside the events. */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .sgal__hero-inner {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      min-height: min(100svh, 56rem);
+    }
+
+    .sgal__pile-print {
+      --x: calc((var(--k) - (var(--n) - 1) / 2) * min(5vw, 3rem));
+      width: min(28vw, 15rem);
+    }
+
+    .sgal__prints,
+    .sgal__chapter--2 .sgal__prints,
+    .sgal__chapter--3 .sgal__prints,
+    .sgal__chapter--6 .sgal__prints {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .sgal__chapter--3 .sgal__print--1,
+    .sgal__chapter--6 .sgal__print--1 {
+      grid-column: 1 / span 2;
+      grid-row: span 2;
+      aspect-ratio: auto;
+    }
+
+    .sgal__chapter--6 .sgal__print--6 {
+      grid-column: auto;
+      aspect-ratio: 4 / 5;
+    }
+
+    .sgal__chapter--2 .sgal__prints {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .sgal__chapter--1 .sgal__print {
+      width: min(100%, 27.5rem);
+      justify-self: center;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sgal__pile-print,
+    .sgal__pile-print img,
+    .sgal__print,
+    .sgal__print-btn,
+    .sgal__print-btn img,
+    .sgal__year {
+      animation: none;
+      transition: none;
+      translate: none;
+    }
+
+    .sgal__pile-print {
+      translate: calc(-50% + var(--x)) -50%;
+    }
+
+    .sgal__viewer-back {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  import { initSponsorGallery } from '@/scripts/system/sponsor-gallery';
+  initSponsorGallery();
+</script>

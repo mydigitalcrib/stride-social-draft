@@ -1,0 +1,53 @@
+---
+// The whole homepage as one scene, on every screen (phones and tablets too since 2026-11-13): the hero (home/CoverHero.astro) stays pinned while
+// "Three sides of Stride" (home/ContentsIndex.astro) scrolls up over it, so the visitor goes deeper
+// into the same world rather than on to a new section. First, over the scroll of the runway after the
+// hero (.scene__door), the big word becomes a door: the footage shows only through its letters, and it
+// grows through one of them until the footage fills the screen again. As the cards rise, the hero's type fades
+// away, its footage blurs and dims under a frosted navy glass (still moving underneath), and the
+// cards and the brand ticker arrive on top; the footer follows. Behaviour: src/scripts/system/hero-scene.ts.
+---
+
+<div class="scene" data-scene data-media-hold>
+  <slot />
+</div>
+
+<style>
+  /* The door's runway: with motion allowed (every screen since 2026-11-13). */
+  .scene :global(.scene__door) {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .scene :global(.scene__door) {
+      display: block;
+      height: 110vh;
+    }
+  }
+
+  @media all {
+    /* The hero stays in place for the whole scene. */
+    .scene :global(.cover) {
+      position: sticky;
+      top: 0;
+    }
+
+    /* The three sides rise over it: no background of their own (the hero's glass is theirs), some
+       room before the heading so the hero's type has gone by the time it arrives. The brand ticker
+       ends the scene: behind it the frosted footage melts away into the page's navy, which the
+       footer goes on in, so no edge shows where the footage stops. */
+    .scene :global(.sides) {
+      position: relative;
+      z-index: 1;
+      padding-top: 40vh;
+      padding-bottom: 0.5rem;
+      background: linear-gradient(to bottom, transparent calc(100% - 34vh), rgb(var(--navy-900-rgb) / 0.55) calc(100% - 14vh), var(--navy-900));
+    }
+  }
+
+</style>
+
+<script>
+  import { initHeroScene } from '@/scripts/system/hero-scene';
+  initHeroScene();
+</script>

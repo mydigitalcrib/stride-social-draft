@@ -1,0 +1,36 @@
+---
+// Our Team (brief §7: names, roles, genuine photographs and optional bios): a field of faces that swell
+// as you pass (group/TeamField), then the way to the open roles. Desktop: in front of the homepage's showreel as
+// About shows it (monochrome, in Stride's navy, blurred: core/BackVideo; the owner, 2026-11-12: "the background should
+// be the same as the about section"), on navy to the end; the departments are big words that light their people.
+// Phones and tablets are on the same navy, the departments big words in a line that scrolls sideways (the owner,
+// 2026-11-13).
+import { getEntry } from 'astro:content';
+import SiteLayout from '@/layouts/SiteLayout.astro';
+import TeamField from '@/components/group/TeamField.astro';
+import EnquiryClose from '@/components/social/EnquiryClose.astro';
+import PlaceholderNotice from '@/components/core/PlaceholderNotice.astro';
+import BackVideo from '@/components/core/BackVideo.astro';
+import { teamField } from '@/lib/team';
+import { isPreview } from '@/lib/env';
+
+const s = (await getEntry('pages', 'team'))?.data.sections;
+if (!s) throw new Error('Missing src/content/pages/team.yaml');
+const ui = (key: string, fallback: string) => s.field?.items?.find((i) => i.key === key)?.label ?? fallback;
+const { people, departments } = await teamField();
+---
+
+<SiteLayout title="Our Team | Stride" description={s.hero.body} look="deep" headerOverlay>
+  {/* On navy (desktop: in front of About's footage). */}
+  <BackVideo look="deep" mp4="/assets/video/stride-showreel-desktop.mp4" webm="/assets/video/stride-showreel-desktop.webm" poster="/assets/site/stride-showreel-desktop-poster.jpg" blur={12} />
+  <TeamField
+    look="deep"
+    copy={s.hero}
+    people={people}
+    departments={departments}
+    crumbs={[{ label: 'About', href: '/about' }, { label: 'Our Team' }]}
+    ui={{ all: ui('all', 'Everyone'), shuffle: ui('shuffle', 'Shuffle'), hint: s.field?.body ?? 'Move across the faces · click one to meet them', hintDesk: ui('hint-desk', 'Move across the faces') }}
+  />
+  {isPreview && <PlaceholderNotice variant="inline" label="Departments proposed">— derived from job titles; confirm (Gate 2)</PlaceholderNotice>}
+  <EnquiryClose headline={s.join.headline ?? ''} label={s.join.cta?.label ?? ''} href={s.join.cta?.href} tone="group" look="navy" deskLook="deep" glass />
+</SiteLayout>

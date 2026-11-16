@@ -1,0 +1,1030 @@
+---
+// Insights: the articles as a big list of headlines. Moving down the list, each headline slides forward
+// and its picture floats beside the pointer in a glass frame. Narrow it by topic and by how long you've
+// got (reading times are worked out from each article's own length). The latest stands above it all.
+// Behaviour: src/scripts/system/headlines.ts, filters: archive-filter.ts. Phones and tablets have the same page
+// (2026-11-13): no picture beside the headlines there, and the headline in the middle of the screen is the lit one.
+// Desktop (the owner's choice, 2026-11-12): on navy, in front of the homepage's showreel (pages/insights): the headline
+// lit; the latest a cover that leans to the pointer; the topics as big words; the time as a glowing slider; the
+// headlines in big type, the one pointed at lit and the rest in outline, each with a line as long as its read.
+// Also on desktop: the latest in depth as it leans (its picture behind, its badge in front) and lit at its edge when
+// pointed at or focused; a chosen topic fills with light from the left; while the slider is worked every headline
+// shows its line against a faint mark at your time, the track lit up to the thumb; the keyboard gets what the
+// pointer gets (the rest of the list in outline, the picture beside the focused headline); and moving from one
+// headline to the next turns the picture like a stack of prints (headlines.ts). Sizes are in rem, so the page
+// grows past 1920×1080 as the rest of the site does.
+import Breadcrumbs from '../global/Breadcrumbs.astro';
+import { pad } from '@/lib/experience';
+
+type Item = { id: string; title: string; href: string; cover: string; category: string; categoryLabel: string; date: string; minutes: number; standfirst?: string };
+
+export interface Props {
+  copy: { eyebrow?: string; headline?: string; body?: string };
+  lead?: Item;
+  items: Item[];
+  categories: { id: string; label: string }[];
+  /** The longest read, the top of the time slider. */
+  maxMinutes: number;
+  ui: { topic: string; time: string; all: string; any: string; upto: string; read: string; more: string; empty: string; clear: string; latest: string };
+  crumbs: { label: string; href?: string }[];
+}
+
+const { copy, lead, items, categories, maxMinutes, ui, crumbs } = Astro.props;
+const longest = Math.max(5, ...(copy.headline ?? '').split(/\s+/).map((w) => w.length));
+// A title with a word no line can hold (a web address) may break inside it on desktop; every other title keeps its
+// words whole, as the design has them (a long word like "comprehensive" never splits on a narrow laptop).
+const unbroken = (title: string) => title.split(/\s+/).some((w) => w.length > 17);
+---
+
+<section class="heads" aria-labelledby="heads-title" data-heads data-archive data-tone="group" data-look="navy">
+  <div class="heads__inner container-wide">
+    <header class="heads__top">
+      <div class="heads__lead" data-reveal="from-left">
+        <Breadcrumbs items={crumbs} tone="dark" />
+        <h1 class="heads__title exp-title" id="heads-title" style={`--len: ${longest}`}>{copy.headline}</h1>
+        {copy.body && <p class="heads__body">{copy.body}</p>}
+      </div>
+      {lead && (
+        <a class="latest glass on-photo" href={lead.href} data-latest>
+          <span class="latest__tag" aria-hidden="true">{ui.latest}</span>
+          <img class="latest__image" src={lead.cover} alt="" sizes="(max-width: 1023px) 100vw, 46vw" fetchpriority="high" decoding="async" />
+          <span class="latest__text">
+            <span class="exp-label">{lead.categoryLabel} · {lead.date}</span>
+            <span class:list={['latest__name exp-title', { 'is-unbroken': unbroken(lead.title) }]}>{lead.title}</span>
+            {lead.standfirst && <span class="latest__stand">{lead.standfirst}</span>}
+            <span class="exp-pill">
+              {ui.read} · {lead.minutes} min
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
+            </span>
+          </span>
+        </a>
+      )}
+    </header>
+
+    <div class="heads__bar glass">
+      <div class="heads__group">
+        <p class="exp-label" id="heads-topic">{ui.topic}</p>
+        <div class="heads__chips" role="group" aria-labelledby="heads-topic" data-filter-group="category">
+          <button class="exp-chip" type="button" aria-pressed="true" data-value="all">{ui.all}</button>
+          {categories.map((c) => <button class="exp-chip" type="button" aria-pressed="false" data-value={c.id}>{c.label}</button>)}
+        </div>
+      </div>
+      <div class="heads__group">
+        <p class="exp-label" id="heads-time">{ui.time}</p>
+        <div class="heads__slider">
+          <input type="range" min="1" max={maxMinutes} step="1" value={maxMinutes} aria-labelledby="heads-time" data-filter-max="minutes" data-any={ui.any} data-upto={ui.upto} />
+          <output class="exp-chip" data-filter-max-label>{ui.any}</output>
+        </div>
+      </div>
+      <p class="heads__count exp-label" role="status" aria-live="polite" data-filter-count data-noun="article|articles">{items.length} articles</p>
+    </div>
+
+    <ol class="heads__list" role="list" data-archive-grid data-page-size="14" data-heads-list>
+      {items.map((a, i) => (
+        <li class="hline" data-filter-category={a.category} data-minutes={a.minutes} style={`--read: ${(a.minutes / maxMinutes).toFixed(3)}`}>
+          <a class="hline__link" href={a.href} data-cover={a.cover}>
+            <img class="hline__thumb" src={a.cover} alt="" sizes="96px" loading="lazy" decoding="async" />
+            <span class="hline__n" aria-hidden="true">{pad(i + 1)}</span>
+            <h2 class:list={['hline__name', { 'is-unbroken': unbroken(a.title) }]}>{a.title}</h2>
+            <span class="hline__meta">
+              <span>{a.categoryLabel}</span>
+              <span>{a.date}</span>
+              <span class="hline__min">{a.minutes} min</span>
+            </span>
+          </a>
+        </li>
+      ))}
+    </ol>
+
+    <div class="heads__empty" hidden data-filter-empty>
+      <p>{ui.empty}</p>
+      <button class="exp-pill exp-pill--ghost" type="button" data-filter-clear>{ui.clear}</button>
+    </div>
+    <div class="heads__more">
+      <button class="exp-pill exp-pill--ghost" type="button" data-load-more hidden>{ui.more}</button>
+    </div>
+  </div>
+
+  <div class="heads__float" aria-hidden="true" data-heads-float>
+    <img alt="" data-heads-a />
+    <img alt="" data-heads-b />
+  </div>
+</section>
+
+<style>
+  .heads {
+    position: relative;
+    min-height: 100svh;
+    overflow: clip;
+    padding-block: calc(var(--header-h) + var(--space-3)) var(--space-8);
+    color: rgb(var(--ink));
+  }
+
+  .heads__inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: clamp(var(--space-5), 4vh, var(--space-7));
+  }
+
+  .heads__top {
+    display: grid;
+    grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
+    gap: var(--space-5) var(--gutter);
+    align-items: center;
+    min-height: calc(100svh - var(--header-h) - 200px);
+  }
+
+  .heads__lead {
+    display: grid;
+    gap: var(--space-4);
+    container-type: inline-size;
+  }
+
+  .heads__title {
+    font-size: min(7rem, calc(100cqi / (var(--len) * 0.84)));
+  }
+
+  .heads__body {
+    max-width: 28rem;
+    font-size: var(--type-lead);
+    line-height: 1.36;
+    color: rgb(var(--ink) / 0.88);
+  }
+
+  /* ---------- The latest ---------- */
+  .latest {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    align-items: flex-end;
+    height: min(60svh, 34rem);
+    overflow: hidden;
+    color: rgb(var(--ink));
+    transition:
+      translate 500ms var(--ease-out),
+      box-shadow 500ms var(--ease-out);
+  }
+
+  .latest:hover,
+  .latest:focus-visible {
+    translate: 0 -5px;
+    outline: none;
+    box-shadow:
+      inset 0 0 0 1.5px rgb(var(--tone-lit) / 0.95),
+      0 0 34px -4px rgb(var(--tone-glow) / 0.6);
+  }
+
+  .latest__image {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+    filter: contrast(1.1) saturate(1.18) brightness(0.72);
+    transition: transform 900ms var(--ease-out);
+  }
+
+  .latest:hover .latest__image {
+    transform: scale(1.04);
+  }
+
+  .latest__text {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-3);
+    width: 100%;
+    padding: clamp(20px, 2.2vw, 34px);
+    background: linear-gradient(to top, rgb(var(--navy-900-rgb) / 0.92), transparent);
+  }
+
+  .latest__name {
+    font-size: clamp(1.375rem, 2.3vw, 2.5rem);
+    line-height: 0.98;
+  }
+
+  .latest__stand {
+    display: -webkit-box;
+    max-width: 40rem;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    color: rgb(var(--ink) / 0.88);
+  }
+
+  /* ---------- The filters ---------- */
+  .heads__bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--space-4) var(--space-7);
+    padding: clamp(14px, 1.5vw, 22px) clamp(18px, 2vw, 28px);
+  }
+
+  .heads__group {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .heads__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .heads__slider {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .heads__slider input {
+    width: clamp(160px, 18vw, 280px);
+    accent-color: rgb(var(--tone-lit));
+    cursor: grab;
+  }
+
+  .heads__slider input:active {
+    cursor: grabbing;
+  }
+
+  .heads__slider input:focus-visible {
+    outline: 2px solid rgb(var(--tone-lit));
+    outline-offset: 4px;
+  }
+
+  .heads__slider output {
+    white-space: nowrap;
+  }
+
+  .heads__count {
+    align-self: center;
+    margin-left: auto;
+  }
+
+  /* ---------- The headlines ---------- */
+  .heads__list {
+    display: grid;
+  }
+
+  .hline[hidden] {
+    display: none;
+  }
+
+  .hline__link {
+    position: relative;
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr);
+    gap: var(--space-2) var(--space-5);
+    padding-block: clamp(14px, 1.5vw, 22px);
+    border-bottom: 1px solid rgb(var(--hair) / 0.14);
+    color: rgb(var(--ink));
+    transition:
+      padding-left 420ms cubic-bezier(0.2, 1.2, 0.35, 1),
+      border-color 300ms var(--ease-out);
+  }
+
+  .hline__thumb {
+    display: none;
+  }
+
+  .hline__n {
+    padding-top: 0.7em;
+    font-family: var(--font-mono);
+    font-size: var(--type-label);
+    color: rgb(var(--tone-lit));
+  }
+
+  /* The right of each row stays free: that's where the picture floats. */
+  .hline__name {
+    max-width: 62%;
+    font-family: var(--font-display);
+    font-size: clamp(1.25rem, 2.3vw, 2.5rem);
+    font-weight: 800;
+    line-height: 1.04;
+    letter-spacing: -0.012em;
+    color: rgb(var(--ink) / 0.86);
+    transition: color 300ms var(--ease-out);
+  }
+
+  .hline__meta {
+    grid-column: 2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px var(--space-3);
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgb(var(--ink) / 0.74);
+  }
+
+  .hline__min {
+    color: rgb(var(--tone-lit));
+  }
+
+  .hline__link:hover,
+  .hline__link:focus-visible {
+    padding-left: var(--space-5);
+    border-color: rgb(var(--tone-lit) / 0.8);
+    outline: none;
+  }
+
+  .hline__link:hover .hline__name,
+  .hline__link:focus-visible .hline__name {
+    color: rgb(var(--ink));
+  }
+
+  .heads__empty {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-3);
+    padding-block: var(--space-6);
+    font-size: var(--type-lead);
+  }
+
+  .heads__empty[hidden] {
+    display: none;
+  }
+
+  .heads__more {
+    display: flex;
+    justify-content: center;
+  }
+
+  /* The picture following the pointer. */
+  .heads__float {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 30;
+    width: clamp(240px, 24vw, 380px);
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: 22px;
+    background: var(--navy-700);
+    box-shadow:
+      0 0 0 1.5px rgb(var(--tone-lit) / 0.9),
+      0 0 40px -6px rgb(var(--tone-glow) / 0.6),
+      0 30px 60px -24px rgb(var(--shade) / 0.85);
+    opacity: 0;
+    pointer-events: none;
+    transform: translate3d(var(--fx, 0), var(--fy, 0), 0) rotate(var(--fr, 0deg)) scale(var(--fs, 0.86));
+    transition: opacity 240ms var(--ease-out);
+  }
+
+  .heads.is-previewing .heads__float {
+    --fs: 1;
+    opacity: 1;
+  }
+
+  .heads__float img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 280ms var(--ease-out);
+  }
+
+  .heads__float img.is-on {
+    opacity: 1;
+  }
+
+  /* ---------- Desktop: on navy, everything in big type and light ---------- */
+  .latest__tag {
+    display: none;
+  }
+
+  /* In rem from here, so past 1920×1080 it all grows with the page (styles/system/tokens.css); up to it, the same. */
+  /* Every screen (phones' own sizes further down). */
+  @media all {
+    .heads {
+      padding-bottom: var(--space-8);
+    }
+
+    /* The opening screen takes the share of the screen it takes at 1920×1080 on any larger one, so the filters
+       stay at its fold. */
+    .heads__top {
+      min-height: calc(100svh - var(--header-h) - 12.5rem);
+    }
+
+    .heads__title {
+      font-size: min(9rem, calc(100cqi / (var(--len) * 0.8)));
+    }
+
+    /* The latest: a cover leaning to the pointer (--rx, --ry: the script), in depth: its picture shifts the other
+       way behind it and its badge stands in front, turning (--tx, --ty). */
+    .latest.glass {
+      border-radius: 1.375rem;
+      transform: perspective(68.75rem) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+      transition:
+        transform 300ms var(--ease-out),
+        box-shadow 500ms var(--ease-out);
+      box-shadow:
+        inset 0 0 0 1px rgb(var(--white-rgb) / 0.2),
+        0 0 5rem -1.25rem rgb(var(--ice-rgb) / 0.35),
+        0 3.125rem 5.625rem -2.5rem rgb(0 0 0 / 0.95);
+    }
+
+    .latest:hover,
+    .latest:focus-visible {
+      translate: none;
+    }
+
+    /* Pointed at or focused, its edge lights (the focus ring for the keyboard). */
+    .latest.glass:hover,
+    .latest.glass:focus-visible {
+      box-shadow:
+        inset 0 0 0 1.5px rgb(var(--tone-lit) / 0.95),
+        0 0 2.125rem -0.25rem rgb(var(--tone-glow) / 0.6),
+        0 3.125rem 5.625rem -2.5rem rgb(0 0 0 / 0.95);
+    }
+
+    /* The shift keeps the zoom's pace, so as the pointer comes on it never runs ahead of the zoom and opens an edge. */
+    .latest__image {
+      transition:
+        transform 900ms var(--ease-out),
+        translate 900ms var(--ease-out);
+    }
+
+    /* Within the zoom's margin (2% a side), so no edge ever shows. */
+    .latest:hover .latest__image {
+      translate: calc(var(--tx, 0) * -3%) calc(var(--ty, 0) * -3%);
+    }
+
+    .latest__text {
+      padding: clamp(1.25rem, 2.2vw, 2.125rem);
+    }
+
+    /* A word too long for any line (a web address in a title) breaks rather than running out of the cover; other
+       titles keep their words whole (.is-unbroken, set in the markup). */
+    .latest__name.is-unbroken {
+      overflow-wrap: anywhere;
+    }
+
+    .latest__tag {
+      position: absolute;
+      top: 1.375rem;
+      right: 1.375rem;
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      width: 5.75rem;
+      height: 5.75rem;
+      border-radius: 50%;
+      background: var(--white);
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--navy-900);
+      box-shadow: 0 0 2.125rem rgb(var(--ice-rgb) / 0.6);
+      translate: calc(var(--tx, 0) * 0.9rem) calc(var(--ty, 0) * 0.9rem);
+      rotate: calc(-12deg + var(--tx, 0) * 8deg);
+      transition:
+        translate 300ms var(--ease-out),
+        rotate 300ms var(--ease-out);
+    }
+
+    /* The filters: no panel; the topics as big words, the time as a glowing slider. */
+    .heads__bar.glass {
+      align-items: end;
+      gap: var(--space-5) var(--space-7);
+      padding: 0 0 var(--space-4);
+      border-radius: 0;
+      background: none;
+      box-shadow: inset 0 -1px 0 rgb(var(--hair) / 0.2);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+
+    .heads__chips {
+      gap: 0.25rem 1.375rem;
+    }
+
+    /* (The doubled class keeps the site's glass buttons, styles/system/glass.css, off these words.) */
+    .heads__chips .exp-chip.exp-chip {
+      position: relative;
+      min-height: 0;
+      padding: 0;
+      border-radius: 0;
+      background: none;
+      box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      font-family: var(--font-display);
+      font-size: clamp(1.25rem, 1.9vw, 2rem);
+      font-weight: 850;
+      font-stretch: var(--stretch-wide);
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+      color: transparent;
+      -webkit-text-stroke: 0.0625rem rgb(var(--white-rgb) / 0.55);
+      transition:
+        color 240ms var(--ease-out),
+        -webkit-text-stroke-color 240ms var(--ease-out),
+        text-shadow 300ms var(--ease-out);
+    }
+
+    .heads__chips .exp-chip.exp-chip:hover {
+      background: none;
+      box-shadow: none;
+      -webkit-text-stroke-color: var(--white);
+    }
+
+    .heads__chips .exp-chip.exp-chip[aria-pressed='true'] {
+      background: none;
+      box-shadow: none;
+      color: var(--white);
+      -webkit-text-stroke-color: var(--white);
+      text-shadow: 0 0 1.625rem rgb(var(--ice-rgb) / 0.5);
+    }
+
+    /* Chosen, a topic fills with light from the left, and the one left drains to the right: the script lays each
+       word's solid self over it (the same label, hidden from screen readers), so the word itself stays an outline.
+       The clip reaches past the word by more than its glow (2rem against 1.625rem), so the glow isn't cut. */
+    .heads.has-fill .heads__chips .exp-chip.exp-chip[aria-pressed='true'] {
+      color: transparent;
+      text-shadow: none;
+    }
+
+    .heads__chips .exp-chip.exp-chip :global(.heads__fill) {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      color: var(--white);
+      -webkit-text-stroke: 0.0625rem var(--white);
+      text-shadow: 0 0 1.625rem rgb(var(--ice-rgb) / 0.5);
+      clip-path: inset(-2rem calc(100% + 2rem) -2rem -2rem);
+      pointer-events: none;
+    }
+
+    .heads__chips .exp-chip.exp-chip.was-on :global(.heads__fill) {
+      clip-path: inset(-2rem -2rem -2rem calc(100% + 2rem));
+      transition: clip-path 560ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .heads__chips .exp-chip.exp-chip[aria-pressed='true'] :global(.heads__fill) {
+      clip-path: inset(-2rem);
+      transition: clip-path 560ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* The slider: its track lit up to the thumb (--v, the script; full at rest, as it starts at the top). */
+    .heads__slider input {
+      width: clamp(12.5rem, 20vw, 20rem);
+      height: 1.625rem;
+      background: transparent;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .heads__slider input::-webkit-slider-runnable-track {
+      height: 0.25rem;
+      border-radius: 0.25rem;
+      background: linear-gradient(90deg, var(--white), rgb(var(--ice-rgb) / 0.5) calc(var(--v, 1) * 100%), rgb(var(--white-rgb) / 0.14) calc(var(--v, 1) * 100%));
+      box-shadow: 0 0 0.875rem rgb(var(--ice-rgb) / 0.7);
+    }
+
+    .heads__slider input::-moz-range-track {
+      height: 0.25rem;
+      border-radius: 0.25rem;
+      background: linear-gradient(90deg, var(--white), rgb(var(--ice-rgb) / 0.5) calc(var(--v, 1) * 100%), rgb(var(--white-rgb) / 0.14) calc(var(--v, 1) * 100%));
+    }
+
+    .heads__slider input::-webkit-slider-thumb {
+      width: 1.5rem;
+      height: 1.5rem;
+      margin-top: -0.625rem;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, var(--white), rgb(var(--ice-rgb) / 0.7));
+      box-shadow:
+        0 0 0 0.3125rem rgb(var(--ice-rgb) / 0.22),
+        0 0 1.375rem rgb(var(--ice-rgb) / 0.9);
+      appearance: none;
+      -webkit-appearance: none;
+      transition:
+        transform 180ms var(--ease-out),
+        box-shadow 180ms var(--ease-out);
+    }
+
+    .heads__slider input::-moz-range-thumb {
+      width: 1.5rem;
+      height: 1.5rem;
+      border: 0;
+      border-radius: 50%;
+      background: var(--white);
+      box-shadow: 0 0 1.375rem rgb(var(--ice-rgb) / 0.9);
+      transition:
+        transform 180ms var(--ease-out),
+        box-shadow 180ms var(--ease-out);
+    }
+
+    /* Held, the thumb swells and glows; focused from the keyboard, it glows. */
+    .heads__slider input:focus-visible {
+      outline-offset: 0.25rem;
+    }
+
+    .heads__slider input:active::-webkit-slider-thumb {
+      transform: scale(1.18);
+    }
+
+    .heads__slider input:active::-moz-range-thumb {
+      transform: scale(1.18);
+    }
+
+    .heads__slider input:is(:active, :focus-visible)::-webkit-slider-thumb {
+      box-shadow:
+        0 0 0 0.4375rem rgb(var(--ice-rgb) / 0.28),
+        0 0 1.875rem var(--ice);
+    }
+
+    .heads__slider input:is(:active, :focus-visible)::-moz-range-thumb {
+      box-shadow:
+        0 0 0 0.4375rem rgb(var(--ice-rgb) / 0.28),
+        0 0 1.875rem var(--ice);
+    }
+
+    .heads__slider output {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 850;
+      font-stretch: var(--stretch-wide);
+      text-transform: uppercase;
+    }
+
+    /* The headlines: big type, the one pointed at lit and the rest in outline, a line as long as its read. */
+    .hline__link {
+      grid-template-columns: 3rem minmax(0, 1fr) auto;
+      align-items: center;
+      padding-block: clamp(1.125rem, 2.4svh, 1.875rem);
+    }
+
+    /* Pointed at or focused, the number and the words slide forward, not the row: its width stays, so a headline
+       never rewraps (and moves the list) under the pointer. */
+    .hline__link:hover,
+    .hline__link:focus-visible {
+      padding-left: 0;
+    }
+
+    .hline__n {
+      transition: translate 420ms var(--spring-soft, cubic-bezier(0.3, 1.25, 0.45, 1));
+    }
+
+    .hline__link:hover .hline__n,
+    .hline__link:hover .hline__name,
+    .hline__link:focus-visible .hline__n,
+    .hline__link:focus-visible .hline__name {
+      translate: var(--space-5) 0;
+    }
+
+    /* On a short laptop screen the size follows the height too, so a screen still holds a few headlines: only where
+       the window is under about 0.53 of its width tall (1366×657, 1536×750 once the browser's bars are counted), so a
+       16:9 or 16:10 window, and 1920×1080 with its bars, keep the size as it was. The outline is there all along,
+       clear, so the rest of the list eases into it rather than snapping. */
+    .hline__name {
+      max-width: 70%;
+      font-size: clamp(1.75rem, min(3.2vw, 6svh), 3.5rem);
+      font-weight: 850;
+      font-stretch: var(--stretch-wide);
+      line-height: 1;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+      color: var(--white);
+      -webkit-text-stroke: 0.0625rem transparent;
+      transition:
+        color 300ms var(--ease-out),
+        -webkit-text-stroke-color 300ms var(--ease-out),
+        translate 420ms var(--spring-soft, cubic-bezier(0.3, 1.25, 0.45, 1));
+    }
+
+    /* Only a title with a word no line can hold (a web address) breaks inside its words; the rest wrap whole, so a
+       narrow laptop never shows "comprehens / ive". */
+    .hline__name.is-unbroken {
+      overflow-wrap: anywhere;
+    }
+
+    .heads__list:hover .hline__link:not(:hover) .hline__name {
+      color: transparent;
+      -webkit-text-stroke-color: rgb(var(--white-rgb) / 0.4);
+    }
+
+    /* The same from the keyboard: the focused headline lit, the rest in outline. */
+    .heads__list:not(:hover):has(.hline__link:focus-visible) .hline__link:not(:focus-visible) .hline__name {
+      color: transparent;
+      -webkit-text-stroke-color: rgb(var(--white-rgb) / 0.4);
+    }
+
+    .hline__meta {
+      grid-column: 3;
+      grid-row: 1;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.25rem;
+      text-align: right;
+    }
+
+    .hline__link::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: calc(var(--read, 0.3) * 100%);
+      height: 2px;
+      background: linear-gradient(90deg, rgb(var(--ice-rgb) / 0.2), rgb(var(--ice-rgb) / 0.9));
+      box-shadow: 0 0 0.75rem rgb(var(--ice-rgb) / 0.6);
+      scale: 0 1;
+      transform-origin: 0 50%;
+      transition: scale 600ms cubic-bezier(0.2, 0.9, 0.3, 1);
+    }
+
+    .hline__link:hover::after,
+    .hline__link:focus-visible::after {
+      scale: 1 1;
+    }
+
+    /* How long have you got, charted: while the slider is worked (.is-timing, the script) every headline shows its
+       line, rising one after another down the screen (--i), and a faint line over the list marks your time (--cut),
+       so each read visibly ends inside it. */
+    .heads.is-timing .hline__link::after {
+      scale: 1 1;
+      transition: scale 520ms cubic-bezier(0.2, 0.9, 0.3, 1) min(calc(var(--i, 0) * 22ms), 300ms);
+    }
+
+    .heads.is-untiming .hline__link::after {
+      transition-duration: 360ms;
+      transition-delay: 0s;
+    }
+
+    .heads__list {
+      position: relative;
+    }
+
+    .heads__list::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-left: 1px solid rgb(var(--ice-rgb) / 0.9);
+      opacity: 0;
+      pointer-events: none;
+      translate: calc(var(--cut, 1) * 100%) 0;
+      -webkit-mask-image: linear-gradient(to bottom, #000, transparent);
+      mask-image: linear-gradient(to bottom, #000, transparent);
+      transition: opacity 300ms var(--ease-out);
+    }
+
+    .heads.is-timing .heads__list::before {
+      opacity: 0.35;
+    }
+
+    /* The picture beside the pointer: a print, white edged. It grows out of its side nearest the headlines as it
+       appears (landing with a little give) and shrinks back as it goes. During a turn to the next picture the one
+       coming in is on top (.is-top, the script). Placed with translate and rotate rather than transform: the scale
+       property applies after transform, so it would shrink the frame's place on the screen too (and fly it in). */
+    .heads__float {
+      width: clamp(15rem, 24vw, 23.75rem);
+      border-radius: 0.625rem;
+      box-shadow:
+        0 0 0 0.375rem var(--white),
+        0 2.5rem 4.375rem -1.625rem rgb(0 0 0 / 0.9);
+      transform: none;
+      translate: var(--fx, 0) var(--fy, 0);
+      rotate: var(--fr, 0deg);
+      transform-origin: 0 50%;
+      scale: 0.86;
+      will-change: transform;
+      transition:
+        opacity 200ms var(--ease-out),
+        scale 200ms var(--ease-out);
+    }
+
+    .heads.is-previewing .heads__float {
+      scale: 1;
+      transition:
+        opacity 240ms var(--ease-out),
+        scale 320ms var(--spring-pop, cubic-bezier(0.2, 1.4, 0.35, 1));
+    }
+
+    .heads__float img.is-on {
+      z-index: 1;
+    }
+
+    .heads__float img.is-top {
+      z-index: 2;
+      opacity: 1;
+      transition: none;
+    }
+  }
+
+  /* A narrow laptop: the latest's pill keeps its words on one line. */
+  @media (min-width: 1024px) and (max-width: 1199px) {
+    .latest__text {
+      padding-inline: 1rem;
+    }
+
+    .latest .exp-pill {
+      padding-inline: 1rem;
+      white-space: nowrap;
+    }
+  }
+
+  /* Reduced motion: nothing slides, swells or turns; the lines and the time marker fade in and out. */
+  @media (prefers-reduced-motion: reduce) {
+    .latest.glass,
+    .latest__image,
+    .latest__tag,
+    .hline__n,
+    .hline__name,
+    .heads__chips .exp-chip.exp-chip,
+    .heads__chips .exp-chip.exp-chip.was-on :global(.heads__fill),
+    .heads__chips .exp-chip.exp-chip[aria-pressed='true'] :global(.heads__fill) {
+      transition: none;
+    }
+
+    .heads__slider input::-webkit-slider-thumb {
+      transition: none;
+    }
+
+    .heads__slider input::-moz-range-thumb {
+      transition: none;
+    }
+
+    .latest:hover .latest__image {
+      translate: none;
+    }
+
+    .heads__float,
+    .heads.is-previewing .heads__float {
+      scale: none;
+      transition: opacity 240ms var(--ease-out);
+    }
+
+    .hline__link::after {
+      scale: 1 1;
+      opacity: 0;
+      transition: opacity 150ms var(--ease-out);
+    }
+
+    .hline__link:hover::after,
+    .hline__link:focus-visible::after,
+    .heads.is-timing .hline__link::after {
+      opacity: 1;
+    }
+
+    .heads.is-timing .hline__link::after {
+      transition: opacity 150ms var(--ease-out);
+    }
+
+    .heads__list::before {
+      transition: opacity 150ms var(--ease-out);
+    }
+  }
+
+  /* ---------- Phones and tablets: the same page, sized for the screen (2026-11-13) ---------- */
+  @media (max-width: 1023px) {
+    .heads__top {
+      grid-template-columns: minmax(0, 1fr);
+      min-height: 0;
+    }
+
+    .heads__float {
+      display: none;
+    }
+
+    .heads__count {
+      margin-left: 0;
+    }
+
+    .latest__tag {
+      top: 1rem;
+      right: 1rem;
+      width: 4.5rem;
+      height: 4.5rem;
+      font-size: 0.5625rem;
+    }
+
+    .heads__bar.glass {
+      gap: var(--space-4);
+    }
+
+    .heads__chips .exp-chip.exp-chip {
+      font-size: clamp(1.25rem, 6vw, 1.75rem);
+    }
+
+    /* Each headline: its number, then the words in big type across the screen, its date and read under them. */
+    .hline__link {
+      grid-template-columns: 2.25rem minmax(0, 1fr);
+      gap: 0.375rem var(--space-3);
+      padding-block: 1rem;
+    }
+
+    .hline__name {
+      max-width: none;
+      font-size: clamp(1.375rem, 6.2vw, 2.25rem);
+    }
+
+    .hline__meta {
+      grid-column: 2;
+      grid-row: auto;
+      flex-direction: row;
+      align-items: center;
+      text-align: left;
+    }
+
+    /* A tap leaves :hover behind on a phone: no slide for it. */
+    .hline__link:hover .hline__n,
+    .hline__link:hover .hline__name {
+      translate: none;
+    }
+
+    /* The headline in the middle of the screen is the lit one, with its read line; the rest in outline (headlines.ts). */
+    .heads__list.has-near .hline__link:not(.is-near) .hline__name {
+      color: transparent;
+      -webkit-text-stroke-color: rgb(var(--white-rgb) / 0.4);
+    }
+
+    .hline__link.is-near::after {
+      scale: 1 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .latest,
+    .latest__image,
+    .hline__link,
+    .hline__name {
+      transition: none;
+    }
+
+    .latest:hover {
+      translate: none;
+    }
+
+    .latest:hover .latest__image {
+      transform: none;
+    }
+  }
+</style>
+
+<script>
+  import { initArchiveFilters } from '@/scripts/system/archive-filter';
+  import { initHeadlines } from '@/scripts/system/headlines';
+  import { reduced } from '@/scripts/system/env';
+  initArchiveFilters();
+  initHeadlines();
+  // With a mouse: the latest leans towards the pointer, its picture
+  // shifting the other way behind it and its badge in front (--rx, --ry, and --tx, --ty from -0.5 to 0.5). Its box
+  // is measured as the pointer comes onto it and carried through a scroll, never read while it's tilted, and the
+  // lean is written once a frame.
+  if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    const latest = document.querySelector<HTMLElement>('[data-latest]');
+    if (latest && !reduced()) {
+      let box: { left: number; top: number; width: number; height: number } | null = null;
+      let px = 0;
+      let py = 0;
+      let queued = false;
+      const half = (n: number) => Math.max(-0.5, Math.min(0.5, n));
+      const set = (u: number, v: number) => {
+        latest.style.setProperty('--ry', `${(u * 10).toFixed(2)}deg`);
+        latest.style.setProperty('--rx', `${(-v * 8).toFixed(2)}deg`);
+        latest.style.setProperty('--tx', u.toFixed(3));
+        latest.style.setProperty('--ty', v.toFixed(3));
+      };
+      const measure = () => {
+        const r = latest.getBoundingClientRect();
+        box = { left: r.left, top: r.top + window.scrollY, width: r.width || 1, height: r.height || 1 };
+      };
+      const lean = () => {
+        queued = false;
+        if (box) set(half((px - box.left) / box.width - 0.5), half((py + window.scrollY - box.top) / box.height - 0.5));
+      };
+      latest.addEventListener('pointerenter', measure, { passive: true });
+      latest.addEventListener(
+        'pointermove',
+        (e) => {
+          px = e.clientX;
+          py = e.clientY;
+          if (!box) measure();
+          if (queued) return;
+          queued = true;
+          requestAnimationFrame(lean);
+        },
+        { passive: true },
+      );
+      latest.addEventListener(
+        'pointerleave',
+        () => {
+          box = null;
+          set(0, 0);
+        },
+        { passive: true },
+      );
+      window.addEventListener('resize', () => (box = null), { passive: true });
+    }
+  }
+</script>

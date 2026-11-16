@@ -1,0 +1,56 @@
+# Creator content categories: the roster filters. From the client brief (PDF §5), plus those Stride's roster
+# sheet uses (2026-11-06). The first eight are the hero's filters.
+- id: sport
+  label: Sport
+  order: 1
+- id: beauty
+  label: Beauty
+  order: 2
+- id: fashion
+  label: Fashion
+  order: 3
+- id: lifestyle
+  label: Lifestyle
+  order: 4
+- id: travel
+  label: Travel
+  order: 5
+- id: family
+  label: Family
+  order: 6
+- id: fitness
+  label: Fitness and wellness
+  order: 7
+- id: food
+  label: Food
+  order: 8
+- id: entertainment
+  label: Entertainment
+  order: 9
+- id: technology
+  label: Technology
+  order: 10
+- id: gaming
+  label: Gaming
+  order: 11
+- id: books
+  label: Books
+  order: 12
+- id: pets
+  label: Pets
+  order: 13
+- id: creative
+  label: Art and DIY
+  order: 14
+- id: music
+  label: Music
+  order: 15
+- id: podcasts
+  label: Podcasts
+  order: 16
+- id: speakers
+  label: Speakers
+  order: 17
+- id: other
+  label: Other
+  order: 18

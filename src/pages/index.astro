@@ -1,0 +1,94 @@
+---
+// Group homepage: one scene. The editorial video hero, then "Three sides of Stride" rising over it
+// with the brand partners ticker; its three giant rows lead to the Social, Talent and Academy pages. On
+// desktop the page ends there, without the footer; phones and tablets keep the footer (the division pages
+// they used to carry here, home/Portals.astro, went when they were rebuilt from the desktop, 2026-11-13). Copy lives in src/content/pages/home.yaml; brands come
+// through their status rule.
+import SiteLayout from '@/layouts/SiteLayout.astro';
+import CoverHero from '@/components/home/CoverHero.astro';
+import HeroScene from '@/components/home/HeroScene.astro';
+import ContentsIndex from '@/components/home/ContentsIndex.astro';
+import { getEntry } from 'astro:content';
+import { site, socials } from '@/config/site';
+
+const page = await getEntry('pages', 'home');
+if (!page) throw new Error('Missing src/content/pages/home.yaml');
+const s = page.data.sections;
+
+type DivisionKey = 'social' | 'talent' | 'education';
+
+// Organization + WebSite structured data: real company facts only (no address until Q3).
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Stride',
+    legalName: site.legalName,
+    url: site.url,
+    logo: new URL(site.favicon, site.url).href,
+    sameAs: socials.map((s) => s.href),
+  },
+  { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Stride', url: site.url },
+];
+---
+
+<SiteLayout
+  title="Stride Social | Influencer Advertising & Talent Agency"
+  description="Stride is a global media group built around creators: Stride Social for brands, Stride Talent for creators and Stride Academy for the next generation."
+  headerOverlay
+  noDeskFooter
+  jsonLd={jsonLd}
+>
+  {/* One scene: the footage stays pinned while the cards rise over it. */}
+  <HeroScene>
+    <CoverHero
+      headline={s.hero.lines ?? []}
+      description={s.hero.body ?? ''}
+      awards={(s.awards?.items ?? []).flatMap((a) => (a.image ? [{ src: a.image, alt: a.label }] : []))}
+      reel={{
+        // Desktop: the showreel supplied for the hero (a CapCut export, re-encoded without sound). Phones
+        // keep the cut made from the campaign footage already on the site (scratchpad make-reel.py).
+        label: 'Showreel of Stride creator campaigns',
+        mp4: '/assets/video/stride-showreel-desktop.mp4',
+        webm: '/assets/video/stride-showreel-desktop.webm',
+        poster: '/assets/site/stride-showreel-desktop-poster.jpg',
+        mobile: {
+          mp4: '/assets/video/stride-reel-mobile.mp4',
+          webm: '/assets/video/stride-reel-mobile.webm',
+          poster: '/assets/site/stride-reel-mobile-poster.jpg',
+        },
+      }}
+      opening
+      routes={(s.sides.items ?? []).map((item) => ({ audience: item.audience ?? '', name: item.label, href: item.href ?? '/', division: item.key as DivisionKey }))}
+      intro={{
+        // The divisions take turns after STRIDE; the last name holds as the opening ends.
+        words: [
+          { label: 'Social', division: 'social' },
+          { label: 'Talent', division: 'talent' },
+          // Stride Sport, part of Stride Talent (the owner, 2026-11-13); plain, as lime is Talent's own name only.
+          { label: 'Sport' },
+          { label: 'Academy', division: 'education' },
+          { label: 'Group' },
+        ],
+      }}
+    />
+
+    {/* The scroll the word takes to become a door (src/scripts/system/hero-scene.ts), on every screen. */}
+    <div class="scene__door" aria-hidden="true" data-door-run></div>
+
+    <ContentsIndex
+      headline={s.sides.headline ?? ''}
+      body={s.sides.body}
+      items={(s.sides.items ?? []).map((item) => ({
+        key: item.key as DivisionKey,
+        label: item.label,
+        audience: item.audience ?? '',
+        copy: item.copy,
+        cta: item.cta ?? `Explore Stride ${item.label}`,
+        href: item.href ?? '/',
+      }))}
+      partners={s.partners ? { cue: s.partners.eyebrow ?? '', brands: s.partners.featured ?? [] } : undefined}
+    />
+
+  </HeroScene>
+</SiteLayout>

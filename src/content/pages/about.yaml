@@ -1,0 +1,93 @@
+# About Stride copy (docs/phase-2/05-wireframes.md §E). The three sides and the markets come from
+# home.yaml and the markets collection, so they are written once.
+sections:
+  hero:
+    status: approved
+    eyebrow: About Stride
+    headline: About Stride.
+    # The homepage hero line (client brief, PDF §3).
+    body: One global group. Three businesses shaping how creators build careers, how brands reach audiences, and how the next generation gets started.
+
+  model:
+    status: approved
+    eyebrow: How the group works
+    headline: Three sides of Stride.
+
+  # Mission and values must be Stride's own (brief §7); nothing is shown until they are supplied.
+  mission:
+    status: draft
+    eyebrow: Mission and values
+    headline: What we stand for.
+    awaiting: [Group mission statement, 3 to 5 company values]
+
+  presence:
+    status: approved
+    eyebrow: Where we work
+    headline: International presence.
+
+  # Founders' story, from Stride's history supplied by the owner (2026-11-13), edited for spelling and grammar;
+  # "best friends since they were 12" is the previous site's (the owner's text starts "Alex and Ollie were").
+  # Draft until the owner has read it over. Founder portraits need approval.
+  founders:
+    status: draft
+    eyebrow: Our story
+    headline: How it started.
+    body: |-
+      Alex and Ollie have been best friends since they were 12. Between playing sports, starting small e-commerce businesses and building themed Instagram pages, they discovered a shared entrepreneurial streak. School wasn’t easy for either of them: both have learning difficulties, and Alex dealt with dyspraxia and speech therapy.
+    # The founders' photographs, from the owner (2026-11-13): prints beside the year in About's story (desktop).
+    images:
+      - src: /assets/history/founders-together.jpg
+        alt: "Alex and Ollie side by side on a yellow sofa by a window at night"
+      - src: /assets/history/founders-portrait-1.jpg
+        alt: "One of Stride's founders in a black T-shirt, in the office in front of a white brick wall"
+      - src: /assets/history/founders-portrait-2.jpg
+        alt: "The other founder in a light blue T-shirt, in the same office"
+
+  # Stride's LinkedIn newsletter, after the team (the owner, 2026-11-13). Its name, line and how often it comes out
+  # as LinkedIn gives them (read 2026-11-13; the line's spelling fixed); the four latest editions, newest first, each
+  # `key` the LinkedIn post that shares it (its preview over the page is LinkedIn's own embed of that post), `label` its
+  # title, `audience` its month, `copy` its reading time, `href` the article. Add each new edition at the top and drop
+  # the oldest. Subscriber counts are left out: they change every day.
+  newsletter:
+    status: draft
+    eyebrow: Newsletter on LinkedIn · Published weekly
+    headline: Stride with Influencers
+    body: Weekly updates about the influencer industry, trends and what's going on with Stride.
+    cta:
+      label: Subscribe on LinkedIn
+      href: https://www.linkedin.com/newsletters/stride-with-influencers-7424820846042578944
+    items:
+      - key: urn:li:activity:7525528525748146190
+        label: New Month, New Momentum
+        audience: November 2026
+        copy: 5 min read
+        href: https://www.linkedin.com/pulse/stride-social-november-2026-newsletter-new-month-momentum-behdf
+      - key: urn:li:activity:7520455297979768832
+        label: The October Edit
+        audience: October 2026
+        copy: 5 min read
+        href: https://www.linkedin.com/pulse/stride-social-october-2026-newsletter-edit-stridesocialagency-lnlvf
+      - key: urn:li:activity:7515382336243507201
+        label: October in Motion
+        audience: October 2026
+        copy: 6 min read
+        href: https://www.linkedin.com/pulse/stride-social-october-2026-newsletter-motion-stridesocialagency-zlpwf
+      - key: urn:li:activity:7510308028592803840
+        label: Closing Out September
+        audience: September 2026
+        copy: 5 min read
+        href: https://www.linkedin.com/pulse/stride-social-september-2026-newsletter-closing-out-kugpf
+
+  more:
+    status: approved
+    eyebrow: More about the group
+    items:
+      - label: Our History
+        copy: The milestones, from the first videos to three businesses.
+        href: /history
+      - label: Our Team
+        copy: The people behind Stride.
+        href: /team
+      - label: Careers
+        copy: Open roles and the placement scheme.
+        href: /careers

@@ -1,0 +1,538 @@
+---
+// Videos from creators' own YouTube channels, for a page of Stride Talent's (Stride Podcasts' episodes, Stride Sport's
+// brand videos): the copy file's `placements.items` whose link is a YouTube video (`key`: the creator's roster entry,
+// named only while published, or `channel`, the name of a show's channel outside the roster; `label`: the title as
+// YouTube gives it; `copy`: when, or the brand as the video names it). A Spotify episode can stand among them (`kind`
+// spotify: its picture is the episode's own from Spotify, by address, and the screen's play button loads Spotify's own
+// player, only then, as it sets Spotify's cookies; phones get a link to Spotify). A video whose channel has turned off
+// playing it elsewhere (`embed` false) opens on YouTube from the list and from the screen, marked with an arrow.
+// Desktop: a screen and its running order. The screen shows the one chosen, its picture large; the list beside it, each
+// with its picture, who and what; pointing at one shows it on the screen, a click puts it there, and the screen's play
+// button loads the video from YouTube (privacy-enhanced, only then, so nothing of YouTube's loads before). Phones and
+// tablets have the same screen, its running order under it (a tap puts one on the screen; the owner, 2026-11-13). The
+// pictures are YouTube's own, by address.
+// On desktop the screen's picture changes by a crossfade once the next one is ready (two pictures, one over the other),
+// the running order scrolls under the wheel, and a video playing hushes the footage behind the page. Between 1024 and
+// 1279px wide the screen takes the whole width, with the running order in two columns under it, so neither is cramped.
+// Very large screens fetch YouTube's larger thumbnails for the list. A video with a moment (`start`, in seconds: the
+// link's `t`) starts there, on the screen and on YouTube. Behaviour: video-wall.ts.
+import { interfaceCopy } from '@/lib/ui-copy';
+
+export interface Props {
+  id: string;
+  eyebrow?: string;
+  headline?: string;
+  body?: string;
+  videos: {
+    kind?: 'youtube' | 'spotify';
+    id: string;
+    start?: number;
+    embed?: boolean;
+    image?: string;
+    title: string;
+    who?: { name: string; href?: string } | null;
+    note?: string;
+  }[];
+}
+type Video = Props['videos'][number];
+
+const { id, eyebrow, headline, body, videos } = Astro.props;
+const t = await interfaceCopy();
+const thumb = (v: string, size = 'hqdefault') => `https://i.ytimg.com/vi/${v}/${size}.jpg`;
+const spotify = (v: Video) => v.kind === 'spotify';
+// Where each one opens outside the page, and its picture.
+const link = (v: Video) => (spotify(v) ? `https://open.spotify.com/episode/${v.id}` : `https://www.youtube.com/watch?v=${v.id}${v.start ? `&t=${v.start}s` : ''}`);
+const picture = (v: Video, size = 'hqdefault') => (spotify(v) ? (v.image ?? '') : thumb(v.id, size));
+const first = videos[0];
+---
+
+<section class="vwall" aria-labelledby={`${id}-title`} data-tone="talent" data-look="deep" data-video-wall data-play-words={t('video.play')}>
+  <div class="vwall__inner">
+    <header class="vwall__head">
+      {eyebrow && <p class="exp-label">{eyebrow}</p>}
+      <h2 class="vwall__title exp-title" id={`${id}-title`}>{headline}</h2>
+      {body && <p class="vwall__body">{body}</p>}
+    </header>
+
+    {first && (
+      <div class="vwall__set">
+        {/* The screen. */}
+        <div class:list={['vwall__screen', { 'is-out': first.embed === false }]} data-vwall-screen>
+          <img class:list={['vwall__poster is-front', { 'is-art': spotify(first) }]} src={picture(first)} alt="" decoding="async" referrerpolicy="no-referrer" data-vwall-poster />
+          <img class:list={['vwall__poster', { 'is-art': spotify(first) }]} src={picture(first)} alt="" decoding="async" referrerpolicy="no-referrer" data-vwall-poster />
+          <button class="vwall__play" type="button" data-vwall-play aria-label={`${t('video.play')}: ${first.title}${first.embed === false ? ' (on YouTube, in a new tab)' : ''}`}>
+            <svg class="vwall__icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"></path></svg>
+            <svg class="vwall__icon-out" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h10v10M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </button>
+          <div class="vwall__now">
+            {first.who && <span class="vwall__who exp-label" data-vwall-who>{first.who.name}</span>}
+            <b data-vwall-title>{first.title}</b>
+            {first.note && <span class="vwall__note" data-vwall-note>{first.note}</span>}
+          </div>
+        </div>
+
+        <ol class="vwall__list" role="list" data-vwall-list>
+          {videos.map((v, i) => (
+            <li>
+              <a class:list={['vwall__item', { 'is-on': i === 0 }]} href={link(v)} target="_blank" rel="noopener" data-vwall-item={v.id} data-kind={v.kind ?? 'youtube'} data-image={spotify(v) ? v.image : undefined} data-out={v.embed === false ? 'true' : undefined} data-start={v.start} data-title={v.title} data-who={v.who?.name ?? ''} data-note={v.note ?? ''}>
+                <span class:list={['vwall__thumb', { 'is-art': spotify(v) }]}>{spotify(v) ? <img src={picture(v)} alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" /> : <picture><source media="(min-width: 2400px)" srcset={thumb(v.id)} /><img src={thumb(v.id, 'mqdefault')} alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" /></picture>}<i class:list={['vwall__mini-play', { 'is-out': v.embed === false }]} aria-hidden="true"></i></span>
+                <span class="vwall__text">
+                  {v.who && <span class="vwall__who exp-label">{v.who.name}</span>}
+                  <span class="vwall__item-title">{v.title}</span>
+                  {v.note && <span class="vwall__note">{v.note}</span>}
+                </span>
+                <span class="visually-hidden">: on {spotify(v) ? 'Spotify' : 'YouTube'}, in a new tab</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </div>
+    )}
+  </div>
+</section>
+
+<style>
+  .vwall {
+    position: relative;
+    padding-block: clamp(56px, 9vh, 110px);
+    color: rgb(var(--ink));
+  }
+
+  .vwall__inner {
+    display: grid;
+    gap: var(--space-5);
+    margin-inline: var(--margin);
+  }
+
+  .vwall__head {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-3);
+  }
+
+  .vwall__title {
+    font-size: clamp(2rem, 3.4vw, 3.5rem);
+  }
+
+  .vwall__body {
+    max-width: 44ch;
+    font-size: 1.0625rem;
+    color: rgb(var(--ink) / 0.8);
+  }
+
+  /* Phones and tablets: the pictures in a grid, each opening the video on YouTube. */
+  .vwall__list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 10px;
+  }
+
+  .vwall__item {
+    display: grid;
+    gap: 8px;
+    color: inherit;
+  }
+
+  .vwall__thumb {
+    position: relative;
+    display: block;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #050c1a;
+  }
+
+  .vwall__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: scale 700ms var(--ease-out);
+  }
+
+  .vwall__mini-play {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: rgb(var(--navy-900-rgb) / 0.75);
+    box-shadow: inset 0 0 0 1px rgb(var(--white-rgb) / 0.4);
+  }
+
+  .vwall__mini-play::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 52%;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 5px 0 5px 8px;
+    border-color: transparent transparent transparent var(--white);
+    translate: -50% -50%;
+  }
+
+  /* One that opens on YouTube (its channel has turned off playing it elsewhere): an arrow in place of the triangle. */
+  .vwall__mini-play.is-out::after {
+    content: '\2197';
+    left: 50%;
+    width: auto;
+    height: auto;
+    border: 0;
+    font-size: 15px;
+    line-height: 1;
+    color: var(--white);
+  }
+
+  /* A Spotify episode's picture is square: shown whole, on the dark. */
+  .vwall__thumb.is-art img {
+    object-fit: contain;
+  }
+
+  .vwall__text {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .vwall__who {
+    color: rgb(var(--tone-lit));
+  }
+
+  .vwall__item-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .vwall__note {
+    font-size: 0.8125rem;
+    color: rgb(var(--ink) / 0.62);
+  }
+
+  .vwall__item:focus-visible {
+    outline: 2px solid rgb(var(--tone-lit));
+    outline-offset: 4px;
+    border-radius: 10px;
+  }
+
+  /* ---------- Desktop: the screen and its running order ----------
+     Sizes in rem, so the scene grows with a large screen as the type around it does (styles/system/tokens.css). */
+  /* The screen and its running order, on every screen (desktop's sizes; phones' and tablets' below). */
+  @media all {
+    .vwall {
+      padding-block: clamp(3.5rem, 9vh, 6.875rem);
+    }
+
+    .vwall__set {
+      display: grid;
+      grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+      gap: clamp(1.25rem, 2.4vw, 2.5rem);
+      align-items: start;
+    }
+
+    .vwall__screen {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      border-radius: 0.875rem;
+      background: #050c1a;
+      box-shadow:
+        inset 0 0 0 1px rgb(var(--white-rgb) / 0.12),
+        0 0 5.625rem -1.25rem rgb(var(--ice-rgb) / 0.3),
+        0 3.125rem 5.625rem -2.75rem rgb(0 0 0 / 0.95);
+    }
+
+    .vwall__poster,
+    .vwall__screen :global(iframe) {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    /* Two pictures, one over the other: the next one comes in over the last once it's ready (video-wall.ts), and the
+       one going stays whole underneath until it has, so nothing behind ever shows through. */
+    .vwall__poster {
+      object-fit: cover;
+      opacity: 0;
+      transition:
+        opacity 0s linear 280ms,
+        scale 1200ms var(--ease-out);
+    }
+
+    .vwall__poster.is-front {
+      z-index: 1;
+      opacity: 1;
+      transition:
+        opacity 280ms var(--ease-out),
+        scale 1200ms var(--ease-out);
+    }
+
+    .vwall__screen:hover .vwall__poster {
+      scale: 1.03;
+    }
+
+    .vwall__screen::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(to top, rgb(var(--navy-900-rgb) / 0.92), rgb(var(--navy-900-rgb) / 0.2) 46%, transparent 64%);
+      pointer-events: none;
+    }
+
+    .vwall__screen.is-playing::after,
+    .vwall__screen.is-playing .vwall__now,
+    .vwall__screen.is-playing .vwall__play,
+    .vwall__screen.is-playing .vwall__poster {
+      display: none;
+    }
+
+    /* The play button: a round of glass, glowing, the light catching it as the pointer comes. */
+    .vwall__play {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      z-index: 3;
+      display: grid;
+      place-items: center;
+      width: 5.75rem;
+      height: 5.75rem;
+      margin: -2.875rem 0 0 -2.875rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgb(var(--white-rgb) / 0.3), rgb(var(--white-rgb) / 0.08));
+      box-shadow:
+        inset 0 0 0 1px rgb(var(--white-rgb) / 0.5),
+        0 0 2.5rem rgb(var(--ice-rgb) / 0.45);
+      color: var(--white);
+      backdrop-filter: blur(0.875rem);
+      -webkit-backdrop-filter: blur(0.875rem);
+      transition:
+        scale 380ms var(--spring-pop, cubic-bezier(0.2, 1.4, 0.35, 1)),
+        box-shadow 300ms var(--ease-out);
+    }
+
+    .vwall__play svg {
+      width: 2.125rem;
+      height: 2.125rem;
+      margin-left: 0.3125rem;
+      fill: currentColor;
+    }
+
+    /* For one that opens on YouTube, the button's triangle becomes an arrow; a Spotify episode's square picture shows
+       whole on the screen. */
+    .vwall__icon-out,
+    .vwall__screen.is-out .vwall__icon-play {
+      display: none;
+    }
+
+    .vwall__screen.is-out .vwall__icon-out {
+      display: block;
+      margin-left: 0;
+    }
+
+    .vwall__poster.is-art {
+      object-fit: contain;
+    }
+
+    .vwall__screen:hover .vwall__play {
+      scale: 1.1;
+      box-shadow:
+        inset 0 0 0 1px rgb(var(--white-rgb) / 0.7),
+        0 0 4.375rem rgb(var(--ice-rgb) / 0.7);
+    }
+
+    .vwall__play:focus-visible {
+      outline: 2px solid rgb(var(--tone-lit));
+      outline-offset: 4px;
+    }
+
+    .vwall__now {
+      position: absolute;
+      right: 1.75rem;
+      bottom: 1.5rem;
+      left: 1.75rem;
+      z-index: 2;
+      display: grid;
+      gap: 0.375rem;
+      pointer-events: none;
+    }
+
+    .vwall__now b {
+      max-width: 36ch;
+      font-family: var(--font-display);
+      font-size: clamp(1.0625rem, 1.4vw, 1.5rem);
+      font-weight: 850;
+      line-height: 1.1;
+    }
+
+    .vwall__now .vwall__note {
+      font-size: 0.9375rem;
+    }
+
+    /* The running order: one to a line, scrolling if long; the one on the screen lit. It's the box for what's in it
+       (each link's hidden words included), so none of it reaches past it and lengthens the page. */
+    .vwall__list {
+      position: relative;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.375rem;
+      max-height: min(70svh, calc((100vw - 2 * var(--margin)) * 0.62 * 9 / 16 + 2.5rem));
+      padding-right: 0.375rem;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+      scrollbar-color: rgb(var(--white-rgb) / 0.25) transparent;
+    }
+
+    .vwall__item {
+      grid-template-columns: 8.25rem minmax(0, 1fr);
+      align-items: center;
+      gap: 0.875rem;
+      padding: 0.5rem;
+      border-radius: 0.75rem;
+      transition:
+        background-color 220ms var(--ease-out),
+        box-shadow 220ms var(--ease-out);
+    }
+
+    .vwall__item:focus-visible {
+      border-radius: 0.75rem;
+    }
+
+    .vwall__item:hover {
+      background: rgb(var(--white-rgb) / 0.06);
+    }
+
+    .vwall__item.is-on {
+      background: rgb(var(--tone-lit) / 0.12);
+      box-shadow: inset 0 0 0 1px rgb(var(--tone-lit) / 0.45);
+    }
+
+    .vwall__item:hover .vwall__thumb img {
+      scale: 1.06;
+    }
+
+    .vwall__thumb {
+      border-radius: 0.5rem;
+    }
+
+    .vwall__mini-play {
+      right: 0.5rem;
+      bottom: 0.5rem;
+      width: 1.625rem;
+      height: 1.625rem;
+    }
+
+    .vwall__mini-play::after {
+      border-width: 0.3125rem 0 0.3125rem 0.5rem;
+    }
+
+    .vwall__mini-play.is-out::after {
+      border-width: 0;
+      font-size: 0.9375rem;
+    }
+
+    .vwall__text {
+      gap: 0.1875rem;
+    }
+
+    .vwall__item-title {
+      font-size: 0.875rem;
+    }
+  }
+
+  /* Narrower desktops (1024 to 1279px): the screen takes the whole width, so its words clear the play button, and the
+     running order goes under it in two columns wide enough to read. */
+  @media (min-width: 1024px) and (max-width: 1279px) {
+    .vwall__set {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .vwall__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      max-height: min(46svh, 26rem);
+    }
+  }
+
+  /* ---------- Phones and tablets: the screen, then the running order under it ---------- */
+  @media (max-width: 1023px) {
+    .vwall__set {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-4);
+    }
+
+    .vwall__screen {
+      border-radius: 1rem;
+    }
+
+    .vwall__play {
+      width: 4rem;
+      height: 4rem;
+    }
+
+    .vwall__play svg {
+      width: 1.5rem;
+      height: 1.5rem;
+    }
+
+    .vwall__now {
+      right: 1rem;
+      bottom: 0.875rem;
+      left: 1rem;
+      gap: 0.25rem;
+    }
+
+    .vwall__now b {
+      font-size: 1rem;
+    }
+
+    .vwall__now .vwall__note {
+      font-size: 0.8125rem;
+    }
+
+    .vwall__list {
+      max-height: none;
+      padding-right: 0;
+      overflow: visible;
+    }
+
+    .vwall__item {
+      grid-template-columns: 7.5rem minmax(0, 1fr);
+      gap: 0.75rem;
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .vwall__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vwall__thumb img,
+    .vwall__poster,
+    .vwall__poster.is-front,
+    .vwall__play {
+      transition: none;
+    }
+
+    /* Nothing grows under the pointer: only the light and the colour change. */
+    .vwall__screen:hover .vwall__poster,
+    .vwall__screen:hover .vwall__play,
+    .vwall__item:hover .vwall__thumb img {
+      scale: none;
+    }
+  }
+</style>
+
+<script>
+  import { initVideoWalls } from '@/scripts/system/video-wall';
+  initVideoWalls();
+</script>

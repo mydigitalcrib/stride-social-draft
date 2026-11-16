@@ -1,0 +1,897 @@
+---
+// Careers (brief §7: company information, team culture, available opportunities and an application
+// route): open roles as glass tickets that lean towards the pointer and grow into a big card, then a team
+// picker that addresses your application email (group/TeamPicker). Production lists only roles Stride has
+// confirmed open; preview also shows the previous site's postings, labelled. Culture copy must be Stride's own.
+// Desktop (the owner's choice, 2026-11-12): in front of an abstract blue clip (core/BackVideo), all in one navy. The
+// roles are numbered lines of big type; pointed at, one lights up and the rest go quiet; pressed, it opens where it is
+// (what it is, where, "Read the role", "Apply by email"). The team picker carries straight on below, in the same navy.
+// Phones and tablets have the same roles and the same navy (the owner, 2026-11-13).
+// Desktop motion: going quiet, a role's ink drains out of its letters and leaves the outline; lit again, the ink fills
+// back in along the line. Its details come in one after another as it opens, and one that would end below the screen
+// eases into view. The keyboard gets the same: focus lights a role as the pointer does, the arrow keys, Home and End
+// move between them, Escape closes the open one. The headline's sheen rests while it's off the screen.
+import { getCollection, getEntry } from 'astro:content';
+import SiteLayout from '@/layouts/SiteLayout.astro';
+import BigCard from '@/components/experience/BigCard.astro';
+import Breadcrumbs from '@/components/global/Breadcrumbs.astro';
+import TeamPicker from '@/components/group/TeamPicker.astro';
+import PlaceholderNotice from '@/components/core/PlaceholderNotice.astro';
+import { careersEmail } from '@/config/forms';
+import { routes } from '@/lib/routes';
+import { isPreview } from '@/lib/env';
+import { pad } from '@/lib/experience';
+import { interfaceCopy } from '@/lib/ui-copy';
+import BackVideo from '@/components/core/BackVideo.astro';
+import { byOrder } from '@/lib/team';
+const t = await interfaceCopy();
+
+const s = (await getEntry('pages', 'careers'))?.data.sections;
+if (!s) throw new Error('Missing src/content/pages/careers.yaml');
+const roles = (await getCollection('roles', (r) => r.data.status === 'open' || (isPreview && r.data.status === 'legacy'))).sort((a, b) => a.data.order - b.data.order);
+const applyFor = (title: string) => `mailto:${careersEmail}?subject=${encodeURIComponent(`Application: ${title}`)}`;
+const roleTitle = (title: string) => title.replace(/^Placement Scheme:\s*/i, '');
+// The longest word in any role's name, which the desktop lines size to so it never runs past its column.
+const roleLen = Math.max(5, ...roles.flatMap((r) => roleTitle(r.data.title).split(/\s+/).map((w) => w.length)));
+
+const labels = { talent: 'Talent', campaigns: 'Campaigns', social: 'Social media', sales: 'Sales', operations: 'Operations' } as const;
+const team = (await getCollection('team', (m) => m.data.visible)).sort(byOrder);
+const teams = (Object.keys(labels) as (keyof typeof labels)[])
+  .map((id) => {
+    const members = team.filter((m) => m.data.department === id);
+    return { id, label: labels[id], count: members.length, faces: members.slice(0, 9).map((m) => m.data.photo) };
+  })
+  .filter((t) => t.count > 0);
+const ui = (key: string, fallback: string) => s.picker?.items?.find((i) => i.key === key)?.label ?? fallback;
+---
+
+<SiteLayout title="Careers | Stride" description={s.hero.body} look="navy" headerOverlay>
+  <BackVideo look="deep" mp4="/assets/video/careers-blue.mp4" poster="/assets/site/careers-blue-poster.jpg" />
+  {/* Desktop: one navy to the end, so the team picker carries on in front of the same clip. */}
+  <section class="jobs" aria-labelledby="jobs-title" data-jobs data-tone="group" data-look="navy">
+    <div class="jobs__inner container-wide">
+      <div class="jobs__lead" data-reveal="from-left">
+        <Breadcrumbs items={[{ label: 'Careers' }]} tone="dark" />
+        <h1 class="jobs__title exp-title" id="jobs-title">{s.hero.headline}</h1>
+        <p class="jobs__body">{s.hero.body}</p>
+        {roles.length > 0 && <p class="jobs__count"><b>{roles.length}</b> {roles.length === 1 ? t('careers.open1') : t('careers.open')}</p>}
+        {isPreview && <PlaceholderNotice variant="inline" label="Needed from Stride">— {(s.culture.awaiting ?? []).join(' · ')}</PlaceholderNotice>}
+      </div>
+
+      {/* The roles as lines of big type, each opening where it is. */}
+      {roles.length > 0 && (
+        <div class="roles" data-roles style={`--len: ${roleLen}`}>
+          <p class="exp-label">{s.roles.eyebrow} · {s.roles.headline}</p>
+          <ol class="roles__list" role="list">
+            {roles.map((r, i) => (
+              <li class="roles__item" data-role>
+                <button class="roles__head" type="button" aria-expanded="false" aria-controls={`role-${r.id}`} data-role-toggle>
+                  <span class="roles__no">{pad(i + 1)}</span>
+                  <span class="roles__name">
+                    {r.data.scheme && <span class="roles__flag">{t('careers.scheme')}</span>}
+                    <span class="roles__text">{roleTitle(r.data.title)}</span>
+                  </span>
+                  <span class="roles__plus" aria-hidden="true"></span>
+                </button>
+                <div class="roles__more" id={`role-${r.id}`} data-role-more>
+                  <div class="roles__more-inner">
+                    <p class="roles__chips">{[r.data.location, r.data.salary].filter(Boolean).map((x) => <span>{x}</span>)}</p>
+                    {r.data.summary && <p class="roles__summary">{r.data.summary}</p>}
+                    <p class="roles__ways">
+                      <a class="exp-pill" href={applyFor(r.data.title)}>
+                        {t('careers.apply')}
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
+                      </a>
+                      <a class="roles__read" href={routes.role(r.id)}>
+                        {t('careers.read')}
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
+                      </a>
+                    </p>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
+      {/* The tickets: only when no role is open (with roles, they're the lines above). */}
+      <div class:list={['jobs__board', { 'jobs__board--spare': roles.length > 0 }]} data-jobs-board>
+        <p class="exp-label">{s.roles.eyebrow} · {s.roles.headline}</p>
+        {roles.length > 0 ? (
+          <ul class="jobs__tickets" role="list" data-grow-row>
+            {roles.map((r, i) => (
+              <li class="jobs__ticket-wrap">
+                <a class="ticket" href={routes.role(r.id)} draggable="false" data-grow-card={r.id} data-ticket>
+                  <span class="ticket__sheen" aria-hidden="true"></span>
+                  <span class="ticket__main">
+                    {r.data.scheme && <span class="ticket__flag">Placement scheme</span>}
+                    <span class="ticket__name">{r.data.title.replace(/^Placement Scheme:\s*/i, '')}</span>
+                    <span class="ticket__meta">
+                      {[r.data.location, r.data.salary].filter(Boolean).map((x) => <span class="exp-chip">{x}</span>)}
+                    </span>
+                  </span>
+                  <span class="ticket__stub" aria-hidden="true" data-ticket-stub data-mailto={applyFor(r.data.title)}>
+                    <span class="exp-label">No. {pad(i + 1)}</span>
+                    <span class="ticket__tear desk-only">{t('ticket.tear')}</span>
+                    <span class="exp-round"><svg viewBox="0 0 24 24"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg></span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="jobs__none">No open roles right now. We still like hearing from people who want to work with creators.</p>
+        )}
+      </div>
+    </div>
+
+    <div class="jobs__details">
+      {roles.map((r) => (
+        <BigCard
+          growKey={r.id}
+          eyebrow={s.roles.eyebrow ?? ''}
+          card={{
+            name: r.data.title,
+            text: r.data.summary,
+            href: routes.role(r.id),
+            chips: [r.data.location, r.data.salary].filter((x): x is string => !!x),
+            action: { label: 'Read the role', href: routes.role(r.id) },
+            blocks: [{ title: 'Apply by email', text: careersEmail, href: applyFor(r.data.title), action: 'Apply by email' }],
+          }}
+        />
+      ))}
+    </div>
+  </section>
+
+  <TeamPicker eyebrow={s.apply.eyebrow} headline={s.apply.headline} body={s.apply.body} email={careersEmail} teams={teams} pick={ui('pick', 'Which team would you fit?')} send={ui('send', 'Write to the careers inbox')} />
+</SiteLayout>
+
+<style>
+  .jobs {
+    position: relative;
+    display: grid;
+    align-items: center;
+    min-height: 100svh;
+    padding-block: calc(var(--header-h) + var(--space-3)) var(--space-6);
+    overflow: clip;
+    color: rgb(var(--ink));
+  }
+
+  .jobs__inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: var(--space-6) var(--gutter);
+    align-items: center;
+    width: 100%;
+  }
+
+  .jobs__lead {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-4);
+    container-type: inline-size;
+  }
+
+  .jobs__title {
+    font-size: clamp(2.5rem, 17cqi, 6.5rem);
+  }
+
+  .jobs__body {
+    max-width: 30rem;
+    font-size: var(--type-lead);
+    line-height: 1.36;
+    color: rgb(var(--ink) / 0.88);
+  }
+
+  .jobs__board {
+    display: grid;
+    gap: var(--space-4);
+    perspective: 1400px;
+  }
+
+  .jobs__tickets {
+    display: grid;
+    gap: clamp(14px, 1.6vw, 24px);
+  }
+
+  .jobs__none {
+    font-size: var(--type-lead);
+  }
+
+  /* ---------- Desktop: the headline lit, the roles as lines of big type ---------- */
+  .jobs__count {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: var(--type-label);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgb(var(--ink) / 0.75);
+  }
+
+  .jobs__count b {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 3vw, 3rem);
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    color: rgb(var(--ink));
+    text-shadow: 0 0 24px rgb(var(--ice-rgb) / 0.5);
+  }
+
+  .jobs__board--spare {
+    display: none;
+  }
+
+  /* The roles, on every screen (phones and tablets rebuilt from the desktop, the owner, 2026-11-13; their own sizes
+     below). The lengths are in rem, so past 1920×1080 the lines, the plus and their spacing grow with the type
+     (tokens.css); up to it they're the pixels they were. */
+  @media all {
+    .jobs__count {
+      gap: 0.625rem;
+    }
+
+    .jobs__count b {
+      text-shadow: 0 0 1.5rem rgb(var(--ice-rgb) / 0.5);
+    }
+
+    .roles {
+      display: grid;
+      gap: var(--space-4);
+      container-type: inline-size;
+    }
+
+    .roles__list {
+      display: grid;
+      border-top: 1px solid rgb(var(--hair) / 0.2);
+    }
+
+    .roles__item {
+      border-bottom: 1px solid rgb(var(--hair) / 0.2);
+    }
+
+    .roles__head {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 1.375rem;
+      width: 100%;
+      padding: clamp(1.125rem, 2.6svh, 1.875rem) 0.25rem;
+      text-align: left;
+    }
+
+    .roles__no {
+      align-self: start;
+      margin-top: 0.4em;
+      font-family: var(--font-mono);
+      font-size: var(--type-label);
+      letter-spacing: 0.12em;
+      color: rgb(var(--tone-lit));
+    }
+
+    /* As large as 2.7vw, but never wider than the column: its longest word (--len, at about 0.9em a letter) has to
+       fit beside the number, the gaps, the plus and the slide (7.75rem). Up to 1440 wide that's the 2.7vw it was;
+       on a narrow laptop it steps down so "COMMUNICATIONS" stays clear of the plus. */
+    .roles__name {
+      display: grid;
+      justify-items: start;
+      gap: 0.625rem;
+      font-family: var(--font-display);
+      font-size: clamp(1.25rem, min(2.7vw, (100cqi - 7.75rem) / (var(--len, 14) * 0.9)), 2.875rem);
+      font-weight: 850;
+      font-stretch: var(--stretch-wide);
+      line-height: 1;
+      letter-spacing: -0.015em;
+      text-transform: uppercase;
+      color: rgb(var(--ink));
+      transition: translate 380ms var(--ease-out);
+    }
+
+    /* The name's ink can drain out of the letters as a fill clipped to them. At rest the name is just its solid colour,
+       exactly as it was (the fill is sized to nothing, so the glow stays under the letters, untinted); going quiet,
+       the fill takes the colour's place and drains out. The soft edge sits between the two halves of the 210%
+       gradient, so it only shows while it moves. */
+    .roles__text {
+      background: linear-gradient(90deg, rgb(var(--ink)) 48%, transparent 52%) 0 0 / 0 0 no-repeat;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: rgb(var(--ink));
+      -webkit-text-stroke: 0 transparent;
+      /* Lit again: the ink fills back in along the line; the outline stays under it until it's covered, then the
+         colour takes over from the fill and the outline goes. */
+      transition:
+        background-position 480ms var(--ease-in-out),
+        background-size 0s linear 480ms,
+        color 0s linear 480ms,
+        -webkit-text-stroke-color 0s linear 480ms,
+        -webkit-text-stroke-width 0s linear 480ms;
+      transition-behavior: allow-discrete;
+    }
+
+    .roles__flag {
+      padding: 0.25rem 0.625rem;
+      border-radius: 999px;
+      background: rgb(var(--tone-lit) / 0.18);
+      box-shadow: inset 0 0 0 1px rgb(var(--tone-lit) / 0.6);
+      font-family: var(--font-mono);
+      font-size: 0.625rem;
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      color: rgb(var(--ink));
+    }
+
+    /* Pointed at (or reached with the keyboard), one lights up and slides a little; the others go quiet: the ink
+       drains out of them, leaving the outline (in rem, so it keeps its weight on a 4K or 8K screen). */
+    .roles__list:hover .roles__item:not(:hover):not(.is-open) .roles__text {
+      background-position: 100% 0;
+      background-size: 210% 100%;
+      color: transparent;
+      -webkit-text-stroke: 0.0625rem rgb(var(--ink) / 0.45);
+      transition:
+        background-position 480ms var(--ease-in-out),
+        -webkit-text-stroke-color 200ms var(--ease-out);
+    }
+
+    .roles__item:hover .roles__name,
+    .roles__item.is-open .roles__name {
+      translate: 0.625rem 0;
+      text-shadow: 0 0 1.875rem rgb(var(--ice-rgb) / 0.4);
+    }
+
+    /* The keyboard's version, in rules of their own so a browser without :has() keeps the pointer's. */
+    .roles__list:has(:focus-visible) .roles__item:not(:has(:focus-visible)):not(.is-open) .roles__text {
+      background-position: 100% 0;
+      background-size: 210% 100%;
+      color: transparent;
+      -webkit-text-stroke: 0.0625rem rgb(var(--ink) / 0.45);
+      transition:
+        background-position 480ms var(--ease-in-out),
+        -webkit-text-stroke-color 200ms var(--ease-out);
+    }
+
+    .roles__item:has(.roles__head:focus-visible) .roles__name {
+      translate: 0.625rem 0;
+      text-shadow: 0 0 1.875rem rgb(var(--ice-rgb) / 0.4);
+    }
+
+    /* A plus that turns into a minus. */
+    .roles__plus {
+      position: relative;
+      width: 2.75rem;
+      height: 2.75rem;
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 1px rgb(var(--white-rgb) / 0.35);
+      transition:
+        background-color 260ms var(--ease-out),
+        rotate 420ms cubic-bezier(0.2, 1.3, 0.35, 1);
+    }
+
+    /* Its cross is an icon, not a hairline: in rem, so it doesn't thin to nothing on a large screen. */
+    .roles__plus::before,
+    .roles__plus::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0.875rem;
+      height: 0.09375rem;
+      margin: -0.046875rem 0 0 -0.4375rem;
+      border-radius: 2px;
+      background: currentColor;
+    }
+
+    .roles__plus::after {
+      rotate: 90deg;
+      transition: rotate 420ms cubic-bezier(0.2, 1.3, 0.35, 1);
+    }
+
+    .roles__item:hover .roles__plus {
+      background: rgb(var(--white-rgb) / 0.1);
+    }
+
+    .roles__item.is-open .roles__plus {
+      rotate: 180deg;
+      background: rgb(var(--tone-lit) / 0.2);
+    }
+
+    .roles__item.is-open .roles__plus::after {
+      rotate: 0deg;
+    }
+
+    .roles__head:focus-visible {
+      outline: 2px solid rgb(var(--tone-lit));
+      outline-offset: 0.25rem;
+      border-radius: 0.375rem;
+    }
+
+    /* What it is: opens where it is. Closed, it's out of sight and out of the tab order too, once it has folded
+       away (visibility waits for the fold). */
+    .roles__more {
+      display: grid;
+      grid-template-rows: 0fr;
+      visibility: hidden;
+      transition:
+        grid-template-rows 520ms cubic-bezier(0.2, 0.9, 0.3, 1),
+        visibility 0s linear 520ms;
+    }
+
+    .roles__item.is-open .roles__more {
+      grid-template-rows: 1fr;
+      visibility: visible;
+      transition-delay: 0s;
+    }
+
+    .roles__more-inner {
+      display: grid;
+      justify-items: start;
+      gap: 1rem;
+      min-height: 0;
+      overflow: hidden;
+      padding-left: calc(1.375rem + 2ch);
+    }
+
+    .roles__item.is-open .roles__more-inner {
+      padding-bottom: 1.75rem;
+    }
+
+    /* Its parts come in one after another as it opens, and fade before it has folded far as it closes. */
+    .roles__more-inner > * {
+      opacity: 0;
+      translate: 0 0.625rem;
+      transition:
+        opacity 140ms var(--ease-out),
+        translate 0s linear 140ms;
+    }
+
+    .roles__item.is-open .roles__more-inner > * {
+      opacity: 1;
+      translate: none;
+      transition:
+        opacity 380ms var(--ease-out) 120ms,
+        translate 380ms var(--ease-out) 120ms;
+    }
+
+    .roles__item.is-open .roles__more-inner > :nth-child(2) {
+      transition-delay: 180ms;
+    }
+
+    .roles__item.is-open .roles__more-inner > :nth-child(3) {
+      transition-delay: 240ms;
+    }
+
+    .roles__chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.375rem;
+      font-family: var(--font-mono);
+      font-size: var(--type-label);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .roles__chips span {
+      padding: 0.375rem 0.6875rem;
+      border-radius: 999px;
+      box-shadow: inset 0 0 0 1px rgb(var(--hair) / 0.3);
+      color: rgb(var(--ink) / 0.8);
+    }
+
+    .roles__summary {
+      max-width: 46ch;
+      font-size: 1.0625rem;
+      line-height: 1.55;
+      color: rgb(var(--ink) / 0.86);
+    }
+
+    .roles__ways {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem 1.375rem;
+    }
+
+    .roles__read {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: var(--type-label);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgb(var(--ink) / 0.85);
+    }
+
+    .roles__read svg {
+      width: 0.9375rem;
+      height: 0.9375rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: translate 300ms var(--ease-out);
+    }
+
+    .roles__read:is(:hover, :focus-visible) svg {
+      translate: 0.25rem 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .jobs__title {
+      background: var(--title-sheen) 100% 0 / 300% 100% no-repeat;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: jobs-sheen 6.5s ease-in-out 1.4s infinite;
+    }
+
+    /* Off the screen (the visitor is down at the team picker), the sheen rests. */
+    .jobs.is-away .jobs__title {
+      animation-play-state: paused;
+    }
+
+    @keyframes jobs-sheen {
+      0%,
+      62% {
+        background-position: 100% 0;
+      }
+      100% {
+        background-position: 0% 0;
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .roles__more,
+    .roles__more-inner > *,
+    .roles__name,
+    .roles__text,
+    .roles__plus,
+    .roles__plus::after {
+      transition: none;
+    }
+
+    /* The states that bring transitions of their own (going quiet, an opening role's details): matched as they are,
+       so these win; the keyboard's in a rule of its own for a browser without :has(). */
+    .roles__list:hover .roles__item:not(:hover):not(.is-open) .roles__text,
+    .roles__item.is-open .roles__more-inner > * {
+      transition: none;
+    }
+
+    .roles__list:has(:focus-visible) .roles__item:not(:has(:focus-visible)):not(.is-open) .roles__text {
+      transition: none;
+    }
+  }
+
+  /* ---------- A ticket: glass, with its stub torn along a dotted line ---------- */
+  .ticket {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    overflow: hidden;
+    border-radius: 24px;
+    color: rgb(var(--ink));
+    background: linear-gradient(120deg, rgb(var(--white-rgb) / calc(0.15 * var(--fill-k))), rgb(var(--white-rgb) / calc(0.05 * var(--fill-k))) 55%, rgb(var(--tone-glow) / 0.14));
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    box-shadow: 0 30px 60px -34px rgb(var(--shade) / 0.7);
+    /* Notches where the stub tears off. */
+    -webkit-mask: radial-gradient(circle 13px at calc(100% - 132px) 0, transparent 98%, #000) top, radial-gradient(circle 13px at calc(100% - 132px) 100%, transparent 98%, #000) bottom;
+    -webkit-mask-size: 100% 51%;
+    -webkit-mask-repeat: no-repeat;
+    mask: radial-gradient(circle 13px at calc(100% - 132px) 0, transparent 98%, #000) top / 100% 51% no-repeat, radial-gradient(circle 13px at calc(100% - 132px) 100%, transparent 98%, #000) bottom / 100% 51% no-repeat;
+    transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transition: transform 240ms var(--ease-out);
+    -webkit-user-drag: none;
+  }
+
+  .ticket:focus-visible {
+    outline: 2px solid rgb(var(--tone-lit));
+    outline-offset: 3px;
+  }
+
+  .ticket__sheen {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: radial-gradient(circle at var(--gx, 30%) var(--gy, 20%), rgb(var(--tone-lit) / 0.36), transparent 46%);
+    pointer-events: none;
+  }
+
+  .ticket__main {
+    display: grid;
+    align-content: center;
+    justify-items: start;
+    gap: var(--space-3);
+    min-height: clamp(150px, 20svh, 210px);
+    padding: clamp(20px, 2vw, 32px);
+  }
+
+  .ticket__flag {
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgb(var(--tone-lit));
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgb(var(--tone-on));
+  }
+
+  .ticket__name {
+    font-family: var(--font-display);
+    font-size: clamp(1.375rem, 2.3vw, 2.375rem);
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    line-height: 1;
+    letter-spacing: -0.015em;
+    text-transform: uppercase;
+  }
+
+  .ticket__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .ticket__stub {
+    display: grid;
+    align-content: space-between;
+    justify-items: center;
+    width: 132px;
+    padding: clamp(18px, 1.6vw, 26px) 12px;
+    border-left: 2px dashed rgb(var(--hair) / 0.3);
+  }
+
+  .ticket__stub {
+    cursor: grab;
+    touch-action: none;
+    transition: opacity 260ms var(--ease-out);
+  }
+
+  .ticket__tear {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.1em;
+    text-align: center;
+    text-transform: uppercase;
+    color: rgb(var(--tone-lit));
+  }
+
+  /* The stub, torn off and following the pointer. */
+  .ticket__stub--free {
+    position: fixed;
+    z-index: 130;
+    border-radius: 18px;
+    background: rgb(var(--panel) / 0.9);
+    box-shadow:
+      inset 0 0 0 1px rgb(var(--hair) / 0.3),
+      0 30px 60px -20px rgb(var(--shade) / 0.8);
+    cursor: grabbing;
+    color: rgb(var(--ink));
+    pointer-events: none;
+  }
+
+  .ticket:hover .exp-round {
+    background: rgb(var(--tone-lit));
+    color: rgb(var(--tone-on));
+  }
+
+  .jobs__details {
+    position: fixed;
+    inset: calc(50svh - min(23rem, 46svh)) max(calc((100vw - 64rem) / 2), var(--margin));
+    z-index: 120;
+    pointer-events: none;
+  }
+
+  .jobs__details :global(.bigcard) {
+    pointer-events: auto;
+  }
+
+  .jobs__details :global(.bigcard__name) {
+    font-size: clamp(1.75rem, 3vw, 2.75rem);
+    line-height: 0.98;
+  }
+
+  .jobs__inner {
+    transition:
+      opacity 400ms var(--ease-out),
+      filter 400ms var(--ease-out);
+  }
+
+  .jobs.has-big-card .jobs__inner {
+    opacity: 0.22;
+    filter: blur(6px);
+  }
+
+  @media (max-width: 1023px) {
+    .jobs__inner {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .roles__head {
+      gap: 0.875rem;
+      padding-block: 1rem;
+    }
+
+    .roles__name {
+      font-size: clamp(1.375rem, 6vw, 2.25rem);
+    }
+
+    .roles__plus {
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+  }
+
+  @media (max-width: 599px) {
+    .ticket {
+      grid-template-columns: minmax(0, 1fr);
+      -webkit-mask: none;
+      mask: none;
+    }
+
+    .ticket__stub {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ticket {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  import { initGrow } from '@/scripts/system/grow';
+  import { initTilt } from '@/scripts/system/ambient';
+  import { desktop, reduced } from '@/scripts/system/env';
+  import { uiScale } from '@/scripts/system/scale';
+
+  type Lenis = { scrollTo(target: number, options?: { duration?: number }): void };
+
+  document.querySelectorAll<HTMLElement>('[data-jobs]').forEach((root) => {
+    if (root.dataset.ready) return;
+    root.dataset.ready = 'true';
+    const desk = desktop();
+    const grow = initGrow(root);
+    // Clicking the dimmed page puts the card away.
+    root.addEventListener('click', (e) => {
+      if (root.classList.contains('has-big-card') && !(e.target as HTMLElement).closest('[data-grow-card], .bigcard')) grow.close();
+    });
+
+    // Desktop: a role opens where it is (one at a time).
+    const list = root.querySelector<HTMLElement>('[data-roles]');
+    const toggles = [...root.querySelectorAll<HTMLButtonElement>('[data-role-toggle]')];
+    const setOpen = (item: HTMLElement, open: boolean) => {
+      item.classList.toggle('is-open', open);
+      item.querySelector('[data-role-toggle]')?.setAttribute('aria-expanded', String(open));
+    };
+    // One that would end below the screen eases up into view, but never so far that its own name goes under the
+    // header. `freed` is what an open role above it gives back as it closes.
+    const bringIntoView = (item: HTMLElement, freed: number) => {
+      const head = item.querySelector<HTMLElement>('[data-role-toggle]');
+      const inner = item.querySelector<HTMLElement>('.roles__more-inner');
+      if (!head || !inner) return;
+      const k = uiScale();
+      const box = head.getBoundingClientRect();
+      const top = box.top - freed;
+      const bottom = box.bottom - freed + inner.scrollHeight;
+      const room = 24 * k;
+      const over = bottom - (window.innerHeight - room);
+      const delta = Math.min(over, top - (76 * k + room)); // 76: the header's height at 1920×1080 (--header-h)
+      if (delta <= 0) return;
+      const target = window.scrollY + delta;
+      const lenis = (window as unknown as { lenis?: Lenis }).lenis;
+      if (lenis) lenis.scrollTo(target, { duration: 0.8 });
+      else window.scrollTo({ top: target, behavior: reduced() ? 'auto' : 'smooth' });
+    };
+    root.querySelectorAll<HTMLElement>('[data-role]').forEach((item) => {
+      const toggle = item.querySelector<HTMLButtonElement>('[data-role-toggle]');
+      toggle?.addEventListener('click', () => {
+        const open = !item.classList.contains('is-open');
+        let freed = 0;
+        root.querySelectorAll<HTMLElement>('[data-role].is-open').forEach((other) => {
+          if (other === item) return;
+          if (other.compareDocumentPosition(item) & Node.DOCUMENT_POSITION_FOLLOWING) freed += other.querySelector('[data-role-more]')?.getBoundingClientRect().height ?? 0;
+          setOpen(other, false);
+        });
+        setOpen(item, open);
+        if (open) bringIntoView(item, freed);
+      });
+    });
+    // The keyboard: the arrow keys, Home and End move between the roles; Escape closes the open one and goes back to it.
+    list?.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const open = list.querySelector<HTMLElement>('[data-role].is-open');
+        if (!open) return;
+        setOpen(open, false);
+        open.querySelector<HTMLElement>('[data-role-toggle]')?.focus();
+        return;
+      }
+      const at = toggles.indexOf(e.target as HTMLButtonElement);
+      if (at < 0) return;
+      const moves: Record<string, number> = { ArrowDown: at + 1, ArrowUp: at - 1, Home: 0, End: toggles.length - 1 };
+      const to = moves[e.key];
+      if (to === undefined) return;
+      e.preventDefault();
+      toggles[Math.max(0, Math.min(toggles.length - 1, to))].focus();
+    });
+
+    // The headline's sheen rests while the page is down at the team picker.
+    if ('IntersectionObserver' in window) new IntersectionObserver(([e]) => root.classList.toggle('is-away', !e.isIntersecting)).observe(root);
+
+    // The tickets (phones and tablets; on desktop they're only there when no role is open, so none to set up).
+    const board = root.querySelector<HTMLElement>('[data-jobs-board]');
+    if (!board || board.offsetParent === null) return;
+    // Each ticket leans towards the pointer while it's on that ticket.
+    root.querySelectorAll<HTMLElement>('[data-ticket]').forEach((t) => initTilt(t, () => t, 8));
+
+    // Tear the stub off a ticket: pulled far enough, it opens the application email. Otherwise it goes back.
+    if (desk) {
+      root.querySelectorAll<HTMLElement>('[data-ticket-stub]').forEach((stub) => {
+        const ticket = stub.closest<HTMLElement>('[data-ticket]');
+        let free: HTMLElement | null = null;
+        let startX = 0;
+        let startY = 0;
+        let pressed = false;
+        let dragged = false;
+        ticket?.addEventListener('click', (e) => {
+          if (!dragged) return;
+          dragged = false;
+          e.preventDefault();
+          e.stopImmediatePropagation();
+        }, { capture: true });
+        const moveFree = (dx: number, dy: number) => {
+          if (free) free.style.transform = `translate(${dx}px, ${dy}px) rotate(${(dx * 0.05).toFixed(1)}deg)`;
+        };
+        stub.addEventListener('pointerdown', (e) => {
+          if (e.button !== 0) return;
+          e.preventDefault();
+          pressed = true;
+          startX = e.clientX;
+          startY = e.clientY;
+          stub.setPointerCapture(e.pointerId);
+        });
+        stub.addEventListener('pointermove', (e) => {
+          if (!pressed) return;
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+          if (!free) {
+            if (Math.hypot(dx, dy) < 6) return;
+            const r = stub.getBoundingClientRect();
+            free = stub.cloneNode(true) as HTMLElement;
+            free.classList.add('ticket__stub--free');
+            Object.assign(free.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
+            document.body.append(free);
+            stub.style.opacity = '0';
+            dragged = true;
+          }
+          moveFree(dx, dy);
+        });
+        stub.addEventListener('pointerup', (e) => {
+          if (!pressed) return;
+          pressed = false;
+          const piece = free;
+          free = null;
+          if (!piece) return;
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+          const torn = Math.hypot(dx, dy) > 130;
+          const end = torn ? `translate(${dx * 2.4}px, ${dy * 2.4 - 120}px) rotate(${dx * 0.12}deg)` : 'none';
+          piece.animate([{ transform: piece.style.transform, opacity: 1 }, { transform: end, opacity: torn ? 0 : 1 }], { duration: torn ? 420 : 300, easing: 'cubic-bezier(0.2, 1, 0.3, 1)' }).finished.finally(() => {
+            piece.remove();
+            stub.style.opacity = '';
+            if (torn) window.location.href = stub.dataset.mailto ?? '';
+          });
+        });
+      });
+    }
+  });
+</script>

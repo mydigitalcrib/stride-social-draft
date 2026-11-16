@@ -1,0 +1,96 @@
+---
+// Breadcrumb trail plus matching BreadcrumbList structured data. On desktop its links underline as they're reached.
+import { site } from '@/config/site';
+
+export interface Props {
+  items: { label: string; href?: string }[];
+  tone?: 'light' | 'dark';
+}
+
+const { items, tone = 'light' } = Astro.props;
+const trail = [{ label: 'Home', href: '/' }, ...items];
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: trail.map((t, i) => ({ '@type': 'ListItem', position: i + 1, name: t.label, ...(t.href ? { item: new URL(t.href, site.url).href } : {}) })),
+};
+---
+
+<nav class:list={['crumbs', `crumbs--on-${tone}`]} aria-label="Breadcrumb">
+  <ol role="list">
+    {trail.map((t, i) => (
+      <li>
+        {t.href && i < trail.length - 1 ? <a href={t.href}>{t.label}</a> : <span aria-current="page">{t.label}</span>}
+      </li>
+    ))}
+  </ol>
+</nav>
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+<style>
+  /* One line only: the current page shortens with an ellipsis instead of wrapping (wrapping when
+     the web font loads used to push the whole page down). min-width: 0 lets the trail shrink
+     inside grid and flex layouts instead of widening them. */
+  .crumbs {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .crumbs ol {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: var(--space-2);
+    min-width: 0;
+    white-space: nowrap;
+    font-family: var(--font-mono);
+    font-size: var(--type-label);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .crumbs li {
+    flex: none;
+  }
+
+  .crumbs li:last-child {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .crumbs li + li::before {
+    content: '/';
+    margin-right: var(--space-2);
+    opacity: 0.5;
+  }
+
+  .crumbs--on-light {
+    color: var(--slate);
+  }
+
+  .crumbs--on-dark {
+    color: rgb(var(--ink) / 0.7);
+  }
+
+  .crumbs a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* Desktop: the underline grows in from the left as the pointer or the keyboard reaches a link, and runs out to the
+     right as it leaves (the footer's and core/Button's text link), its distance in rem so it keeps it past 1920×1080. */
+  @media (min-width: 1024px) {
+    .crumbs a {
+      padding-bottom: 0.1875rem;
+      background: linear-gradient(currentColor, currentColor) 100% 100% / 0% 1px no-repeat;
+      transition: background-size 360ms var(--ease-out);
+    }
+
+    .crumbs a:is(:hover, :focus-visible) {
+      background-position: 0 100%;
+      background-size: 100% 1px;
+      text-decoration: none;
+    }
+  }
+</style>

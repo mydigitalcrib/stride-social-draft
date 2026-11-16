@@ -1,0 +1,555 @@
+---
+// Site chrome: the Stride logo and the Menu button, and the radial scroll
+// navigation on the left (global/EdgeNav.astro). The Menu button slides open into a horizontal
+// frosted-glass bar to its left, listing the six areas; it is the expanded form of the same
+// navigation (shared behaviour and active state), not a separate menu.
+// Desktop: in the open bar one capsule of glass slides to the area pointed at or focused, as the dial's and the decks'
+// do; the Menu button's lines part a little when it's pointed at and it gives under a press; the header puts itself
+// away quicker than it comes back.
+// Behaviour: src/scripts/system/header.ts and src/scripts/system/edge-nav.ts.
+import StrideLogo from '../core/StrideLogo.astro';
+import EdgeNav from './EdgeNav.astro';
+import { modes, modeOf } from '@/config/navigation';
+
+export interface Props {
+  path: string;
+  /** Transparent header with light text over a full-bleed dark hero. */
+  overlay?: boolean;
+}
+
+const { path, overlay = false } = Astro.props;
+const mode = modeOf(path);
+---
+
+<div class:list={['chrome', { 'chrome--overlay': overlay }]} data-chrome>
+  <header class="header">
+    <div class="header__bar">
+      <a class="header__logo" href="/" aria-label="Stride home">
+        <StrideLogo tone="dark" class="header__logo-mark" />
+      </a>
+
+      <div class="header__actions">
+        <button class="header__menu-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="site-menu" data-menu-toggle>
+          <span class="header__burger" aria-hidden="true"><span></span><span></span></span>
+        </button>
+
+        {/* The expanded navigation: one glass bar that slides open to the left of the Menu button. */}
+        <nav class="menu-panel" id="site-menu" aria-label="Site menu" data-menu-panel inert>
+          <span class="menu-panel__glass desk-only" aria-hidden="true" data-menu-glass></span>
+          <ol class="menu-panel__list" role="list">
+            {modes.map((m, i) => (
+              <li style={`--o: ${modes.length - 1 - i}; --i: ${i}`}>
+                <a
+                  class:list={['menu-panel__item', { 'is-active': m.key === mode }]}
+                  href={m.href}
+                  data-menu-item={m.key}
+                  aria-current={path !== '/' && m.key === mode ? 'page' : undefined}
+                >{m.short ? <><span class="menu-panel__long">{m.label.startsWith('Stride ') ? <><span class="menu-panel__pre">Stride </span>{m.label.slice(7)}</> : m.label}</span><span class="menu-panel__short">{m.short}</span></> : m.label}</a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+</div>
+
+{/* The radial navigation, fixed on the left on every page (along the bottom on phones). */}
+<EdgeNav current={mode} home={path === '/'} />
+
+<style>
+  /* ---------- Chrome container ---------- */
+  .chrome {
+    --chrome-ink: rgb(var(--ink));
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 100;
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+
+  .chrome.is-hidden {
+    transform: translateY(-100%);
+  }
+
+  /* Desktop: it goes quicker than it comes back, so putting itself away never lags the scroll. */
+  @media (min-width: 1024px) {
+    .chrome.is-hidden {
+      transition: transform 280ms var(--ease-in-out);
+    }
+  }
+
+  /* Over the Social globe the logo stripe has the top of the screen (src/scripts/system/creator-globe.ts), and
+     Stride's notifications do while they're there (the homepage's, opening.ts, and the Social globe's, creator-globe.ts).
+     Keyboard focus still brings the header back. */
+  :global(html.is-on-globe) .chrome:not(:focus-within),
+  :global(html.has-notes) .chrome:not(:focus-within) {
+    transform: translateY(-100%);
+  }
+
+  /* See-through all the way down, on every page on navy: no bar across what's scrolling under it. */
+  .header {
+    position: relative;
+    color: var(--chrome-ink);
+  }
+
+  /* Only the internal pages that aren't on navy (the styleguide) need a solid bar for its white logo. */
+  .chrome:not(.chrome--overlay) .header {
+    background: var(--navy-900);
+  }
+
+  .header__bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+    height: var(--header-h);
+    max-width: calc(var(--container-wide) + 2 * var(--margin));
+    margin-inline: auto;
+    padding-inline: var(--margin);
+  }
+
+  .header__logo {
+    color: var(--chrome-ink);
+  }
+
+  .header__logo :global(.logo) {
+    color: inherit;
+  }
+
+  .header__actions {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-left: auto;
+  }
+
+  .header__menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    min-height: 44px;
+    padding: 0;
+    border-radius: 999px;
+    transition: box-shadow var(--dur-base) var(--ease-out);
+  }
+
+  .header__menu-btn {
+    position: relative;
+    z-index: 2;
+    box-shadow: inset 0 0 0 1px rgb(var(--hair) / 0.35);
+    color: var(--chrome-ink);
+    /* Glass: no fill, only what's behind it softened, so it stays clear over whatever scrolls past. */
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  /* No fill on hover, or when open: only its outline brightens. */
+  .header__menu-btn:hover {
+    box-shadow: inset 0 0 0 1px rgb(var(--hair) / 0.7);
+  }
+
+  /* Open: the button sits at the right end of the bar; the burger turns to a cross. */
+  .header__menu-btn[aria-expanded='true'] {
+    color: rgb(var(--ink));
+  }
+
+  .header__burger span {
+    transition: translate 420ms var(--ease-out), rotate 420ms var(--ease-out);
+  }
+
+  .header__menu-btn[aria-expanded='true'] .header__burger span:first-child {
+    translate: 0 3.25px;
+    rotate: 45deg;
+  }
+
+  .header__menu-btn[aria-expanded='true'] .header__burger span:last-child {
+    translate: 0 -3.25px;
+    rotate: -45deg;
+  }
+
+  /* ---------- Menu bar ----------
+     One horizontal glass bar attached to the Menu button: it sits around the button and reaches
+     left. Closed, it is clipped to the button's own pill; opening, the clip slides open to the
+     left and the six areas fade in from right to left, nearest the button first. */
+  .menu-panel {
+    --pad: 6px;
+    --btn-w: 64px;
+    position: absolute;
+    top: calc(-1 * var(--pad));
+    right: calc(-1 * var(--pad));
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    height: calc(44px + 2 * var(--pad));
+    padding: 0 calc(var(--btn-w) + var(--pad) + 10px) 0 var(--pad);
+    border: 1px solid rgb(var(--hair) / 0.22);
+    border-radius: 999px;
+    background: linear-gradient(to bottom, rgb(var(--white-rgb) / calc(0.16 * var(--fill-k))), rgb(var(--white-rgb) / calc(0.07 * var(--fill-k))));
+    box-shadow:
+      inset 0 1px 0 rgb(var(--white-rgb) / 0.22),
+      0 16px 40px -20px rgb(var(--shade) / 0.45);
+    backdrop-filter: blur(22px) saturate(170%) brightness(0.86);
+    -webkit-backdrop-filter: blur(22px) saturate(170%) brightness(0.86);
+    color: rgb(var(--ink));
+    clip-path: inset(0 0 0 calc(100% - var(--btn-w) - 2 * var(--pad)) round 999px);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      clip-path 620ms var(--ease-out),
+      opacity 220ms var(--ease-out),
+      visibility 0s linear 620ms;
+  }
+
+  /* Desktop: clear glass. The page shows through, softened and undimmed; the lit edge draws the bar.
+     Its sizes are in rem here, so it grows with the screen past 1920×1080 (the edges stay hairlines). */
+  @media (min-width: 1024px) {
+    .menu-panel {
+      --pad: 0.375rem;
+      --btn-w: 4rem;
+      height: calc(2.75rem + 2 * var(--pad));
+      padding: 0 calc(var(--btn-w) + var(--pad) + 0.625rem) 0 var(--pad);
+      border-color: rgb(var(--hair) / 0.3);
+      background: linear-gradient(to bottom, rgb(var(--white-rgb) / calc(0.09 * var(--fill-k))), rgb(var(--white-rgb) / calc(0.03 * var(--fill-k))));
+      box-shadow:
+        inset 0 1px 0 rgb(var(--white-rgb) / 0.4),
+        inset 0 -1px 0 rgb(var(--white-rgb) / 0.1),
+        0 1rem 2.5rem -1.5rem rgb(var(--shade) / 0.35);
+      backdrop-filter: blur(0.875rem) saturate(160%);
+      -webkit-backdrop-filter: blur(0.875rem) saturate(160%);
+    }
+  }
+
+  .menu-panel.is-open {
+    clip-path: inset(0 round 999px);
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+
+  .menu-panel__list {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  /* --o: order from the button outwards, so the nearest area appears first. */
+  .menu-panel__list li {
+    opacity: 0;
+    translate: 10px 0;
+    transition:
+      opacity 220ms var(--ease-out),
+      translate 220ms var(--ease-out);
+  }
+
+  .menu-panel.is-open .menu-panel__list li {
+    opacity: 1;
+    translate: 0 0;
+    transition-duration: 460ms;
+    transition-delay: calc(120ms + var(--o) * 40ms);
+  }
+
+  .menu-panel__item {
+    display: block;
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    letter-spacing: 0.005em;
+    line-height: 1.2;
+    white-space: nowrap;
+    color: rgb(var(--ink) / 0.84);
+    transition:
+      background-color var(--dur-base) var(--ease-out),
+      color var(--dur-base) var(--ease-out);
+  }
+
+  .menu-panel__item:hover,
+  .menu-panel__item:focus-visible {
+    background: rgb(var(--white-rgb) / calc(0.1 * var(--fill-k)));
+    color: rgb(var(--ink));
+    outline: none;
+  }
+
+  .menu-panel__item:focus-visible {
+    box-shadow: inset 0 0 0 1px rgb(var(--hair) / 0.55);
+  }
+
+  .menu-panel__item.is-active {
+    background: rgb(var(--white-rgb) / calc(0.22 * var(--fill-k)));
+    color: rgb(var(--ink));
+  }
+
+  .menu-panel__short {
+    display: none;
+  }
+
+  /* Desktop, with the script (edge-nav.ts adds .has-glass): one capsule of glass under the area pointed at or focused,
+     springing from one to the next, instead of each area lighting its own; the fill is the one each had. The chosen
+     area keeps its own brighter fill, and the focus ring stays. */
+  @media (min-width: 1024px) {
+    .menu-panel__glass {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      display: block;
+      width: var(--gw, 0px);
+      height: var(--gh, 2.375rem);
+      border-radius: 999px;
+      background: rgb(var(--white-rgb) / calc(0.1 * var(--fill-k)));
+      box-shadow:
+        inset 0 0 0 1px rgb(var(--hair) / 0.18),
+        inset 0 1px 0 rgb(var(--white-rgb) / 0.25);
+      opacity: 0;
+      transform: translate(var(--gx, 0px), -50%);
+      pointer-events: none;
+      transition:
+        transform 460ms var(--spring-soft, cubic-bezier(0.3, 1.25, 0.45, 1)),
+        width 460ms var(--spring-soft, cubic-bezier(0.3, 1.25, 0.45, 1)),
+        opacity 200ms var(--ease-out);
+    }
+
+    .menu-panel__glass.is-on {
+      opacity: 1;
+    }
+
+    .menu-panel.has-glass .menu-panel__item:not(.is-active):is(:hover, :focus-visible) {
+      background: none;
+    }
+  }
+
+  /* Narrower desktops: a tighter bar, then the names without "Stride". Up to 1700px wide the eleven areas need the
+     tighter spacing to fit beside the Menu button (the bar would reach past the screen's left edge otherwise). */
+  @media (max-width: 1699px) {
+    .menu-panel__item {
+      padding-inline: 8px;
+      font-size: 0.875rem;
+    }
+  }
+
+  @media (max-width: 1439px) {
+    .menu-panel__pre {
+      display: none;
+    }
+  }
+
+  /* Up to 1365px wide the tightest spacing, so the bar fits beside the logo from 1260px (below). */
+  @media (max-width: 1365px) {
+    .menu-panel__item {
+      padding: 9px 5px;
+      font-size: 0.8125rem;
+    }
+  }
+
+  /* ---------- Phones and tablets: the same glass, as a sheet that drops from the Menu button ----------
+     The desktop's bar can't fit eleven areas across a phone (it ran off the screen's left edge), so here the glass
+     opens downwards from the button, under the logo's row (the logo stays), the areas one under another in large type,
+     each with its full name ("Stride" faint), arriving from the top. On a dark navy glass, so they read over anything. */
+  @media (max-width: 1023px) {
+    .menu-panel {
+      top: calc(100% + 10px);
+      right: 0;
+      flex-direction: column;
+      align-items: stretch;
+      width: min(calc(100vw - 2 * var(--margin)), 24rem);
+      height: auto;
+      max-height: calc(100svh - var(--header-h) - 1.25rem);
+      padding: 0.5rem;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      border-radius: 1.75rem;
+      background: rgb(var(--navy-900-rgb) / 0.72);
+      backdrop-filter: blur(22px) saturate(160%);
+      -webkit-backdrop-filter: blur(22px) saturate(160%);
+      color: var(--white);
+      /* Closed: gathered into the button's corner. */
+      clip-path: inset(0 0 100% calc(100% - var(--btn-w)) round 1.75rem);
+    }
+
+    .menu-panel.is-open {
+      clip-path: inset(0 round 1.75rem);
+    }
+
+    .menu-panel__list {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+    }
+
+    .menu-panel__list li {
+      translate: 0 -8px;
+    }
+
+    .menu-panel.is-open .menu-panel__list li {
+      transition-delay: calc(100ms + var(--i) * 30ms);
+    }
+
+    .menu-panel__item {
+      padding: 0.7rem 1rem;
+      border-radius: 1.125rem;
+      font-family: var(--font-display);
+      font-size: 1.375rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      white-space: normal;
+      color: rgb(var(--white-rgb) / 0.9);
+    }
+
+    .menu-panel__item:hover,
+    .menu-panel__item:focus-visible {
+      background: rgb(var(--white-rgb) / 0.08);
+      color: var(--white);
+    }
+
+    .menu-panel__item.is-active {
+      background: rgb(var(--white-rgb) / 0.14);
+      color: var(--white);
+    }
+
+    .menu-panel__pre {
+      font-weight: 500;
+      opacity: 0.55;
+    }
+
+    /* A notification from Stride steps aside while the menu is open (it would sit over the sheet). */
+    :global(html:has(.menu-panel.is-open) .exp-note) {
+      opacity: 0 !important;
+      visibility: hidden !important;
+    }
+  }
+
+  /* The smallest phones: a little smaller, so the longest name keeps to one line. */
+  @media (max-width: 359px) {
+    .menu-panel__item {
+      padding-block: 0.6rem;
+      font-size: 1.1875rem;
+    }
+  }
+
+  /* The logo stays while the menu is open (the owner, 2026-11-04: "stride logo shouldnt disappear when u click on
+     menu"). Wherever the bar with the areas' full names would reach the logo, it says their short names instead
+     (Group, Social, Talent...), as phones do: up to 1819px wide, and past it at 1920×1080's proportions up to 8K. Only
+     a screen much wider than it is tall (above about 64:25, or past 2760px wide at the default size) keeps the full
+     names. Below 1260px wide even the short names can't fit beside it, so there alone the logo still steps aside while
+     the menu is open. */
+  @media (min-width: 1024px) and (max-width: 1819px), (min-width: 1820px) and (max-aspect-ratio: 64/25), (min-width: 1820px) and (max-width: 2759px) {
+    .menu-panel__long {
+      display: none;
+    }
+
+    .menu-panel__short {
+      display: inline;
+    }
+  }
+
+  @media (min-width: 1024px) and (max-width: 1259px) {
+    .header__logo {
+      transition: opacity var(--dur-base) var(--ease-out);
+    }
+
+    .chrome:has(.menu-panel.is-open) .header__logo {
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .menu-panel,
+    .menu-panel__list li,
+    .menu-panel__glass,
+    .header__menu-btn,
+    .header__burger span {
+      transition: none;
+    }
+  }
+
+  .header__burger {
+    display: grid;
+    gap: 5px;
+    width: 18px;
+  }
+
+  .header__burger span {
+    height: 1.5px;
+    background: currentColor;
+  }
+
+  /* ---------- Desktop: the same sizes in rem ----------
+     Past 1920×1080 the root size grows with the screen (styles/system/tokens.css), and the button, its burger and the
+     bar's items grow with it; up to there these equal the pixel sizes above. The narrower desktops' tighter items keep
+     their pixels: below 1600px wide the root never grows. */
+  @media (min-width: 1024px) {
+    .header__menu-btn {
+      width: 4rem;
+      min-height: 2.75rem;
+      backdrop-filter: blur(0.875rem);
+      -webkit-backdrop-filter: blur(0.875rem);
+    }
+
+    .menu-panel__list {
+      gap: 0.125rem;
+    }
+
+    .menu-panel__list li {
+      translate: 0.625rem 0;
+    }
+
+    .header__burger {
+      gap: 0.3125rem;
+      width: 1.125rem;
+    }
+
+    /* The burger's lines are part of its drawing, so they thicken with it, and the cross still meets in the middle. */
+    .header__burger span {
+      height: 0.09375rem;
+    }
+
+    .header__menu-btn[aria-expanded='true'] .header__burger span:first-child {
+      translate: 0 0.203125rem;
+    }
+
+    .header__menu-btn[aria-expanded='true'] .header__burger span:last-child {
+      translate: 0 -0.203125rem;
+    }
+
+    /* Pointed at, closed, its two lines part a little; a press pushes it in, and it springs back. */
+    .header__menu-btn:not([aria-expanded='true']):hover .header__burger span {
+      transition-duration: 260ms;
+    }
+
+    .header__menu-btn:not([aria-expanded='true']):hover .header__burger span:first-child {
+      translate: 0 -0.0625rem;
+    }
+
+    .header__menu-btn:not([aria-expanded='true']):hover .header__burger span:last-child {
+      translate: 0 0.0625rem;
+    }
+  }
+
+  @media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+    .header__menu-btn {
+      transition:
+        box-shadow var(--dur-base) var(--ease-out),
+        scale 420ms var(--spring-pop, cubic-bezier(0.2, 1.4, 0.35, 1));
+    }
+
+    .header__menu-btn:active {
+      scale: 0.95;
+      transition:
+        box-shadow var(--dur-base) var(--ease-out),
+        scale 110ms var(--ease-out);
+    }
+  }
+
+  @media (min-width: 1700px) {
+    .menu-panel__item {
+      padding: 0.625rem 1rem;
+    }
+  }
+</style>
+
+<script>
+  import { initHeader } from '@/scripts/system/header';
+  initHeader();
+</script>

@@ -1,0 +1,83 @@
+---
+// Service page, one per Stride Social service: its opening (social/ServiceHero; the owner, 2026-11-12): its name, line
+// and words, its pictures sharp in a frame, what it includes as lines added to the brief; then the shared menu:
+// Related Work, Questions, More Services. All on navy; on desktop in front of Stride Social's night sky. Phones and
+// tablets have the same opening (the owner, 2026-11-13). Content not yet supplied by Stride is left out.
+import { getCollection, getEntry } from 'astro:content';
+import SiteLayout from '@/layouts/SiteLayout.astro';
+import Deck from '@/components/experience/Deck.astro';
+import { routes } from '@/lib/routes';
+import { chunks, paragraphs } from '@/lib/experience';
+import type { Card } from '@/lib/experience';
+import Tray from '@/components/experience/Tray.astro';
+import ServiceHero from '@/components/social/ServiceHero.astro';
+import BackVideo from '@/components/core/BackVideo.astro';
+
+export async function getStaticPaths() {
+  const services = (await getCollection('services')).sort((a, b) => a.data.number - b.data.number);
+  return services.map((service) => ({ params: { slug: service.id }, props: { service, services } }));
+}
+
+const { service, services } = Astro.props;
+const d = service.data;
+const body = d.copyStatus !== 'needed' ? paragraphs(service.body).flatMap((p) => chunks(p, 320)) : [];
+const related = (await getCollection('work', (w) => w.data.visible && w.data.services.some((s) => s.id === service.id))).sort((a, b) => a.data.order - b.data.order);
+const clients = await Promise.all(related.map(async (w) => (await getEntry(w.data.client))?.data.name ?? w.data.title));
+const final = (await getEntry('pages', 'social'))?.data.sections.final;
+const enquire = `/social/enquire?service=${service.id}`;
+const talk = `Talk to us about ${d.name}`;
+
+const relatedCards: Card[] = related.slice(0, 8).map((w, i) => ({
+  name: clients[i],
+  text: w.data.summary,
+  href: routes.caseStudy(w.id),
+  image: w.data.card,
+  stats: w.data.results.filter((r) => r.status === 'verified').slice(0, 3),
+  action: { label: 'View case study', href: routes.caseStudy(w.id) },
+}));
+const faqCards: Card[] = d.faqs.map((f) => ({ name: f.q, text: f.a, href: enquire }));
+const others: Card[] = services
+  .filter((x) => x.id !== service.id)
+  .map((x) => ({ name: x.data.name, text: x.data.descriptor, href: routes.service(x.id), image: x.data.hero, direct: true }));
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: d.name,
+    description: d.descriptor,
+    serviceType: 'Influencer marketing',
+    provider: { '@type': 'Organization', name: 'Stride Social', url: 'https://www.stride-social.com' },
+  },
+];
+---
+
+<SiteLayout title={d.seo?.title ?? `${d.name} | Stride Social`} description={d.seo?.description ?? d.descriptor} division="social" ogImage={d.hero?.src} jsonLd={jsonLd} headerOverlay>
+  {/* On navy; on desktop in front of Stride Social's night sky. */}
+  <BackVideo mp4="/assets/video/social-sky.mp4" poster="/assets/site/social-sky-poster.jpg" shade={0.35} />
+  <ServiceHero
+    name={d.name}
+    number={d.number}
+    descriptor={d.descriptor}
+    body={body}
+    items={d.deliverables}
+    pictures={[...(d.hero ? [d.hero] : []), ...d.gallery]}
+    crumbs={[{ label: 'Stride Social', href: '/social' }, { label: 'Services', href: '/social/services' }, { label: d.name }]}
+    talk={{ label: talk, href: enquire }}
+    serviceId={service.id}
+  />
+
+  <Deck
+    variant="spines"
+    id="service-menu"
+    label={`More about ${d.name}`}
+    tone="social"
+    look="deep"
+    tabs={[
+      { key: 'work', label: 'Related Work', icon: 'play', cards: relatedCards },
+      { key: 'questions', label: 'Questions', icon: 'chat', numbered: true, cards: faqCards },
+      { key: 'more', label: 'More Services', icon: 'layers', cards: others },
+    ]}
+    link={{ label: final?.cta?.label ?? 'Talk To Stride Social', href: enquire }}
+  />
+  <Tray list="brief" />
+</SiteLayout>

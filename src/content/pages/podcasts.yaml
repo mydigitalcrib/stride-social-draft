@@ -1,0 +1,128 @@
+# Stride Podcasts: a page of its own, between Stride Sport and Stride Speakers in the navigation (the owner,
+# 2026-11-11). All copy here is drafted for approval, after Stride Sport's.
+sections:
+  hero:
+    status: draft
+    eyebrow: Stride Podcasts
+    headline: Stride Podcasts.
+    # The owner's words (2026-11-13), said better.
+    body: Podcast hosts and creators, and the brands that want to work with them. We run and manage podcasts across the UK and US, and bring our hosts commercial opportunities.
+    cta: { label: Enquire About Podcasts, href: /talent/enquire?interest=podcasts }
+    # No counts under the headline (the owner, 2026-11-13).
+    counts: false
+  people:
+    status: draft
+    eyebrow: The roster
+    headline: Hosts and podcast creators.
+    awaiting: [hosts and podcast creators, with consent]
+  placements:
+    status: draft
+    eyebrow: From their channels
+    headline: Press play.
+    body: Episodes from each show's own channel.
+    awaiting: [commercial placements, with approval to show them]
+    # The owner's choice of episodes (2026-11-13), in the owner's order, each checked on YouTube on 2026-11-13: the
+    # title as YouTube gives it, the channel and the day YouTube shows it went up (`copy`). Who it's from is the show's
+    # roster entry (`key`) or, for a show outside the roster, its channel's name as YouTube gives it (`channel`; the
+    # owner, 2026-11-13). A link's `t` is the moment the video starts from when it's played. Out Of Bounds' channel has
+    # turned off playing it elsewhere (`embed: false`), so it opens on YouTube. The fourth is an episode on Spotify,
+    # checked there (its title, show and date; its picture is Spotify's own, by address).
+    items:
+      - channel: The Big 6ix
+        label: "LONDON'S BURNING! 🔥🥵 (Man City 2-1 Arsenal)"
+        copy: 20 April 2026
+        href: https://youtu.be/VcZkO8pkfQY?t=165
+      - key: building-wealth-without-borders
+        label: "7-Figure Entreprenuer: It's Impossible To Stay Broke If You Do This | Elfried Samba"
+        copy: 19 April 2026
+        href: https://youtu.be/q7t9YRO7wn4
+      - key: eggchasers-rugby
+        label: "\"OPEN WOUNDS\" | ELLIS GENGE IS OUT FOR REDEMPTION IN SOUTH AFRICA"
+        copy: 18 April 2026
+        href: https://youtu.be/m58C_rwWXQk?t=112
+      - key: eggchasers-rugby
+        label: "S13 Ep36: 13th April 2026 - CHAMPIONS CUP QUARTER FINALS"
+        copy: 12 April 2026, on Spotify
+        href: https://open.spotify.com/episode/1QjMI0uDECRgGviKy6E9oD
+        image: https://image-cdn-ak.spotifycdn.com/image/ab6765630000ba8ae42decfa698b5ef596cf07ec
+        alt: "The EggChasers Rugby Podcast's artwork on Spotify"
+      - key: dodge-woodall-podcast
+        label: "British Entrepreneur’s £50M Gymshark Exit: Paul Richardson"
+        copy: 22 April 2026
+        href: https://youtu.be/AuoiJ-zmvCw?t=61
+      - channel: FILTHYFELLAS
+        label: "ARSENAL BOTTLE IT AGAIN? MAN CITY TAKE CONTROL OF THE TITLE RACE! FT. TROY DEENEY | FILTHY @ FIVE"
+        copy: 21 April 2026
+        href: https://youtu.be/AyNE7FTdKrM?t=134
+      - channel: George Benson Football Chelsea
+        label: "6 THINGS WE LEARNT FROM BRIGHTON 3-0 CHELSEA 🤯"
+        copy: 21 April 2026
+        href: https://youtu.be/OAfU7ImhjMs?t=197
+      - channel: Maul or Nothing Rugby
+        label: "Epic Champions Cup Clashes! 🔥 with Junior Kpoku"
+        copy: 15 April 2026
+        href: https://youtu.be/dAQbjA4OvNk?t=2000
+      - channel: Out Of Bounds
+        label: "The Most Controversial Loss In NBA History"
+        copy: 18 April 2026
+        href: https://youtu.be/mAAP8B-_7_c?t=316
+        embed: false
+      - channel: The Redmen TV
+        label: "CAN ANFIELD ROAR US TO THE SEMIS? | Redmen Originals Liverpool Podcast"
+        copy: Streamed live on 13 April 2026
+        href: https://www.youtube.com/live/rySShS_bAn8
+      - channel: The Rough Cut Golf Podcast
+        label: "THIS PLAYER will WIN the 2026 Masters! @peterfinchgolf | Rough Cut Golf Podcast 172"
+        copy: 8 April 2026
+        href: https://youtu.be/n6J2yYs--5I?t=1645
+      - channel: Stretford Paddock
+        label: "The Flaw In Carrick's System That's Starting To Show | Off The Bar"
+        copy: 16 April 2026
+        href: https://youtu.be/YpQj0XobDKw
+      - channel: The Goonerverse
+        label: "It Can STILL End In Success..."
+        copy: 24 April 2026
+        href: https://youtu.be/YnBnWQDhcxs?t=205
+      - channel: TurkishLDN
+        label: "3 POINTS, Still CONCERNS & a CHAMPIONS LEAGUE SEMI at ATLETICO MADRID! | The Loose Cannons Podcast"
+        copy: 26 April 2026
+        href: https://youtu.be/GKIg7Aran30?t=481
+      - channel: The Square Ball
+        label: "LEEDS ARE ALMOST THERE | GRAHAM SMYTH | The Square Ball"
+        copy: 20 April 2026
+        href: https://youtu.be/pPVn2QBNTY4?t=1065
+      - channel: Under The Cosh
+        label: "Martin Tyler | Clough’s Mind Games | Is Football Still Enjoyable | The Impact Of Sky | Undr The Cosh"
+        copy: 13 April 2026
+        href: https://youtu.be/JsZIpxnM5mI?t=3369
+      - channel: Younes Talks Chelsea
+        label: "BLUECO OUT PROTEST WAS A HUGE SUCCESS! ONTO THE NEXT... | CHELSEA 0-1 MANCHESTER UNITED"
+        copy: 18 April 2026
+        href: https://youtu.be/ByQ9dHuPGTQ?t=155
+      - channel: MAH
+        label: "LIAM ROSENIOR SACKED! 🚨"
+        copy: 22 April 2026
+        href: https://youtu.be/GC6xXWVhBoM?t=388
+      - channel: UnitedPeoplesTV
+        label: "Kobbie Mainoo Is About To Explode"
+        copy: 30 April 2026
+        href: https://youtu.be/kPl5_KPm_G0?t=118
+      - channel: UnitedPeoplesTV
+        label: "The Aurelien Tchouameni Situation Has Completely Changed"
+        copy: 8 May 2026
+        href: https://www.youtube.com/watch?v=wtUPHeh56_E
+      - channel: The Kick Off
+        label: "5 Losses 1 Win - Time For a CELEBRATION!?!"
+        copy: 3 May 2026
+        href: https://www.youtube.com/watch?v=vCTe19WBofs
+      - channel: The Pain Game
+        label: "WARDLEY vs DUBOIS | Who Will Be DESTROYED 🥊"
+        copy: 7 May 2026
+        href: https://youtu.be/CcEt9QbADQw
+
+  close:
+    status: draft
+    # In place of "Looking for a host?": the owner's own words (2026-11-13).
+    headline: Work with Podcasts
+    body: Tell us about the campaign, the show and the market.
+    cta: { label: Enquire About Podcasts, href: /talent/enquire?interest=podcasts }

@@ -1,0 +1,339 @@
+---
+// How Stride Talent's page ends (on desktop; phones and tablets have it standing open, the owner, 2026-11-13): the way
+// on for creators, "Join the roster.", as a giant row of type margin to margin, like the homepage's three sides
+// (home/ContentsIndex.astro; the owner's choice, 2026-11-12; the brands' row, "Book a creator.", went on 2026-11-13).
+// Pointed at (or focused), the row opens and its world comes up behind it: the faces of the creators Stride Talent's
+// page features, side by side across the whole row (through the roster's rules: consent, a photo). Full pictures, edge
+// to edge. Its line and its way in come with it. (`items` come from the page's copy; `key` says whose row it is.)
+// Big screens: its height, padding and the words' inset are in rem, so the rows grow with the type on 2K to 8K.
+import { getEntry } from 'astro:content';
+import { getRoster } from '@/lib/roster';
+
+export interface Props {
+  items: { key?: string; label: string; copy?: string; cta?: string; href?: string }[];
+}
+
+const { items } = Astro.props;
+// Creators: the faces of the creators Stride Talent's page features, by the roster's rules.
+const featured = (await getEntry('pages', 'talent'))?.data.sections.hero?.featured ?? [];
+const roster = await getRoster();
+const faces = featured
+  .map((id) => roster.find((c) => c.id === id))
+  .filter((c) => c?.data.portrait)
+  .slice(0, 7)
+  .map((c) => ({ name: c!.data.name, src: c!.data.portrait!.src }));
+---
+
+<section class="tclose" aria-label="Work with Stride Talent" data-tone="talent" data-look="deep" data-tclose>
+  <ol class="tclose__rows" role="list">
+    {items.map((i) => (
+      <li class:list={['tclose__row', `tclose__row--${i.key ?? 'way'}`]}>
+        <a class="tclose__link" href={i.href ?? '/talent/apply'}>
+          <span class="tclose__world" aria-hidden="true">
+            {i.key === 'creators' && faces.length > 0 && (
+              <span class="tclose__faces">
+                {faces.map((p, k) => <img src={p.src} alt="" sizes="16vw" loading="lazy" decoding="async" draggable="false" style={`--k: ${k}`} />)}
+              </span>
+            )}
+          </span>
+          <span class="tclose__label">{i.label}</span>
+          <span class="tclose__side">
+            {i.copy && <span class="tclose__copy">{i.copy}</span>}
+            {i.cta && (
+              <span class="tclose__action exp-pill">
+                <span>{i.cta}</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
+              </span>
+            )}
+          </span>
+        </a>
+      </li>
+    ))}
+  </ol>
+</section>
+
+<style>
+  .tclose {
+    position: relative;
+    padding-block: clamp(2.5rem, 7vh, 6rem) clamp(3.5rem, 10vh, 7.5rem);
+    color: rgb(var(--ink));
+  }
+
+  /* Two rows sharing a fixed height: pointed at, one takes most of it while the other closes up, its words
+     shrinking and dimming, so nothing below moves. */
+  .tclose__rows {
+    display: flex;
+    flex-direction: column;
+    height: clamp(23.75rem, 56vh, 38.75rem);
+    margin-inline: var(--margin);
+    border-top: 1px solid rgb(var(--hair) / 0.2);
+  }
+
+  .tclose__row {
+    position: relative;
+    flex: 1 1 0;
+    min-height: 0;
+    border-bottom: 1px solid rgb(var(--hair) / 0.2);
+    transition: flex-grow 720ms var(--ease-out);
+  }
+
+  .tclose__rows:hover .tclose__row,
+  .tclose__rows:focus-within .tclose__row {
+    flex-grow: 0.62;
+  }
+
+  .tclose__rows .tclose__row:hover,
+  .tclose__rows .tclose__row:focus-within {
+    flex-grow: 2.4;
+  }
+
+  .tclose__link {
+    --pad: clamp(0.75rem, 1.6vw, 1.75rem);
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    padding-inline: var(--pad);
+    overflow: hidden;
+    isolation: isolate;
+    color: rgb(var(--ink));
+  }
+
+  .tclose__link:focus-visible {
+    outline: 2px solid rgb(var(--tone-lit));
+    outline-offset: -2px;
+  }
+
+  /* The words: the longer ("JOIN THE ROSTER.") fits the width, and no taller than the row allows. */
+  .tclose__label {
+    flex: none;
+    font-family: var(--font-display);
+    font-size: min(calc((100vw - 2 * var(--margin) - 2 * clamp(0.75rem, 1.6vw, 1.75rem)) / 12), 13vh);
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    line-height: 0.86;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transform-origin: 0 50%;
+    transition:
+      scale 720ms var(--ease-out),
+      opacity 500ms var(--ease-out);
+  }
+
+  .tclose__rows:hover .tclose__row:not(:hover) .tclose__label,
+  .tclose__rows:focus-within .tclose__row:not(:focus-within) .tclose__label {
+    scale: 0.7;
+    opacity: 0.38;
+  }
+
+  /* Its line and its way in, at the foot of the open row. */
+  .tclose__side {
+    position: absolute;
+    right: var(--pad);
+    bottom: 1.125rem;
+    display: none;
+    align-items: center;
+    gap: var(--space-4);
+    max-width: min(34rem, 56%);
+    text-align: right;
+  }
+
+  .tclose__row:hover .tclose__side,
+  .tclose__row:focus-within .tclose__side {
+    display: flex;
+    animation: tclose-in 520ms var(--ease-out) 90ms both;
+  }
+
+  @keyframes tclose-in {
+    from {
+      opacity: 0;
+      translate: 0 0.625rem;
+    }
+  }
+
+  .tclose__copy {
+    font-size: clamp(0.9375rem, 1.1vw, 1.125rem);
+    line-height: 1.4;
+    color: rgb(var(--ink) / 0.9);
+  }
+
+  .tclose__action {
+    flex: none;
+    white-space: nowrap;
+  }
+
+  .tclose__action svg {
+    transition: translate 300ms var(--ease-out);
+  }
+
+  .tclose__link:hover .tclose__action svg {
+    translate: 0.1875rem 0;
+  }
+
+  /* ---------- Its world, behind it ---------- */
+  .tclose__world {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 600ms var(--ease-out);
+  }
+
+  .tclose__world::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgb(var(--navy-900-rgb) / 0.84), rgb(var(--navy-900-rgb) / 0.5) 45%, rgb(var(--navy-900-rgb) / 0.66));
+  }
+
+  .tclose__row:hover .tclose__world,
+  .tclose__row:focus-within .tclose__world {
+    opacity: 1;
+  }
+
+  /* Creators: their faces side by side across the whole row, in black and white, coming into colour and drifting a
+     little sideways as the row opens. */
+  .tclose__faces {
+    position: absolute;
+    inset: 0 -6%;
+    display: flex;
+    transition: translate 2400ms var(--ease-out);
+  }
+
+  .tclose__faces img {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 25%;
+    filter: grayscale(1) contrast(1.05);
+    transition: filter 900ms var(--ease-out);
+  }
+
+  .tclose__row--creators:hover .tclose__faces,
+  .tclose__row--creators:focus-within .tclose__faces {
+    translate: -4% 0;
+  }
+
+  .tclose__row--creators:hover .tclose__faces img,
+  .tclose__row--creators:focus-within .tclose__faces img {
+    filter: grayscale(0.2) contrast(1.05);
+  }
+
+  /* ---------- Phones and tablets: the same row, standing open (the owner, 2026-11-13) ----------
+     No pointer to open it, so it stands open as a tall panel: the featured creators' faces behind it under the navy, the
+     words on two lines at its foot, its line and the way in below them. */
+  @media (max-width: 1023px) {
+    .tclose__rows {
+      height: auto;
+      border-top: 0;
+    }
+
+    .tclose__row,
+    .tclose__rows .tclose__row:hover,
+    .tclose__rows .tclose__row:focus-within {
+      flex: none;
+      border-bottom: 0;
+    }
+
+    .tclose__link {
+      --pad: clamp(1.25rem, 5vw, 2rem);
+      position: relative;
+      inset: auto;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-end;
+      gap: var(--space-4);
+      min-height: clamp(24rem, 110vw, 30rem);
+      padding: var(--pad);
+      border-radius: 1.5rem;
+      box-shadow:
+        inset 0 0 0 1px rgb(var(--white-rgb) / 0.16),
+        0 1.5rem 3rem -1.5rem rgb(0 0 0 / 0.7);
+    }
+
+    .tclose__label,
+    .tclose__rows:hover .tclose__row:not(:hover) .tclose__label,
+    .tclose__rows:focus-within .tclose__row:not(:focus-within) .tclose__label {
+      font-size: min(clamp(2.75rem, 14vw, 6rem), calc((100vw - 2 * var(--margin) - 2 * var(--pad)) / 6.6));
+      line-height: 0.9;
+      white-space: normal;
+      scale: none;
+      opacity: 1;
+    }
+
+    .tclose__side {
+      position: static;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      max-width: 30rem;
+      animation: none;
+    }
+
+    .tclose__copy {
+      font-size: 1.0625rem;
+    }
+
+    .tclose__world {
+      opacity: 1;
+    }
+
+    .tclose__world::after {
+      background: linear-gradient(180deg, rgb(var(--navy-900-rgb) / 0.3), rgb(var(--navy-900-rgb) / 0.55) 45%, rgb(var(--navy-900-rgb) / 0.94));
+    }
+
+    /* The faces, three across and two down, filling the panel. */
+    .tclose__faces,
+    .tclose__row--creators:hover .tclose__faces,
+    .tclose__row--creators:focus-within .tclose__faces {
+      inset: 0;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-auto-rows: 50%;
+      translate: none;
+    }
+
+    .tclose__faces img {
+      filter: grayscale(0.35) contrast(1.05);
+    }
+
+    .tclose__faces img:nth-child(n + 7) {
+      display: none;
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .tclose__link {
+      min-height: clamp(22rem, 54vw, 28rem);
+    }
+
+    .tclose__label {
+      white-space: nowrap;
+      font-size: min(6rem, calc((100vw - 2 * var(--margin) - 2 * var(--pad)) / 12));
+    }
+
+    .tclose__faces {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      grid-auto-rows: 100%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tclose__row,
+    .tclose__label,
+    .tclose__world,
+    .tclose__world img,
+    .tclose__faces,
+    .tclose__faces img {
+      transition: none;
+    }
+
+    .tclose__row:hover .tclose__side,
+    .tclose__row:focus-within .tclose__side {
+      animation: none;
+    }
+  }
+</style>

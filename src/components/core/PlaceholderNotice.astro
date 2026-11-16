@@ -1,0 +1,116 @@
+---
+// Marks unfinished content so it is never mistaken for the real thing (brief §8: identify placeholders).
+// Every instance carries data-placeholder; `npm run check:placeholders -- --strict` fails if any
+// remain in a production build.
+//   tag:    small corner label over media ("Interim footage — awaiting approved assets")
+//   inline: the same label in the text flow (e.g. "Draft copy" next to a heading)
+//   block:  full panel standing in for a missing section or page
+// With site.showReviewTags off, tags are hidden (still in the HTML) and block labels lose the yellow.
+import { site } from '@/config/site';
+
+export interface Props {
+  variant?: 'tag' | 'inline' | 'block';
+  label?: string;
+  class?: string;
+}
+
+const { variant = 'tag', label = 'Placeholder', class: className } = Astro.props;
+const show = site.showReviewTags;
+---
+
+{variant !== 'block' ? (
+  <span class:list={['ph-tag', { 'ph-tag--inline': variant === 'inline', 'ph-tag--off': !show }, className]} data-placeholder hidden={!show}>
+    <span class="ph-tag__label">{label}</span>
+    <slot />
+  </span>
+) : (
+  <div class:list={['ph-block', { 'ph-block--quiet': !show }, className]} data-placeholder role="note">
+    <p class="ph-block__label">{label}</p>
+    <div class="ph-block__body"><slot /></div>
+  </div>
+)}
+
+<style>
+  .ph-tag {
+    position: absolute;
+    top: var(--space-3);
+    right: var(--space-3);
+    z-index: 5;
+    display: inline-flex;
+    gap: 0.4em;
+    max-width: calc(100% - 2 * var(--space-3));
+    padding: 4px 10px;
+    background: var(--lime);
+    color: var(--navy-900);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+
+  .ph-tag__label {
+    font-weight: 600;
+  }
+
+  .ph-tag--inline {
+    position: static;
+    align-self: start;
+    justify-self: start;
+    width: fit-content;
+    max-width: 100%;
+  }
+
+  /* Review tags switched off (site.showReviewTags): beats any page rule that positions the tag. */
+  .ph-tag--off {
+    display: none !important;
+  }
+
+  /* Takes the text colour of the surface it sits on, so it reads on paper and on navy alike. */
+  .ph-block {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    border: 1px dashed color-mix(in srgb, currentColor 45%, transparent);
+    background: repeating-linear-gradient(-45deg, transparent 0 14px, color-mix(in srgb, currentColor 4%, transparent) 14px 28px);
+    color: inherit;
+  }
+
+  .ph-block__label {
+    justify-self: start;
+    padding: 4px 10px;
+    background: var(--lime);
+    color: var(--navy-900);
+    font-family: var(--font-mono);
+    font-size: var(--type-label);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .ph-block--quiet .ph-block__label {
+    padding: 0;
+    background: none;
+    color: inherit;
+    opacity: 0.7;
+  }
+
+  .ph-block__body {
+    max-width: 68ch;
+    font-size: var(--type-small);
+    line-height: 1.6;
+  }
+
+  /* Desktop: in rem, so it grows with the screen past 1920×1080 (tokens.css); the same until then. */
+  @media (min-width: 1024px) {
+    .ph-tag,
+    .ph-block__label {
+      padding: 0.25rem 0.625rem;
+    }
+
+    .ph-block {
+      background: repeating-linear-gradient(-45deg, transparent 0 0.875rem, color-mix(in srgb, currentColor 4%, transparent) 0.875rem 1.75rem);
+    }
+  }
+</style>

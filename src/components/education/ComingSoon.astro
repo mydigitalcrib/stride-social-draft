@@ -1,0 +1,285 @@
+---
+// Stride Academy, until it opens (the owner, 2026-11-10): "Coming soon", and one way on for creators who want to
+// know more: Stride OS's creator form, through the site's own route (/talent/apply), at /academy (`embedded` sets it
+// inside another page, as the homepage's phones used to). Copy: src/content/pages/education.yaml, `soon`. The full page waits beside this one, parked
+// (EducationPage.astro, LevelMap.astro).
+// Desktop, on its own page (not embedded): the light over the words passes, then rests a while, and rests altogether
+// while the page isn't in view; with a mouse, the words turn a little towards the pointer and the light follows it
+// across the letters, going back to passing on its own once the pointer has been still for a moment.
+import { getEntry } from 'astro:content';
+import DraftTag from '../core/DraftTag.astro';
+
+export interface Props {
+  /** Inside another page, which has its own h1. */
+  embedded?: boolean;
+}
+
+const { embedded = false } = Astro.props;
+const soon = (await getEntry('pages', 'education'))?.data.sections.soon;
+if (!soon) throw new Error('Missing `soon` in src/content/pages/education.yaml');
+const Title = embedded ? 'h2' : 'h1';
+const lines = soon.lines ?? [soon.headline ?? ''];
+---
+
+<section class:list={['soon', { 'soon--page': !embedded }]} aria-labelledby="soon-title" data-tone="education" data-look="slate" data-soon-page={embedded ? undefined : ''}>
+  <div class="soon__inner">
+    {/* The division's name is part of the heading, so it reads "Stride Academy: coming soon". */}
+    <Title class="soon__title exp-title" id="soon-title">
+      {soon.eyebrow && <span class="soon__label exp-label">{soon.eyebrow}</span>}
+      {lines.map((line, n) => (
+        <Fragment>
+          {' '}
+          <span class="soon__line" style={`--n: ${n}`}><span>{line}</span></span>
+        </Fragment>
+      ))}
+    </Title>
+    {soon.body && <p class="soon__lead soon__rise">{soon.body}</p>}
+    {soon.cta && (
+      <a class="exp-pill soon__rise" href={soon.cta.href}>
+        {soon.cta.label}
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
+      </a>
+    )}
+    <DraftTag status={soon.status} />
+  </div>
+</section>
+
+<style>
+  /* One screen: the two words, as large as it allows, a line and a button. */
+  .soon {
+    position: relative;
+    display: grid;
+    align-items: center;
+    min-height: 100svh;
+    padding-block: calc(var(--header-h) + var(--space-6)) var(--space-8);
+    color: rgb(var(--ink));
+  }
+
+  .soon__inner {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-5);
+    margin-inline: var(--margin);
+  }
+
+  .soon__title {
+    display: grid;
+    justify-items: start;
+    font-size: min(15.5vw, 9rem);
+  }
+
+  .soon__label {
+    margin-bottom: var(--space-4);
+    font-weight: 400;
+    font-stretch: normal;
+    line-height: 1.4;
+  }
+
+  /* Each word rises into its line, and a light passes over the letters now and then. */
+  .soon__line {
+    display: block;
+    overflow: clip;
+    overflow-clip-margin: 0.08em;
+  }
+
+  .soon__line > span {
+    display: inline-block;
+    background: linear-gradient(100deg, rgb(var(--ink) / 0.8) 40%, rgb(var(--ink)) 50%, rgb(var(--ink) / 0.8) 60%) 100% 0 / 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation:
+      soon-rise 1000ms var(--ease-out) calc(var(--n, 0) * 120ms + 120ms) both,
+      soon-light 6.5s linear 1.4s infinite;
+  }
+
+  @keyframes soon-rise {
+    from {
+      translate: 0 104%;
+    }
+  }
+
+  @keyframes soon-light {
+    to {
+      background-position: 0 0;
+    }
+  }
+
+  .soon__lead {
+    max-width: 34ch;
+    font-size: clamp(1.0625rem, 1.3vw, 1.3125rem);
+    color: rgb(var(--ink) / 0.84);
+  }
+
+  .soon__rise {
+    animation: soon-in 800ms var(--ease-out) 560ms both;
+  }
+
+  .soon__rise + .soon__rise {
+    animation-delay: 680ms;
+  }
+
+  @keyframes soon-in {
+    from {
+      opacity: 0;
+      translate: 0 14px;
+    }
+  }
+
+  /* Desktop: the page's margin is wide (the navigation at the left), so the words size to what's left, and to the
+     screen's height. The line and the button rise by a rem, so past 1920×1080 they rise as far, for their size. */
+  @media (min-width: 1024px) {
+    .soon__title {
+      font-size: min(11.4vw, 24svh, 12.5rem);
+    }
+
+    .soon__rise {
+      animation-name: soon-in-desk;
+    }
+
+    @keyframes soon-in-desk {
+      from {
+        opacity: 0;
+        translate: 0 0.875rem;
+      }
+    }
+  }
+
+  /* On its own page (every screen since 2026-11-13): the light sweeps across in 2.4s and then rests for 4.1s, so the big
+     type only repaints while it moves, and it rests altogether while the page isn't in view (.is-away). Steered
+     (.is-steered, the script below, with a mouse), it leaves the automatic pass and sits where the pointer puts it. */
+  @media (prefers-reduced-motion: no-preference) {
+    .soon--page .soon__line > span {
+      animation-name: soon-rise, soon-light-desk;
+    }
+
+    .soon--page.is-away .soon__line > span {
+      animation-play-state: paused;
+    }
+
+    .soon--page.is-steered .soon__line > span {
+      animation: soon-rise 1000ms var(--ease-out) calc(var(--n, 0) * 120ms + 120ms) both;
+      background-position: var(--lx, 100%) 0;
+    }
+
+    @keyframes soon-light-desk {
+      0% {
+        background-position: 100% 0;
+        animation-timing-function: ease-in-out;
+      }
+      37%,
+      100% {
+        background-position: 0 0;
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .soon__line > span,
+    .soon__rise {
+      animation: none;
+    }
+
+    .soon__line > span {
+      background: none;
+      color: inherit;
+    }
+  }
+</style>
+
+<script>
+  // On its own page: the light rests while the page isn't in view (every screen); with a mouse, the words turn towards
+  // the pointer (up to 5deg across, 3.5deg up and down) and the light sits under it on each line; still for 2.5s, or
+  // gone from the window, they ease back flat and the light goes back to passing on its own. Not before the words have
+  // risen, and nothing runs once they've settled.
+  import { reduced } from '@/scripts/system/env';
+
+  document.querySelectorAll<HTMLElement>('[data-soon-page]').forEach((root) => {
+    if (root.dataset.ready || reduced()) return;
+    root.dataset.ready = 'true';
+
+    // Rests while the page isn't in view.
+    let inView = true;
+    const away = () => root.classList.toggle('is-away', document.hidden || !inView);
+    new IntersectionObserver(([e]) => {
+      inView = !!e?.isIntersecting;
+      away();
+    }).observe(root);
+    document.addEventListener('visibilitychange', away);
+
+    const title = root.querySelector<HTMLElement>('.soon__title');
+    const lines = [...root.querySelectorAll<HTMLElement>('.soon__line > span')];
+    if (!title || !lines.length || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    const from = performance.now() + 1300;
+    let boxes: DOMRect[] = [];
+    let steering = false;
+    let raf = 0;
+    let idle = 0;
+    let goal = { x: 0, y: 0 };
+    let now = { x: 0, y: 0 };
+    let lx = lines.map(() => 1);
+    let lxGoal = lines.map(() => 1);
+    let ease = 0.08;
+
+    const frame = () => {
+      raf = 0;
+      now = { x: now.x + (goal.x - now.x) * ease, y: now.y + (goal.y - now.y) * ease };
+      lx = lx.map((v, i) => v + (lxGoal[i] - v) * ease);
+      const still = Math.abs(goal.x - now.x) < 0.002 && Math.abs(goal.y - now.y) < 0.002 && lx.every((v, i) => Math.abs(lxGoal[i] - v) < 0.002);
+      if (still && !steering) {
+        // Settled flat: hand the light back to its own pass and leave the words as they were.
+        title.style.transform = '';
+        title.style.willChange = '';
+        root.classList.remove('is-steered');
+        lines.forEach((l) => l.style.removeProperty('--lx'));
+        return;
+      }
+      title.style.transform = `perspective(75rem) rotateX(${(-now.y * 3.5).toFixed(3)}deg) rotateY(${(now.x * 5).toFixed(3)}deg)`;
+      lines.forEach((l, i) => l.style.setProperty('--lx', `${(lx[i] * 100).toFixed(2)}%`));
+      if (!still) raf = requestAnimationFrame(frame);
+    };
+    const run = () => {
+      if (!raf) raf = requestAnimationFrame(frame);
+    };
+    // Back flat, the light to whichever end of its gradient is nearer (both are plain, so the hand-back can't be seen).
+    const release = () => {
+      window.clearTimeout(idle);
+      if (!steering) return;
+      steering = false;
+      ease = 0.12;
+      goal = { x: 0, y: 0 };
+      lxGoal = lx.map((v) => (v < 0.5 ? 0 : 1));
+      run();
+    };
+
+    window.addEventListener(
+      'pointermove',
+      (e) => {
+        // Only while the words are on screen (down at the footer, a still pointer lets them settle as usual).
+        if (e.pointerType !== 'mouse' || performance.now() < from || document.hidden || !inView) return;
+        if (!steering) {
+          // Where each line sits, read while the words are flat; the light starts from where its own pass has got to.
+          if (!root.classList.contains('is-steered')) {
+            boxes = lines.map((l) => l.getBoundingClientRect());
+            lx = lines.map((l) => (parseFloat(getComputedStyle(l).backgroundPositionX) || 0) / 100);
+          }
+          steering = true;
+          ease = 0.08;
+          title.style.willChange = 'transform';
+          root.classList.add('is-steered');
+        }
+        goal = { x: (e.clientX / window.innerWidth) * 2 - 1, y: (e.clientY / window.innerHeight) * 2 - 1 };
+        // The gradient is three times as wide as the line, its light in the middle: at position p the light is at
+        // (1.5 - 2p) of the line's width, so for the light under the pointer, p = (1.5 - where) / 2.
+        lxGoal = boxes.map((b) => Math.min(1, Math.max(0, (1.5 - (e.clientX - b.left) / b.width) / 2)));
+        window.clearTimeout(idle);
+        idle = window.setTimeout(release, 2500);
+        run();
+      },
+      { passive: true },
+    );
+    document.documentElement.addEventListener('pointerleave', release);
+    window.addEventListener('blur', release);
+    window.addEventListener('resize', () => (boxes = lines.map((l) => l.getBoundingClientRect())), { passive: true });
+  });
+</script>

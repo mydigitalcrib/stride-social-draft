@@ -1,0 +1,71 @@
+# Stride Sport: a page of its own, right after Stride Talent in the navigation (Talent brief, 2026-11-06).
+# All copy here is drafted for approval.
+sections:
+  hero:
+    status: draft
+    eyebrow: Stride Sport
+    headline: Stride Sport.
+    # The owner's words (2026-11-13), said better; the button's words are the owner's.
+    body: We manage athletes and sport creators, and bring them together with the brands that want to work with them.
+    cta: { label: Work with Stride Sport Talent, href: /talent/enquire?interest=sport }
+  people:
+    status: draft
+    eyebrow: The roster
+    headline: Athletes and sport creators.
+    awaiting: [athletes and sport creators, with consent]
+  placements:
+    status: draft
+    eyebrow: Commercial placements
+    headline: Where they've shown up.
+    body: Brand partnerships from our athletes' own YouTube channels.
+    awaiting: [commercial placements, with approval to show them]
+    # From the athletes' own channels (the channel on each roster entry), checked on YouTube on 2026-11-12: only uploads
+    # whose own title or description marks them as an ad or a sponsorship and that carry YouTube's paid-promotion flag;
+    # `copy` is the brand as the video names it and the month it went up. They're the creators' own partnerships (not
+    # said to be Stride's). Titles as YouTube gives them. (The owner asked for them here, 2026-11-12.)
+    items:
+      - key: cergolf
+        label: "Vice Golf Advent Calendar Sneak Peek 🎄⛳️ @VICEGOLF"
+        copy: "Vice Golf · October 2026"
+        href: https://www.youtube.com/watch?v=_VAo_5whYq0
+      - key: dmoktv
+        label: "POV: You fell in love with pressure and now you’re addicted⚽️ @underarmour  #UABaselayer #ad"
+        copy: "Under Armour · October 2026"
+        href: https://www.youtube.com/watch?v=ydj6WbTP39Q
+      - key: rlsbasketball
+        label: "Is @huupeofficial  the future of basketball… #rlsbasketball #basketball #huupe #nba"
+        copy: "huupe · November 2026"
+        href: https://www.youtube.com/watch?v=nICIXtwygVU
+      - key: 5atbfootball
+        label: "They predicted it.."
+        copy: "Kalshi · July 2026"
+        href: https://www.youtube.com/watch?v=J1laRLfEpNc
+      - key: connorparsons
+        label: "Week in the Life of a Professional Footballer"
+        copy: "Ubigi · June 2026"
+        href: https://www.youtube.com/watch?v=HXvEK_n4g1k
+      - key: hlumelo-baartman
+        label: "EVERY goalkeeper needs THIS in their bag!"
+        copy: "Gripmode · February 2026"
+        href: https://www.youtube.com/watch?v=pHLJtagFc1M
+      - key: wizardthewicketkeeper
+        label: "Can I beat a county cricket pro? (INSANE CATCH)"
+        copy: "Attract Socials · January 2026"
+        href: https://www.youtube.com/watch?v=hksrfBKZBfo
+      - key: tomallenfootball
+        label: "US COLLEGE SOCCER VS UK UNI FOOTBALL! MATCHDAY IN THE LIFE"
+        copy: "Dossier · August 2025"
+        href: https://www.youtube.com/watch?v=mhMxlEZzCT8
+      - key: abbie-little
+        label: "Best eSIM for Travelers in 2025 Sim Local vs  Airalo vs Holafly"
+        copy: "Sim Local · June 2025"
+        href: https://www.youtube.com/watch?v=wxDNvA8VOS8
+      - key: theironhistorian
+        label: "The Strongman Banned From Competing For Being Too Strong"
+        copy: "Surfshark · June 2025"
+        href: https://www.youtube.com/watch?v=RN9B3_K1P4Y
+  close:
+    status: draft
+    headline: Looking for an athlete?
+    body: Tell us about the campaign, the sport and the market.
+    cta: { label: Work with Stride Sport Talent, href: /talent/enquire?interest=sport }

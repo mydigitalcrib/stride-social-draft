@@ -1,0 +1,103 @@
+---
+// A video behind a whole page (the owner, 2026-11-12: "the rest of the website is mostly with videos"; phones and tablets
+// too since 2026-11-13, as a phone-sized file, `-phone.mp4` beside the desktop one, paused once the navy covers it), fixed
+// behind everything, under Stride's navy and the shared grain. Every page on a dark blue overlay has the homepage's
+// shade (`look="deep"`, the owner, 2026-11-13): Careers over an abstract blue clip (never literal); About, Team,
+// Sponsorships, Insights, Contact and Stride Academy over the homepage's showreel. Social's services keep their night
+// sky sharp (`plain`). The navy deepens as the page scrolls on (--deep), so what follows the first screen reads on it. The poster alone with reduced motion or data
+// saving; it rests while the tab is hidden. Stock footage: licensed for commercial use, sources in
+// docs/ASSET-SOURCES.md. Behaviour: back-video.ts. One per page.
+export interface Props {
+  mp4: string;
+  webm?: string;
+  poster: string;
+  /** How soft it is, in px at 1920×1080 (0: sharp). Set in rem, so a larger screen softens it as much. */
+  blur?: number;
+  /** How dark the navy over it is at the top of the page (0 to 1). */
+  shade?: number;
+  /** Where the picture is held when it's cut to the screen (object-position). */
+  position?: string;
+  /** The colour over it, as "r g b" (Stride's navy unless the page has its own: Stride Academy's slate). */
+  tint?: string;
+  /** 'deep': the homepage's shade under "Three sides of Stride" (home/CoverHero.astro, .cover.is-deep): the footage in
+      its own colours dissolved into soft moving light, under a frosted navy glass lit from the top left with a
+      faint bright edge along the top. The owner's choice for every page on a dark blue overlay (2026-11-13). */
+  look?: 'plain' | 'deep';
+  /** Phones and tablets: a smaller file of the same footage (by default the mp4 with `-phone` before `.mp4`). */
+  phone?: string;
+}
+
+const { mp4, webm, poster, blur = 0, shade = 0.55, position = '50% 50%', tint = '6 20 43', look = 'plain' } = Astro.props;
+const phone = Astro.props.phone ?? mp4.replace(/(-desktop)?\.mp4$/, '-phone.mp4');
+---
+
+<div class:list={['exp-haze backvid', { 'backvid--deep': look === 'deep' }]} aria-hidden="true" data-backvid data-phone={phone} style={`--haze-blur: ${blur / 16}rem; --shade: ${shade}; --at: ${position}; --tint: ${tint}`}>
+  <video muted loop playsinline preload="none" poster={poster} tabindex="-1" data-backvid-video>
+    {webm && <source src={webm} type="video/webm" />}
+    <source src={mp4} type="video/mp4" />
+  </video>
+</div>
+
+<style>
+  .backvid {
+    --haze-mask: none;
+    position: fixed;
+    z-index: -1;
+  }
+
+  .backvid video {
+    object-position: var(--at);
+    filter: blur(var(--haze-blur)) saturate(1.1);
+  }
+
+  /* A sharp clip isn't pushed past the screen's edges (only a blurred one needs the margin). */
+  .backvid[style*='--haze-blur: 0rem'] video {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* The homepage's deep shade, as it stands once "Three sides of Stride" has risen over the hero (--deep at 1 there):
+     the footage blurred into soft light, a little dimmer and less saturated, whatever blur the page asked for. */
+  .backvid--deep video {
+    filter: saturate(0.9) brightness(0.66) blur(1.875rem);
+  }
+
+  /* Its frosted navy glass: a deep tint, lit softly from the top left, a little light low on the right, and a faint
+     bright edge along the top; a touch deeper as the page scrolls on (--deep, the script), for reading. Under it, the
+     hero's own shade (darker towards the edges). The page's own colour (--tint) takes the lower part: Stride's navy,
+     or Stride Academy's slate. */
+  .backvid--deep::before {
+    background:
+      radial-gradient(110% 70% at 18% 0%, rgb(var(--white-rgb) / 0.07), transparent 62%),
+      radial-gradient(90% 60% at 85% 100%, rgb(41 67 104 / 0.3), transparent 70%),
+      radial-gradient(115% 100% at 50% 42%, transparent 52%, rgb(var(--tint) / 0.5) 100%),
+      linear-gradient(rgb(var(--tint) / 0.1), rgb(var(--tint) / 0.1)),
+      linear-gradient(
+        180deg,
+        rgb(12 39 83 / calc(0.58 + var(--deep, 0) * 0.12)),
+        rgb(var(--tint) / calc(0.74 + var(--deep, 0) * 0.08)) 55%,
+        rgb(var(--tint) / calc(0.84 + var(--deep, 0) * 0.06))
+      );
+    box-shadow: inset 0 1px 0 rgb(var(--white-rgb) / 0.08);
+  }
+
+  /* Stride's navy over it, a touch deeper at the edges, deepening as the page scrolls on (--deep, the script). */
+  .backvid:not(.backvid--deep)::before {
+    background:
+      radial-gradient(120% 90% at 50% 40%, transparent 40%, rgb(var(--tint) / 0.45)),
+      rgb(var(--tint) / calc(var(--shade) + (1 - var(--shade)) * var(--deep, 0) * 0.55));
+  }
+
+  /* Phones and tablets: the same footage at a lighter blur (it's a smaller file, already soft), cheaper to draw. */
+  @media (max-width: 1023px) {
+    .backvid--deep video {
+      filter: saturate(0.9) brightness(0.66) blur(1.125rem);
+    }
+  }
+</style>
+
+<script>
+  import { initBackVideo } from '@/scripts/system/back-video';
+  initBackVideo();
+</script>

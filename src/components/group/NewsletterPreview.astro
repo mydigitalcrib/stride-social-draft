@@ -1,0 +1,335 @@
+---
+// Stride's LinkedIn newsletter, "Stride with Influencers", after the team on About (desktop; the owner, 2026-11-13):
+// its name in big type, its line and how often it comes out as LinkedIn gives them, the latest editions as lines of type
+// (pointed at, one lights up and leans in), and the two ways in: a preview of an edition over the page, which is
+// LinkedIn's own post embed, fetched only when it's opened as it sets LinkedIn's cookies (the edition itself, with
+// LinkedIn's own Subscribe), and "Subscribe on LinkedIn", straight to the newsletter. Words and editions live in
+// about.yaml (`newsletter`): add each new edition at the top. Behaviour: newsletter.ts.
+import { interfaceCopy } from '@/lib/ui-copy';
+
+export interface Props {
+  copy: {
+    eyebrow?: string;
+    headline?: string;
+    body?: string;
+    cta?: { label: string; href: string };
+    /** The editions, newest first: `key` the LinkedIn post that shares it, `label` its title, `audience` its month,
+        `copy` how long it takes to read, `href` the article on LinkedIn. */
+    items?: { key?: string; label: string; audience?: string; copy?: string; href?: string }[];
+  };
+}
+
+const { copy } = Astro.props;
+const t = await interfaceCopy();
+// Only a LinkedIn post's own id opens a preview.
+const editions = (copy.items ?? []).filter((e) => /^urn:li:activity:\d+$/.test(e.key ?? ''));
+// Its name's longest word, which decides how large the name can be in its column.
+const longest = Math.max(1, ...(copy.headline ?? '').split(/\s+/).map((w) => w.length));
+---
+
+<section class="news" aria-labelledby="news-title" data-tone="group" data-look="deep" data-newsletter>
+  <div class="news__inner container-wide">
+    <header class="news__head">
+      {copy.eyebrow && <p class="news__eyebrow exp-label">{copy.eyebrow}</p>}
+      <h2 class="news__title" id="news-title" style={`--len: ${longest}`}>{copy.headline}</h2>
+      {copy.body && <p class="news__body">{copy.body}</p>}
+      <div class="news__actions">
+        {copy.cta && (
+          <a class="exp-pill" href={copy.cta.href} target="_blank" rel="noopener">
+            {copy.cta.label} <span aria-hidden="true">↗</span>
+          </a>
+        )}
+        {editions[0] && (
+          <button class="exp-pill exp-pill--ghost" type="button" data-news-open={editions[0].key} data-news-href={editions[0].href} data-news-title={editions[0].label}>
+            {t('news.latest')}
+          </button>
+        )}
+      </div>
+    </header>
+
+    {editions.length > 0 && (
+      <div class="news__editions">
+        <p class="news__list-label exp-label">{t('news.recent')}</p>
+        <ol class="news__list" role="list">
+          {editions.map((e) => (
+            <li>
+              <button class="news__item" type="button" data-news-open={e.key} data-news-href={e.href} data-news-title={e.label}>
+                <span class="news__when exp-label">{[e.audience, e.copy].filter(Boolean).join(' · ')}</span>
+                <span class="news__name">{e.label}</span>
+                <span class="news__go" aria-hidden="true">→</span>
+              </button>
+            </li>
+          ))}
+        </ol>
+      </div>
+    )}
+  </div>
+
+  {/* An edition, previewed over the page with LinkedIn's own embed. */}
+  <dialog class="news__dialog" aria-label={t('news.preview')} data-news-dialog data-lenis-prevent>
+    <button class="news__close" type="button" aria-label={t('news.close')} data-news-close>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+    </button>
+    <div class="news__frame" data-news-frame></div>
+    <div class="news__dialog-foot">
+      {copy.cta && (
+        <a class="exp-pill" href={copy.cta.href} target="_blank" rel="noopener">
+          {copy.cta.label} <span aria-hidden="true">↗</span>
+        </a>
+      )}
+      <a class="news__article exp-label" href={copy.cta?.href ?? 'https://www.linkedin.com/'} target="_blank" rel="noopener" data-news-article>{t('news.read')} <span aria-hidden="true">↗</span></a>
+    </div>
+  </dialog>
+</section>
+
+<style>
+  .news {
+    position: relative;
+    padding-block: clamp(5rem, 12vh, 8.75rem);
+    color: rgb(var(--ink));
+  }
+
+  /* Its name and ways in on the left, the editions on the right. */
+  .news__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: clamp(2.5rem, 5vw, 6rem);
+    align-items: start;
+  }
+
+  /* Phones and tablets: its name and ways in, then the editions under them. */
+  @media (max-width: 1023px) {
+    .news {
+      padding-block: clamp(4rem, 14vw, 6rem);
+    }
+
+    .news__inner {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-7);
+    }
+
+    .news__title {
+      font-size: min(clamp(2.75rem, 13vw, 5rem), 100cqi / (var(--len, 10) * 0.8));
+    }
+  }
+
+  .news__head {
+    display: grid;
+    justify-items: start;
+    gap: 1.25rem;
+    container-type: inline-size;
+  }
+
+  .news__eyebrow {
+    color: rgb(var(--tone-lit));
+  }
+
+  /* Plain white, as every title is (no glow); never wider than its column, its longest word deciding (--len, about
+     0.8em a letter in this type). */
+  .news__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: min(clamp(3rem, 6vw, 6.5rem), 100cqi / (var(--len, 10) * 0.8));
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    line-height: 0.9;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+
+  .news__body {
+    max-width: 34ch;
+    margin: 0;
+    font-size: clamp(1.0625rem, 1.2vw, 1.25rem);
+    line-height: 1.45;
+    color: rgb(var(--ink) / 0.82);
+  }
+
+  .news__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+  }
+
+  .news__editions {
+    display: grid;
+    gap: 0.75rem;
+    padding-top: 0.75rem;
+  }
+
+  .news__list-label {
+    color: rgb(var(--ink) / 0.6);
+  }
+
+  .news__list {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid rgb(var(--ink) / 0.18);
+  }
+
+  /* An edition: its month and reading time, its title in display type, an arrow; pointed at, it lights up and leans
+     in. */
+  .news__item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'when go'
+      'name go';
+    align-items: center;
+    gap: 0.375rem 1.25rem;
+    width: 100%;
+    padding: 1.25rem 0;
+    border-bottom: 1px solid rgb(var(--ink) / 0.18);
+    text-align: left;
+    color: rgb(var(--ink) / 0.72);
+    transition:
+      color 260ms var(--ease-out),
+      translate 400ms var(--spring-pop, cubic-bezier(0.2, 1.4, 0.35, 1));
+  }
+
+  .news__when {
+    grid-area: when;
+    color: rgb(var(--ink) / 0.55);
+  }
+
+  .news__name {
+    grid-area: name;
+    font-family: var(--font-display);
+    font-size: clamp(1.25rem, 1.9vw, 2rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.015em;
+  }
+
+  .news__go {
+    grid-area: go;
+    font-size: 1.25rem;
+    opacity: 0;
+    translate: -0.5rem 0;
+    transition:
+      opacity 260ms var(--ease-out),
+      translate 400ms var(--spring-pop, cubic-bezier(0.2, 1.4, 0.35, 1));
+  }
+
+  .news__item:hover,
+  .news__item:focus-visible {
+    color: var(--white);
+    translate: 0.625rem 0;
+  }
+
+  .news__item:hover .news__go,
+  .news__item:focus-visible .news__go {
+    opacity: 1;
+    translate: 0 0;
+  }
+
+  .news__item:focus-visible,
+  .news__close:focus-visible,
+  .news__article:focus-visible {
+    outline: 2px solid rgb(var(--tone-lit));
+    outline-offset: 3px;
+  }
+
+  /* The preview: dark frosted glass over the page, LinkedIn's edition inside, the ways on below it. */
+  .news__dialog {
+    width: min(36rem, 92vw);
+    max-height: 90svh;
+    padding: 3.5rem 1.25rem 1.25rem;
+    border: 0;
+    border-radius: 1.5rem;
+    overflow: auto;
+    background: linear-gradient(135deg, rgb(24 34 54 / 0.94), rgb(10 16 28 / 0.92));
+    box-shadow:
+      inset 0 0 0 1px rgb(var(--white-rgb) / 0.18),
+      0 2rem 5rem -1.5rem rgb(0 0 0 / 0.9);
+    color: var(--white);
+  }
+
+  .news__dialog::backdrop {
+    background: rgb(var(--navy-900-rgb) / 0.62);
+    backdrop-filter: blur(0.5rem);
+  }
+
+  .news__dialog[open] {
+    display: grid;
+    gap: 1rem;
+    animation: news-in 480ms var(--spring-pop, cubic-bezier(0.2, 1.4, 0.35, 1));
+  }
+
+  @keyframes news-in {
+    from {
+      opacity: 0;
+      translate: 0 1.5rem;
+      scale: 0.96;
+    }
+  }
+
+  .news__close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: var(--gb-fill);
+    box-shadow: var(--gb-edge);
+    color: var(--white);
+  }
+
+  .news__close svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+
+  .news__frame {
+    min-height: 26rem;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background: var(--white);
+  }
+
+  .news__frame :global(iframe) {
+    display: block;
+    width: 100%;
+    height: min(40rem, 64svh);
+    border: 0;
+  }
+
+  .news__dialog-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .news__article {
+    color: rgb(var(--white-rgb) / 0.75);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .news__item,
+    .news__go {
+      transition: none;
+    }
+
+    .news__dialog[open] {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  import { initNewsletter } from '@/scripts/system/newsletter';
+  initNewsletter();
+</script>

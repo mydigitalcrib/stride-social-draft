@@ -1,0 +1,1003 @@
+---
+// The searchable roster (desktop): every published creator, found by typing or by division, niche and
+// signed or partner, with the choice kept in the URL. It runs on the same data however long the list gets:
+// each card comes from the roster's rules (lib/creator-view.ts) and only `pageSize` show until asked for
+// more. `tools={false}` leaves out the search, the filters and "show more": just the title and the first photographs
+// (`pageSize`), all the same size, three to a row, still narrowed by the division picker above. Editorial, not a directory: what you type goes up on the wall in giant letters, photographs have no frames
+// and every seventh one is large. When the search or a filter changes, the photos it leaves out go dark one by one
+// and the rest close up; under the pointer a photo takes a camera flash and comes into colour.
+// Behaviour: src/scripts/system/roster-browser.ts.
+// Desktop, everything is pictures (the owner's choice, 2026-11-12). With its tools (/talent/roster) every creator shows,
+// in a dense mosaic of photographs, the divisions above it in giant type (no other filter rows), the pointer a
+// viewfinder over them (roster-finder.ts). Without them ("Meet our talent." on /talent) a contact sheet that swells
+// around the pointer, the one under it in colour with its name (roster-mosaic.ts), ending on a tile with the whole
+// roster's count. Either way a click on a photograph adds the creator ("Click to get to know"), a name opens their
+// profile over the page.
+// The camera answers the keyboard as it does the pointer (the viewfinder and the swell follow focus). A press on a
+// photograph half-presses the shutter (the viewfinder closes in, the photo hunts for focus), and the shot follows on
+// release; a creator added gets their ring drawn round them, like a select marked on a contact sheet, and it unwinds
+// when they're taken out. On the roster the flash under the viewfinder comes only once it has settled on a photo.
+// Sizes in rem on desktop, so it all grows with a large screen; on an ultrawide screen the contact sheet keeps the
+// size it has at 16:9.
+import CreatorCard from './CreatorCard.astro';
+import type { CreatorView } from '@/lib/creator-view';
+import { interfaceCopy } from '@/lib/ui-copy';
+
+export interface Props {
+  /** The headline's element: 'h1' where it's the page's title (the roster). */
+  level?: 'h1' | 'h2';
+  eyebrow?: string;
+  headline?: string;
+  creators: CreatorView[];
+  divisions: { id: string; label: string }[];
+  niches: { id: string; label: string }[];
+  copy: Record<string, string>;
+  pageSize?: number;
+  /** The search and the filters. */
+  tools?: boolean;
+  /** A way on to the full roster, beside the count (it follows the division chosen above). */
+  cta?: { label: string; href: string } | null;
+  /** When `creators` is only a selection (the glimpse on /talent): the full count, overall ('') and per division. */
+  totals?: Record<string, number>;
+  /** The photographs' `sizes`, for how wide they show. */
+  sizes?: string;
+}
+
+const { level = 'h2', eyebrow, headline, creators, divisions, niches, copy, pageSize = 15, tools = true, cta = null, totals, sizes } = Astro.props;
+const t = await interfaceCopy();
+// The divisions as giant type (talent/DivisionPicker.astro), given in the "divisions" slot: on desktop it takes the
+// place of the division filter's buttons.
+const giant = Astro.slots.has('divisions');
+const Title = level;
+const relationships = [
+  { id: 'managed', label: 'Signed' },
+  { id: 'partner', label: 'Partner' },
+];
+const groups = [
+  { key: 'division', label: copy.division, options: divisions },
+  { key: 'niche', label: copy.niche, options: niches },
+  { key: 'relationship', label: copy.relationship, options: relationships },
+].filter((g) => g.options.length > 0);
+const noun = (n: number) => `${n} ${n === 1 ? 'creator' : 'creators'}`;
+// The whole roster's figure on its tile (desktop): up to three figures it keeps its designed size; a longer one is
+// capped by its length, so it never runs out of the tile.
+const allDigits = String(totals?.[''] ?? creators.length).length;
+const allFit = allDigits > 3 ? `--all-fit: ${(150 / allDigits).toFixed(1)}cqi` : undefined;
+---
+
+<section class:list={['rb', { 'rb--giant': giant }]} id="roster" aria-labelledby="rb-title" data-tone="talent" data-look="deep" data-roster data-page-size={pageSize} data-totals={totals ? JSON.stringify(totals) : undefined} data-glimpse={tools ? undefined : ''} style={`--hint: ${JSON.stringify(t('photocall.shoot'))}; --hint-kept: ${JSON.stringify(t('photocall.kept'))}`}>
+  {tools && <div class="rb__wall" aria-hidden="true" data-roster-wall></div>}
+  <div class="rb__inner">
+    <header class="rb__head">
+      {eyebrow && <p class="exp-label">{eyebrow}</p>}
+      {headline && <Title class="rb__title exp-title" id="rb-title">{headline}</Title>}
+      {tools && (
+        <label class="rb__search">
+          <span class="visually-hidden">{copy.search}</span>
+          <input type="search" placeholder={copy.search} autocomplete="off" spellcheck="false" data-roster-search />
+        </label>
+      )}
+      {giant && <div class="rb__giant"><slot name="divisions" /></div>}
+      {tools && !giant && (
+        <div class="rb__filters">
+          {groups.map((g) => (
+            <div class="rb__group" role="group" aria-label={g.label} data-roster-group={g.key}>
+              <p class="rb__label exp-label">{g.label}</p>
+              <button class="rb__filter" type="button" aria-pressed="true" data-roster-filter="">{copy.all}</button>
+              {g.options.map((o) => <button class="rb__filter" type="button" aria-pressed="false" data-roster-filter={o.id}>{o.label}</button>)}
+            </div>
+          ))}
+        </div>
+      )}
+      <div class="rb__meta">
+        <p class="rb__count exp-label" aria-live="polite" data-roster-count>{noun(totals?.[''] ?? creators.length)}</p>
+        {cta && (
+          <a class="exp-pill" href={cta.href} data-roster-cta={cta.href}>
+            {cta.label}
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
+          </a>
+        )}
+      </div>
+    </header>
+
+    <div class="rb__grid" data-roster-grid data-press={tools ? undefined : ''}>
+      {creators.map((c) => <CreatorCard creator={c} filterable sizes={sizes} />)}
+      {!tools && cta && (
+        /* The whole roster: its count (the division chosen above, if any) and the way to it. */
+        <a class="rb__all" href={cta.href} data-roster-cta={cta.href}>
+          <span class="rb__all-n" data-roster-all-count style={allFit}>{totals?.[''] ?? creators.length}</span>
+          <span class="rb__all-label">{cta.label}</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
+        </a>
+      )}
+    </div>
+    {tools && (
+      <>
+        {/* The viewfinder over the photographs (roster-finder.ts), and the dot that marks the pointer exactly. */}
+        <div class="rb__finder" aria-hidden="true" data-roster-finder data-shoot={t('photocall.shoot')} data-kept={t('photocall.kept')} data-open={t('sheet.open')}>
+          <i class="rb__corner rb__corner--tl"></i>
+          <i class="rb__corner rb__corner--tr"></i>
+          <i class="rb__corner rb__corner--bl"></i>
+          <i class="rb__corner rb__corner--br"></i>
+          <span class="rb__af">AF</span>
+          <span class="rb__finder-label"><b data-rf-name></b><span data-rf-action></span></span>
+        </div>
+        <span class="rb__dot desk-only" aria-hidden="true" data-roster-dot></span>
+      </>
+    )}
+
+    <div class="rb__none" hidden data-roster-none>
+      <p>{copy.none}</p>
+      <button class="exp-pill exp-pill--ghost" type="button" data-roster-clear>{copy.clear}</button>
+    </div>
+
+    {tools && <p class="rb__foot"><button class="exp-pill exp-pill--ghost" type="button" hidden data-roster-more>{copy.more}</button></p>}
+    <slot />
+  </div>
+</section>
+
+<style>
+  .rb {
+    position: relative;
+    padding-block: clamp(4.5rem, 12vh, 8.75rem);
+    color: rgb(var(--ink));
+  }
+
+  .rb__inner {
+    display: grid;
+    gap: var(--space-6);
+    margin-inline: var(--margin);
+  }
+
+  .rb__head {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .rb__title {
+    font-size: clamp(2rem, 3.4vw, 3.5rem);
+  }
+
+  /* ---------- What you type, up on the wall: fixed like the wall, and only while the search is in view ---------- */
+  .rb__wall {
+    position: fixed;
+    top: 8svh;
+    right: 0;
+    left: 0;
+    z-index: -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 58svh;
+    font-family: var(--font-display);
+    font-size: min(36svh, calc(86vw / (var(--len, 6) * 0.98)));
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: #43648e;
+    text-shadow:
+      0.0625rem 0.0625rem 0 #2c466c,
+      0.125rem 0.125rem 0 #2a4367,
+      0.1875rem 0.1875rem 0 #284062,
+      0.25rem 0.25rem 0 #263d5e,
+      0.3125rem 0.3125rem 0 #243a59,
+      0.375rem 0.375rem 0 #223755,
+      0.4375rem 0.4375rem 0 #203450,
+      0.5rem 0.5rem 0 #1e314c,
+      0.5625rem 0.5625rem 0 #1c2e47,
+      0.625rem 0.625rem 0 #1a2b43,
+      1.375rem 1.625rem 2.125rem rgb(3 10 24 / 0.75);
+    opacity: 0;
+    /* A new size eases in as a scale (roster-browser.ts), so the letters aren't laid out again on every frame. */
+    transform: perspective(93.75rem) rotateY(-5deg);
+    transition: opacity 400ms var(--ease-out);
+    pointer-events: none;
+  }
+
+  .rb__wall.is-on {
+    opacity: 1;
+  }
+
+  .rb__wall :global(span) {
+    display: inline-block;
+    white-space: pre;
+    animation: rb-stamp 340ms cubic-bezier(0.2, 1.3, 0.35, 1) backwards;
+  }
+
+  @keyframes rb-stamp {
+    from {
+      opacity: 0;
+      scale: 1.3;
+      translate: 0 -0.08em;
+    }
+  }
+
+  /* The search is a line of big type, not a box. */
+  .rb__search input {
+    width: 100%;
+    padding: 0.75rem 0;
+    border: 0;
+    border-bottom: 1px solid rgb(var(--hair) / 0.4);
+    border-radius: 0;
+    background: none;
+    font-family: var(--font-display);
+    font-size: clamp(1.25rem, 2.2vw, 2.25rem);
+    font-weight: 500;
+    color: rgb(var(--ink));
+    transition: border-color 260ms var(--ease-out);
+  }
+
+  .rb__search input::-webkit-search-cancel-button {
+    filter: brightness(0) invert(1);
+  }
+
+  .rb__search input::placeholder {
+    color: rgb(var(--ink) / 0.42);
+  }
+
+  .rb__search input:focus {
+    border-color: rgb(var(--tone-lit));
+    outline: none;
+  }
+
+  .rb__filters {
+    display: grid;
+    gap: 6px;
+    margin-top: var(--space-2);
+  }
+
+  .rb__group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 14px;
+  }
+
+  .rb__label {
+    flex: none;
+    width: 7.5rem;
+    color: rgb(var(--ink) / 0.72);
+  }
+
+  /* Filters are words: the chosen one lit, underlined. */
+  .rb__filter {
+    padding: 3px 0;
+    font-size: 0.9375rem;
+    color: rgb(var(--ink) / 0.8);
+    transition: color 220ms var(--ease-out);
+  }
+
+  .rb__filter:hover {
+    color: rgb(var(--ink));
+  }
+
+  .rb__filter[aria-pressed='true'] {
+    color: rgb(var(--ink));
+    text-decoration: underline;
+    text-decoration-color: rgb(var(--tone-lit));
+    text-decoration-thickness: 2px;
+    text-underline-offset: 5px;
+  }
+
+  .rb__filter:focus-visible {
+    outline: 2px solid rgb(var(--tone-lit));
+    outline-offset: 2px;
+  }
+
+  .rb__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-top: var(--space-2);
+  }
+
+  /* ---------- The photographs ---------- */
+  .rb__grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-auto-flow: dense;
+    gap: clamp(8px, 1vw, 14px);
+  }
+
+  /* The glimpse (no tools): every photograph the same size, three to a row. */
+  .rb[data-glimpse] .rb__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  /* Lights in the crowd: left out, a photo flares once and goes dark. */
+  .rb__grid > :global(.is-out) {
+    pointer-events: none;
+    animation: rb-out 260ms var(--ease-out) var(--out, 0ms) forwards;
+  }
+
+  @keyframes rb-out {
+    25% {
+      filter: brightness(1.8);
+      opacity: 1;
+    }
+
+    to {
+      filter: brightness(0);
+      opacity: 0;
+    }
+  }
+
+  /* Under the viewfinder, once it has settled on a photo: the flash, and it comes into colour in the flash
+     (roster-finder.ts: .is-flashing, never more than about two a second). */
+  .rb__grid :global(.ccc__photo)::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: radial-gradient(circle at 68% 24%, var(--white), rgb(var(--white-rgb) / 0.72) 28%, rgb(var(--ice-rgb) / 0.28) 62%, rgb(var(--ice-rgb) / 0.12));
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .rb__grid :global(.ccc.is-flashing .ccc__photo)::after {
+    animation: rb-flash 460ms var(--ease-out);
+  }
+
+  @keyframes rb-flash {
+    12% {
+      opacity: 0.6;
+    }
+
+    to {
+      opacity: 0;
+    }
+  }
+
+  .rb__grid :global(.ccc:hover .ccc__photo img) {
+    transition:
+      filter 90ms linear,
+      scale 900ms var(--ease-out);
+  }
+
+  .rb__grid > :global([data-roster-card][hidden]) {
+    display: none;
+  }
+
+  .rb__grid > :global(.is-big) {
+    grid-column: span 2;
+    grid-row: span 2;
+  }
+
+  /* ---------- Desktop, with the tools (the roster): the camera ----------
+     The divisions as giant type in place of their buttons; a filter or a search leaves its results in colour; over
+     the photographs the pointer is a viewfinder (roster-finder.ts) and a click on one takes the shot (it keeps them),
+     while a click on a name opens their profile over the page (creator-sheet.ts). */
+  .rb__finder,
+  .rb__dot {
+    display: none;
+  }
+
+  /* (Every screen since 2026-11-13; phones and tablets get their own sizes at the end.) */
+  @media all {
+    .rb--giant .rb__group[data-roster-group='division'] {
+      display: none;
+    }
+
+    .rb__giant {
+      margin-block: var(--space-3) var(--space-2);
+    }
+
+    .rb__giant :global(.picker) {
+      padding: 0;
+    }
+
+    .rb__giant :global(.picker__inner) {
+      margin-inline: 0;
+    }
+
+    .rb__giant :global(.picker__head) {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+
+    .rb.is-filtered:not([data-glimpse]) .rb__grid :global(.ccc__photo img) {
+      filter: none;
+    }
+
+    /* Every creator, a mosaic of photographs: eight across (six on smaller screens), close together, a large one every
+       so often (roster-browser.ts); their name only under the viewfinder, the rest of their details in the profile. */
+    .rb:not([data-glimpse]) .rb__grid {
+      --ring-r: 0.1875rem;
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      gap: 0.375rem;
+    }
+
+    .rb:not([data-glimpse]) .rb__grid :global(.ccc__photo) {
+      border-radius: var(--ring-r);
+    }
+
+    .rb:not([data-glimpse]) .rb__grid :global(.ccc__over) {
+      padding: 2.5rem 0.625rem 0.5625rem;
+      opacity: 0;
+      transition: opacity 220ms var(--ease-out);
+    }
+
+    .rb:not([data-glimpse]) .rb__grid :global(.ccc.is-aimed .ccc__over),
+    .rb:not([data-glimpse]) .rb__grid :global(.ccc:focus-within .ccc__over),
+    .rb:not([data-glimpse]) .rb__grid :global(.ccc.is-big .ccc__over) {
+      opacity: 1;
+    }
+
+    .rb:not([data-glimpse]) .rb__grid :global(.ccc__name) {
+      font-size: 0.875rem;
+    }
+
+    .rb:not([data-glimpse]) .rb__grid :global(.ccc.is-big .ccc__name) {
+      font-size: clamp(1.125rem, 1.5vw, 1.5rem);
+    }
+
+    .rb:not([data-glimpse]) .rb__grid {
+      cursor: none;
+    }
+
+    /* The photograph is the camera's: only the name opens the profile. */
+    .rb:not([data-glimpse]) .rb__grid :global(.ccc__name a)::after {
+      display: none;
+    }
+
+    .rb:not([data-glimpse]) .rb__grid :global(.ccc.is-aimed .ccc__photo img),
+    .rb:not([data-glimpse]) .rb__grid :global(.ccc:has(.ccc__keep[aria-pressed='true']) .ccc__photo img) {
+      filter: none;
+    }
+
+    /* Added: in colour, ringed in light. */
+    .rb__grid :global(.ccc:has(.ccc__keep[aria-pressed='true']) .ccc__photo) {
+      box-shadow:
+        0 0 0 2px rgb(var(--tone-lit)),
+        0 0 1.625rem rgb(var(--tone-lit) / 0.4);
+    }
+
+    /* Only the keyboard needs the card's own buttons (the pointer adds with a click on the photo); the details are in
+       the profile. Shown on keyboard focus only: a click on a name focuses it too, and the name mustn't move under it. */
+    .rb__grid :global(.ccc__more) {
+      display: none;
+    }
+
+    .rb__grid :global(.ccc:has(:focus-visible) .ccc__more) {
+      display: grid;
+    }
+
+    .rb__grid :global(.ccc:has(:focus-visible) .ccc__more > :not(.ccc__actions)) {
+      display: none;
+    }
+
+    .rb__finder {
+      --w: 0px;
+      --h: 0px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 6;
+      display: block;
+      width: var(--w);
+      height: var(--h);
+      opacity: 0;
+      transform: translate(var(--x, 0), var(--y, 0));
+      pointer-events: none;
+      transition: opacity 240ms var(--ease-out);
+    }
+
+    .rb__finder.is-on {
+      opacity: 1;
+    }
+
+    .rb__corner {
+      position: absolute;
+      width: 1.375rem;
+      height: 1.375rem;
+      border: 0 solid rgb(var(--white-rgb) / 0.92);
+      filter: drop-shadow(0 0 0.375rem rgb(var(--ice-rgb) / 0.6));
+      transition: translate 260ms cubic-bezier(0.2, 1.5, 0.4, 1);
+    }
+
+    .rb__corner--tl {
+      top: 0;
+      left: 0;
+      border-width: 2px 0 0 2px;
+    }
+
+    .rb__corner--tr {
+      top: 0;
+      right: 0;
+      border-width: 2px 2px 0 0;
+    }
+
+    .rb__corner--bl {
+      bottom: 0;
+      left: 0;
+      border-width: 0 0 2px 2px;
+    }
+
+    .rb__corner--br {
+      right: 0;
+      bottom: 0;
+      border-width: 0 2px 2px 0;
+    }
+
+    .rb__finder.is-locking .rb__corner--tl {
+      translate: 0.4375rem 0.4375rem;
+    }
+
+    .rb__finder.is-locking .rb__corner--tr {
+      translate: -0.4375rem 0.4375rem;
+    }
+
+    .rb__finder.is-locking .rb__corner--bl {
+      translate: 0.4375rem -0.4375rem;
+    }
+
+    .rb__finder.is-locking .rb__corner--br {
+      translate: -0.4375rem -0.4375rem;
+    }
+
+    .rb__af {
+      position: absolute;
+      top: 0.4375rem;
+      left: 1.875rem;
+      font-family: var(--font-mono);
+      font-size: 0.5625rem;
+      letter-spacing: 0.12em;
+      color: rgb(var(--tone-lit));
+      transition: text-shadow 200ms var(--ease-out);
+    }
+
+    /* Half-pressed (a press on a photo, before its release takes the shot): the focus mark glows. */
+    .rb__finder.is-half .rb__af {
+      text-shadow: 0 0 0.5rem rgb(var(--tone-lit));
+    }
+
+    .rb__finder-label {
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      left: 0;
+      display: grid;
+      gap: 0.125rem;
+      white-space: nowrap;
+    }
+
+    .rb__finder-label b {
+      font-family: var(--font-display);
+      font-size: 0.9375rem;
+      font-weight: 850;
+      font-stretch: var(--stretch-wide);
+      text-transform: uppercase;
+    }
+
+    .rb__finder-label span {
+      font-family: var(--font-mono);
+      font-size: 0.5625rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgb(var(--ink) / 0.75);
+    }
+
+    .rb__finder-label b:empty,
+    .rb__finder-label span:empty {
+      display: none;
+    }
+
+    /* In the mosaic the photo under it shows its name: the viewfinder says only what a click does, on a strip of
+       glass so it reads over the photographs below. */
+    .rb__finder-label b {
+      display: none;
+    }
+
+    .rb__finder-label span {
+      padding: 0.3125rem 0.625rem;
+      border-radius: 999px;
+      background: rgb(var(--navy-900-rgb) / 0.72);
+      box-shadow: inset 0 0 0 1px rgb(var(--white-rgb) / 0.22);
+      color: rgb(var(--ink));
+      backdrop-filter: blur(0.625rem);
+      -webkit-backdrop-filter: blur(0.625rem);
+    }
+
+    .rb__dot {
+      position: absolute;
+      top: -0.1875rem;
+      left: -0.1875rem;
+      z-index: 6;
+      display: block;
+      width: 0.375rem;
+      height: 0.375rem;
+      border-radius: 50%;
+      background: var(--white);
+      box-shadow: 0 0 0.625rem rgb(var(--ice-rgb) / 0.95);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 200ms var(--ease-out);
+    }
+
+    .rb.is-aiming .rb__dot {
+      opacity: 1;
+    }
+  }
+
+  /* Half-pressed: the corners close in further than the lock, quickly, and hold until the release. */
+  @media (prefers-reduced-motion: no-preference) {
+    .rb__finder.is-half .rb__corner {
+      transition: translate 120ms var(--ease-out);
+    }
+
+    .rb__finder.is-half .rb__corner--tl {
+      translate: 0.6875rem 0.6875rem;
+    }
+
+    .rb__finder.is-half .rb__corner--tr {
+      translate: -0.6875rem 0.6875rem;
+    }
+
+    .rb__finder.is-half .rb__corner--bl {
+      translate: 0.6875rem -0.6875rem;
+    }
+
+    .rb__finder.is-half .rb__corner--br {
+      translate: -0.6875rem -0.6875rem;
+    }
+  }
+
+  /* ---------- Without the tools (/talent): the contact sheet (every screen since 2026-11-13) ----------
+     Six across, every photograph the same, in black and white; around the pointer they swell, the one under it in
+     colour with its name and what a click does, its neighbours eased aside and half in colour (roster-mosaic.ts sets
+     --sx, --sy, --ss, --sg and --sz). It ends on the whole roster's tile. */
+  .rb__all {
+    display: none;
+  }
+
+  @media all {
+    .rb[data-glimpse] .rb__grid {
+      --ring-r: 0.25rem;
+      position: relative;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 0.75rem;
+      /* No taller than at 16:9: on a 32:9 screen the sheet keeps its size, under its heading, instead of running on
+         below the screen. Never narrower than its width at 1920 (97.5rem), so no window up to 1920 wide, browser bars
+         and all, changes. */
+      max-width: min(100%, max(97.5rem, 145svh));
+    }
+
+    .rb[data-glimpse] .rb__grid > :global(.ccc) {
+      z-index: var(--sz, 0);
+      translate: var(--sx, 0px) var(--sy, 0px);
+      scale: var(--ss, 1);
+    }
+
+    .rb[data-glimpse] .rb__grid :global(.ccc__photo) {
+      border-radius: var(--ring-r);
+      box-shadow: 0 1.5rem 2.5rem -1.625rem rgb(0 0 0 / 0.9);
+    }
+
+    .rb[data-glimpse] .rb__grid :global(.ccc:has(.ccc__keep[aria-pressed='true']) .ccc__photo) {
+      box-shadow:
+        0 0 0 2px rgb(var(--tone-lit)),
+        0 0 1.625rem rgb(var(--tone-lit) / 0.4),
+        0 1.5rem 2.5rem -1.625rem rgb(0 0 0 / 0.9);
+    }
+
+    .rb[data-glimpse] .rb__grid :global(.ccc__photo img) {
+      filter: grayscale(var(--sg, 1)) contrast(1.04);
+      transition: scale 900ms var(--ease-out);
+    }
+
+    .rb[data-glimpse] .rb__grid :global(.ccc.is-aimed .ccc__photo img),
+    .rb[data-glimpse] .rb__grid :global(.ccc:focus-within .ccc__photo img),
+    .rb[data-glimpse] .rb__grid :global(.ccc:has(.ccc__keep[aria-pressed='true']) .ccc__photo img) {
+      filter: none;
+    }
+
+    .rb[data-glimpse] .rb__grid :global(.ccc__over) {
+      padding: 4rem 0.875rem 0.8125rem;
+      opacity: 0;
+      translate: 0 0.5rem;
+      transition:
+        opacity 240ms var(--ease-out),
+        translate 320ms var(--ease-out);
+    }
+
+    .rb[data-glimpse] .rb__grid :global(.ccc.is-aimed .ccc__over),
+    .rb[data-glimpse] .rb__grid :global(.ccc:focus-within .ccc__over) {
+      opacity: 1;
+      translate: 0 0;
+    }
+
+    .rb[data-glimpse] .rb__grid :global(.ccc__name) {
+      font-size: clamp(1.0625rem, 1.3vw, 1.375rem);
+      font-weight: 850;
+      font-stretch: var(--stretch-wide);
+      text-transform: uppercase;
+    }
+
+    /* What a click does, under the name. */
+    .rb[data-glimpse] .rb__grid :global(.ccc__over)::after {
+      content: var(--hint);
+      margin-top: 0.25rem;
+      font-family: var(--font-mono);
+      font-size: 0.5625rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgb(var(--tone-lit));
+    }
+
+    .rb[data-glimpse] .rb__grid :global(.ccc:has(.ccc__keep[aria-pressed='true']) .ccc__over)::after {
+      content: var(--hint-kept);
+    }
+
+    /* Only the name opens the profile; the photograph adds them. */
+    .rb[data-glimpse] .rb__grid :global(.ccc__name a)::after {
+      display: none;
+    }
+
+    /* The whole roster: its count, large, and the way to it. */
+    .rb[data-glimpse] .rb__all {
+      position: relative;
+      display: grid;
+      align-content: end;
+      gap: 0.375rem;
+      padding: 1rem;
+      overflow: hidden;
+      border-radius: 0.25rem;
+      container-type: inline-size;
+      background:
+        radial-gradient(120% 90% at 20% 0%, rgb(var(--tone-lit) / 0.3), transparent 60%),
+        linear-gradient(160deg, rgb(var(--white-rgb) / 0.16), rgb(var(--white-rgb) / 0.04));
+      box-shadow: inset 0 0 0 1px rgb(var(--white-rgb) / 0.3);
+      color: rgb(var(--ink));
+      backdrop-filter: blur(0.875rem);
+      -webkit-backdrop-filter: blur(0.875rem);
+      transition:
+        background-color 260ms var(--ease-out),
+        translate 360ms var(--ease-out);
+    }
+
+    /* Never wider than its tile on a narrow laptop (under about 1250 wide, where three figures ran out of it); from
+       1280 the cap is above the size, so the figure stands as designed. A longer figure brings a lower cap (--all-fit). */
+    .rb[data-glimpse] .rb__all-n {
+      font-family: var(--font-display);
+      font-size: min(clamp(2.5rem, 4.6vw, 4.5rem), var(--all-fit, 55cqi));
+      font-weight: 850;
+      font-stretch: var(--stretch-wide);
+      line-height: 0.9;
+      letter-spacing: -0.03em;
+    }
+
+    .rb[data-glimpse] .rb__all-label {
+      font-family: var(--font-mono);
+      font-size: var(--type-label);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .rb[data-glimpse] .rb__all svg {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      width: 1.375rem;
+      height: 1.375rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: translate 320ms var(--ease-out);
+    }
+
+    .rb[data-glimpse] .rb__all:hover svg,
+    .rb[data-glimpse] .rb__all:focus-visible svg {
+      translate: 0.25rem 0;
+    }
+
+    .rb[data-glimpse] .rb__all:focus-visible {
+      outline: 2px solid rgb(var(--tone-lit));
+      outline-offset: 3px;
+    }
+
+    /* The tile says it: the pill beside the count is the phones'. */
+    .rb[data-glimpse] .rb__meta .exp-pill {
+      display: none;
+    }
+  }
+
+  /* ---------- Desktop: a creator added gets their ring drawn round them ----------
+     roster-finder.ts sets .is-selecting as they're added: a ring of light traces itself round the card from the top,
+     clockwise, like a select marked on a contact sheet; then it's the steady ring (.is-blooming for a frame, ring
+     without glow) and its glow blooms in. Taken out (.is-unselecting), the ring unwinds. On the card, so it follows the
+     contact sheet's swell. */
+  @property --ccc-sweep {
+    syntax: '<angle>';
+    inherits: false;
+    initial-value: 0deg;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .rb__grid :global(.ccc .ccc__photo) {
+      transition: box-shadow 200ms var(--ease-out);
+    }
+
+    .rb__grid :global(.ccc.is-selecting)::before,
+    .rb__grid :global(.ccc.is-unselecting)::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      z-index: 3;
+      border: 2px solid rgb(var(--tone-lit));
+      border-radius: calc(var(--ring-r, 0.25rem) + 2px);
+      -webkit-mask: conic-gradient(from 0deg, #000 var(--ccc-sweep), transparent 0);
+      mask: conic-gradient(from 0deg, #000 var(--ccc-sweep), transparent 0);
+      pointer-events: none;
+      animation: rb-sweep 520ms cubic-bezier(0.6, 0, 0.2, 1) forwards;
+    }
+
+    .rb__grid :global(.ccc.is-unselecting)::before {
+      animation: rb-unsweep 300ms var(--ease-out) forwards;
+    }
+
+    .rb__grid :global(.ccc.is-selecting .ccc__photo),
+    .rb__grid :global(.ccc.is-unselecting .ccc__photo) {
+      transition: none;
+    }
+
+    .rb:not([data-glimpse]) .rb__grid :global(.ccc.is-selecting .ccc__photo) {
+      box-shadow: none;
+    }
+
+    /* Here the kept creator's ring and glow are a stronger rule (above), so these say "kept" too, to come first. */
+    .rb[data-glimpse] .rb__grid :global(.ccc.is-selecting:has(.ccc__keep[aria-pressed='true']) .ccc__photo) {
+      box-shadow: 0 1.5rem 2.5rem -1.625rem rgb(0 0 0 / 0.9);
+    }
+
+    .rb:not([data-glimpse]) .rb__grid :global(.ccc.is-blooming .ccc__photo) {
+      box-shadow:
+        0 0 0 2px rgb(var(--tone-lit)),
+        0 0 0 rgb(var(--tone-lit) / 0);
+      transition: none;
+    }
+
+    .rb[data-glimpse] .rb__grid :global(.ccc.is-blooming:has(.ccc__keep[aria-pressed='true']) .ccc__photo) {
+      box-shadow:
+        0 0 0 2px rgb(var(--tone-lit)),
+        0 0 0 rgb(var(--tone-lit) / 0),
+        0 1.5rem 2.5rem -1.625rem rgb(0 0 0 / 0.9);
+      transition: none;
+    }
+
+    @keyframes rb-sweep {
+      from {
+        --ccc-sweep: 0deg;
+      }
+
+      to {
+        --ccc-sweep: 360deg;
+      }
+    }
+
+    @keyframes rb-unsweep {
+      from {
+        --ccc-sweep: 360deg;
+      }
+
+      to {
+        --ccc-sweep: 0deg;
+      }
+    }
+  }
+
+  @media (max-width: 1279px) {
+    .rb__grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .rb:not([data-glimpse]) .rb__grid {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+  }
+
+  /* Phones and tablets: the desktop's mosaic and contact sheet (the owner, 2026-11-13), at their own sizes: the roster
+     three photographs across a phone and five across a tablet, under the same divisions in giant type; the contact
+     sheet three across (four on a tablet), ending on the whole roster's tile. The swell and the viewfinder answer a
+     tap (roster-mosaic.ts, roster-finder.ts), and stay inside the screen. */
+  @media (max-width: 1023px) {
+    .rb {
+      overflow-x: clip;
+    }
+
+    .rb:not([data-glimpse]) .rb__grid {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0.5rem;
+    }
+
+    .rb[data-glimpse] .rb__grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.5rem;
+      max-width: none;
+    }
+
+    .rb[data-glimpse] .rb__all {
+      aspect-ratio: 4 / 5;
+      padding: 0.75rem;
+    }
+
+    .rb[data-glimpse] .rb__all-label {
+      font-size: 0.625rem;
+      line-height: 1.3;
+    }
+
+    .rb[data-glimpse] .rb__all svg {
+      top: 0.75rem;
+      right: 0.75rem;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .rb:not([data-glimpse]) .rb__grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.375rem;
+    }
+
+    .rb[data-glimpse] .rb__grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.375rem;
+    }
+
+    .rb[data-glimpse] .rb__grid :global(.ccc__name) {
+      font-size: 0.875rem;
+    }
+
+    .rb[data-glimpse] .rb__grid :global(.ccc__over) {
+      padding: 2.5rem 0.5rem 0.5rem;
+    }
+
+    .rb[data-glimpse] .rb__all-n {
+      font-size: min(2.25rem, var(--all-fit, 44cqi));
+    }
+  }
+
+  .rb__none {
+    display: grid;
+    gap: var(--space-4);
+    justify-items: start;
+    padding-block: var(--space-6);
+    color: rgb(var(--ink) / 0.82);
+  }
+
+  .rb__none[hidden] {
+    display: none;
+  }
+
+  .rb__foot {
+    display: grid;
+    justify-items: center;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rb__wall,
+    .rb__wall :global(span),
+    .rb__grid > :global(.is-out),
+    .rb__grid :global(.ccc.is-flashing .ccc__photo)::after {
+      transition: none;
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  import { initRosterBrowsers } from '@/scripts/system/roster-browser';
+  import { initRosterMosaics } from '@/scripts/system/roster-mosaic';
+  import { initRosterFinders } from '@/scripts/system/roster-finder';
+  import { initShortlists } from '@/scripts/system/shortlist';
+  initRosterBrowsers();
+  initRosterMosaics();
+  initRosterFinders();
+  initShortlists();
+</script>

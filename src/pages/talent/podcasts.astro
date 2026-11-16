@@ -1,0 +1,13 @@
+---
+// Stride Podcasts: its own page, between Stride Sport and Stride Speakers in the navigation
+// (components/talent/SpecialistPage.astro). Holding (noindex) until Stride confirms its hosts and placements.
+import { getEntry } from 'astro:content';
+import SiteLayout from '@/layouts/SiteLayout.astro';
+import SpecialistPage from '@/components/talent/SpecialistPage.astro';
+
+const copy = (await getEntry('pages', 'podcasts'))?.data.sections.hero;
+---
+
+<SiteLayout title="Stride Podcasts | Podcast hosts and creators" description={copy?.body} division="talent" look="deep" headerOverlay noindex>
+  <SpecialistPage page="podcasts" crumbs={[{ label: 'Stride Talent', href: '/talent' }, { label: 'Stride Podcasts' }]} />
+</SiteLayout>

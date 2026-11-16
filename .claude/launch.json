@@ -1,0 +1,93 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "astro-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "4321"
+      ],
+      "port": 4321
+    },
+    {
+      "name": "astro-preview",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "astro",
+        "preview",
+        "--port",
+        "4330"
+      ],
+      "port": 4330
+    },
+    {
+      "name": "astro-next",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "astro",
+        "preview",
+        "--port",
+        "4331",
+        "--outDir",
+        "dist-next"
+      ],
+      "port": 4331
+    },
+    {
+      "name": "astro-a",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "astro",
+        "preview",
+        "--port",
+        "4332",
+        "--outDir",
+        "dist-a"
+      ],
+      "port": 4332
+    },
+    {
+      "name": "astro-b",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "astro",
+        "preview",
+        "--port",
+        "4333",
+        "--outDir",
+        "dist-b"
+      ],
+      "port": 4333
+    },
+    {
+      "name": "astro-c",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "astro",
+        "preview",
+        "--port",
+        "4334",
+        "--outDir",
+        "dist-c"
+      ],
+      "port": 4334
+    },
+    {
+      "name": "astro-d",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "astro",
+        "preview",
+        "--port",
+        "4335",
+        "--outDir",
+        "dist-d"
+      ],
+      "port": 4335
+    }
+  ]
+}

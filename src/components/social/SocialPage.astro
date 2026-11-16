@@ -1,0 +1,215 @@
+---
+// The Stride Social page's content, on every screen (phones and tablets rebuilt from the desktop, the owner,
+// 2026-11-13): its name and approved line over the menu (the owner's design, 2026-11-04), which leads on to the
+// services, industries, work and enquiry pages, then the creator globe; both on navy. Copy lives in
+// src/content/pages/social.yaml.
+import { getEntry } from 'astro:content';
+import { getPartners } from '@/lib/partners';
+import CreatorGlobe from './CreatorGlobe.astro';
+import SocialMenu from './SocialMenu.astro';
+
+const page = await getEntry('pages', 'social');
+if (!page) throw new Error('Missing src/content/pages/social.yaml');
+const s = page.data.sections;
+// The same brand partners as under the homepage's cards, for the ticker over the globe.
+const home = await getEntry('pages', 'home');
+const { shown: partners } = await getPartners(home?.data.sections.partners?.featured ?? []);
+// The page opens on its name and its approved line.
+const [pre = 'Stride', ...rest] = (s.hero.eyebrow ?? 'Stride Social').split(' ');
+const title = { pre, name: rest.join(' ') || 'Social', line: (s.hero.lines ?? []).join(' ') || undefined };
+---
+
+<SocialMenu strategies={s.menu?.items ?? []} approach={s.approach?.items ?? []} enquire={s.final?.cta?.href ?? '/social/enquire'} intro={s.hero.body} title={title} />
+<CreatorGlobe copy={s.creators} brands={partners} close={s.final?.headline && s.final.cta ? { headline: s.final.headline, label: s.final.cta.label, href: s.final.cta.href ?? '/social/enquire' } : undefined} background={{ video: '/assets/video/social-sky.mp4', poster: '/assets/site/social-sky-poster.jpg' }} />
+
+<script>
+  import { initMeteors } from '@/scripts/system/meteors';
+  initMeteors();
+</script>
+
+<style is:global>
+  /* The meteors' streaks and impacts (src/scripts/system/meteors.ts). Desktop only (the script makes them there), so
+     in rem: they grow with the screen, as the photos they come from do. */
+  .meteors {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .meteors__trail {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: 999px;
+    background: linear-gradient(to bottom, transparent, rgb(195 242 251 / 0.45) 50%, var(--white));
+    filter: blur(0.25rem);
+    opacity: 0;
+    transform-origin: 50% 100%;
+  }
+
+  /* The glow around the meteor's head. */
+  .meteors__trail::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 240%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgb(var(--white-rgb) / 0.95), rgb(195 242 251 / 0.5) 45%, transparent);
+    transform: translate(-50%, 50%);
+  }
+
+  .meteors__hit {
+    position: absolute;
+    z-index: 1;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
+
+  .meteors__ring {
+    position: absolute;
+    top: -4.375rem;
+    left: -4.375rem;
+    width: 8.75rem;
+    height: 8.75rem;
+    border: 2px solid rgb(var(--white-rgb) / 0.95);
+    border-radius: 50%;
+    box-shadow: 0 0 1.625rem rgb(195 242 251 / 0.95);
+    animation: meteor-ring 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .meteors__ring + .meteors__ring {
+    animation-delay: 120ms;
+  }
+
+  .meteors__hit i {
+    position: absolute;
+    top: -0.25rem;
+    left: -0.25rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--white);
+    box-shadow: 0 0 0.75rem rgb(195 242 251);
+    animation: meteor-spark 800ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .meteors__hit b {
+    position: absolute;
+    bottom: 1.625rem;
+    left: 0;
+    padding: 0.3125rem 0.6875rem;
+    border-radius: 999px;
+    background: var(--ice);
+    font-family: var(--font-mono);
+    font-size: var(--type-label);
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--navy-900);
+    animation: meteor-name 1400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    transition: filter 200ms var(--ease-out);
+  }
+
+  /* A name landed where the words beside the phone are (a narrow desktop: meteors.ts, .is-crowded) steps aside as
+     they come in, so the two never sit on top of each other. A filter, so it leaves the name's own animation be. */
+  .globe:not(.is-landing) .meteors__hit b.is-crowded {
+    filter: opacity(0);
+  }
+
+  @keyframes meteor-ring {
+    from {
+      opacity: 1;
+      transform: scale(0.05);
+    }
+    to {
+      opacity: 0;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes meteor-spark {
+    from {
+      opacity: 1;
+      transform: rotate(var(--a)) translateX(0) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: rotate(var(--a)) translateX(5.75rem) scale(0.2);
+    }
+  }
+
+  @keyframes meteor-name {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, 0.75rem) scale(0.7);
+    }
+    18% {
+      opacity: 1;
+      transform: translate(-50%, 0) scale(1);
+    }
+    72% {
+      opacity: 1;
+      transform: translate(-50%, 0) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -0.875rem) scale(1);
+    }
+  }
+
+  /* Where each landed: a point of light that stays lit on the planet until the region's own marker takes over. It's
+     moved by its translate (meteors.ts), not laid out again. */
+  .meteors__spot {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    width: 0.5625rem;
+    height: 0.5625rem;
+    margin: -0.28125rem 0 0 -0.28125rem;
+    border-radius: 50%;
+    background: var(--white);
+    box-shadow:
+      0 0 0.625rem 0.125rem rgb(195 242 251 / 0.95),
+      0 0 2.125rem 0.5rem rgb(195 242 251 / 0.45);
+    opacity: 0;
+    scale: 0.2;
+    pointer-events: none;
+    transition: scale 600ms cubic-bezier(0.2, 1.5, 0.4, 1);
+  }
+
+  /* Its ripple only runs while it's lit (from the moment it lands). */
+  .meteors__spot::after {
+    content: '';
+    position: absolute;
+    inset: -0.5625rem;
+    border: 1px solid rgb(var(--ice-rgb) / 0.7);
+    border-radius: 50%;
+    opacity: 0;
+  }
+
+  .meteors__spot.is-lit {
+    scale: 1;
+  }
+
+  .meteors__spot.is-lit::after {
+    animation: meteor-spot 2.4s ease-out infinite;
+  }
+
+  @keyframes meteor-spot {
+    from {
+      opacity: 0.9;
+      transform: scale(0.6);
+    }
+    to {
+      opacity: 0;
+      transform: scale(2.2);
+    }
+  }
+</style>

@@ -1,0 +1,338 @@
+/*
+ * Stride design system: tokens (Phase 2 spec: docs/phase-2/04-design-system.md).
+ * Division themes only change colour: accent, surface and glow. Typography, space and motion are shared.
+ * Breakpoints (literal in media queries): ≥ 1024px desktop · 768–1023px tablet · < 768px mobile.
+ *   Desktop:  @media (min-width: 1024px)
+ *   Tablet:   @media (min-width: 768px) and (max-width: 1023px)   (or max-width: 1023px for tablet and phone)
+ *   Phone:    @media (max-width: 767px)
+ * The desktop design is final (tag desktop-final): tablet and phone styles go inside max-width blocks and never change
+ * a rule desktop reads. Scripts take the same queries from scripts/system/env.ts.
+ */
+:root {
+  /* Stride's palette: these nine colours make up the site. */
+  --navy-900: #06142b;
+  --navy-700: #0c2753;
+  --navy-500: #294368;
+  --steel: #7892ab;
+  --ice: #cfedf8;
+  --ice-pale: #e9fafd;
+  --frost: #f5fcff;
+  --lime: #edff77;
+  --white: #ffffff;
+
+  /* Three of them as channels, for a colour with an alpha: rgb(var(--white-rgb) / 0.4). */
+  --white-rgb: 255 255 255;
+  --navy-900-rgb: 6 20 43;
+  --ice-rgb: 207 237 248;
+
+  /* The light that crosses a lit title every few seconds, as across a sign: three times the title's width
+     (background-size: 300% 100%), moved by its background-position. */
+  --title-sheen: linear-gradient(100deg, #fff 0%, #fff 42%, #d9f6ff 47%, #ffffff 50%, #d9f6ff 53%, #fff 58%, #fff 100%);
+
+  /* Their roles */
+  --paper: var(--frost);
+  --line: var(--ice);
+  --line-dark: rgb(255 255 255 / 0.16);
+  --slate: var(--navy-500);
+  --focus: var(--steel);
+  --accent: var(--ice);
+  --accent-ink: var(--navy-700);
+  --surface: var(--paper);
+  --surface-ink: var(--navy-900);
+
+  /* Type families */
+  --font-display: 'Archivo Variable', 'Archivo', 'Arial Narrow', system-ui, sans-serif;
+  --font-text: 'Inter Variable', 'Inter', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+
+  /* Type scale (fluid, mobile → desktop) */
+  --type-hero: clamp(3.5rem, 11vw, 11rem);
+  --type-display: clamp(2.75rem, 7vw, 7rem);
+  --type-h1: clamp(2.25rem, 4.5vw, 4.5rem);
+  --type-h2: clamp(1.75rem, 3vw, 3rem);
+  --type-h3: clamp(1.25rem, 1.8vw, 1.75rem);
+  --type-lead: clamp(1.125rem, 1.4vw, 1.5rem);
+  --type-body: 1.0625rem;
+  --type-small: 0.875rem;
+  --type-label: 0.75rem;
+
+  /* Display width settings (Archivo wdth axis) */
+  --stretch-wide: 125%;
+  --stretch-normal: 100%;
+
+  /* Space (4px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --space-10: 128px;
+  --space-11: 192px;
+  --section-pad: clamp(64px, 10vw, 192px);
+
+  /* Layout */
+  --margin: clamp(16px, 4vw, 64px);
+  --gutter: 24px;
+  --container: 1440px;
+  --container-wide: 1680px;
+  --header-h: 76px;
+  --division-bar-h: 44px;
+  --radius: 2px;
+
+  /* Motion */
+  --dur-fast: 150ms;
+  --dur-base: 250ms;
+  --dur-slow: 450ms;
+  --dur-reveal: 700ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* Desktop: an 11.25rem margin (180px up to 1920×1080) keeps the radial navigation (global/EdgeNav.astro, whose
+   longest label ends about 11rem from the screen's left edge) clear of all content.
+
+   Laptops to 8K screens (the owner, 2026-11-12): the design is drawn for 1920×1080, and on a larger screen it grows
+   with it, as a television fits its picture. The root size follows the smaller of width / 1920 and height / 1080
+   (never below the visitor's own default size), so everything set in rem, the spacing and the layout tokens below
+   scale together and the compositions keep their proportions on 2K, 4K, 5K, 8K and ultrawide screens; a screen that
+   is wider than it is tall for its size (21:9, 32:9) also gets a wider content area, so it isn't mostly empty. Up to
+   1920×1080 nothing changes: 1rem stays the browser's default (16px) and these tokens equal the old pixel values.
+   Components that need to grow with it use rem (or the tokens) on desktop; phones and tablets are untouched. */
+@media (min-width: 1024px) {
+  html {
+    font-size: clamp(1rem, min(100vw / 120, 100vh / 67.5), 4rem);
+  }
+
+  :root {
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.5rem;
+    --space-6: 2rem;
+    --space-7: 3rem;
+    --space-8: 4rem;
+    --space-9: 6rem;
+    --space-10: 8rem;
+    --space-11: 12rem;
+    --section-pad: clamp(4rem, 10vw, 12rem);
+    --gutter: 1.5rem;
+    --header-h: 4.75rem;
+    --division-bar-h: 2.75rem;
+    /* The content's width: 1560px at 1920 (as drawn), growing with the screen; on a very wide screen up to 58% of it. */
+    --content-max: max(97.5rem, min(58vw, 140rem));
+    /* 180px up to 1920 wide; wider than the content needs, the margin grows to centre it, so every section lines up
+       whether it uses the containers or the margin itself. */
+    --margin: max(11.25rem, (100vw - var(--content-max)) / 2);
+    --container: min(90rem, var(--content-max));
+    --container-wide: var(--content-max);
+  }
+}
+
+@media (max-width: 767px) {
+  :root {
+    --gutter: 16px;
+    --header-h: 64px;
+  }
+}
+
+/* Small phones: display type scales with the viewport and narrows slightly so the longest
+   single words ("DIVISIONS.", "BUSINESS.") fit down to 320px. */
+@media (max-width: 479px) {
+  :root {
+    --type-display: 11vw;
+    --stretch-wide: 112%;
+  }
+}
+
+/* Division themes */
+[data-division='social'] {
+  --accent: var(--ice);
+  --accent-ink: var(--navy-700);
+  --surface: var(--navy-900);
+  --surface-ink: var(--white);
+}
+
+[data-division='talent'] {
+  --accent: var(--ice);
+  --accent-ink: var(--navy-900);
+  --surface: var(--navy-900);
+  --surface-ink: var(--white);
+}
+
+[data-division='education'] {
+  --accent: var(--navy-500);
+  --accent-ink: var(--navy-500);
+  --surface: var(--ice-pale);
+  --surface-ink: var(--navy-900);
+}
+
+/* ---------- Each division's accents, as RGB triples ----------
+   What's lit on a dark colour and on a light one (--lit-), what goes on top of it (--on-), its glow on dark,
+   its hover. --tone-wash is the large soft light, which isn't always the accent: it stays soft at low
+   strength, so it stays crisp, on edges and fills. */
+:root,
+[data-tone='group'] {
+  --lit-dark: 255 255 255;
+  --on-dark: 6 20 43;
+  --glow-dark: 120 146 171;
+  --hover-dark: 207 237 248;
+  --lit-light: 12 39 83;
+  --on-light: 255 255 255;
+  --hover-light: 41 67 104;
+  --tone-wash: 120 146 171;
+  --tone-depth: 41 67 104;
+}
+
+[data-division='social'],
+[data-tone='social'] {
+  --lit-dark: 207 237 248;
+  --on-dark: 6 20 43;
+  --glow-dark: 207 237 248;
+  --hover-dark: 255 255 255;
+  --lit-light: 12 39 83;
+  --on-light: 207 237 248;
+  --hover-light: 41 67 104;
+  --tone-wash: 207 237 248;
+  --tone-depth: 41 67 104;
+}
+
+[data-division='talent'],
+[data-tone='talent'] {
+  --lit-dark: 255 255 255;
+  --on-dark: 6 20 43;
+  --glow-dark: 120 146 171;
+  --hover-dark: 207 237 248;
+  --lit-light: 6 20 43;
+  --on-light: 255 255 255;
+  --hover-light: 12 39 83;
+  --tone-wash: 120 146 171;
+  --tone-depth: 41 67 104;
+}
+
+[data-division='education'],
+[data-tone='education'] {
+  --lit-dark: 233 250 253;
+  --on-dark: 6 20 43;
+  --glow-dark: 207 237 248;
+  --hover-dark: 255 255 255;
+  --lit-light: 41 67 104;
+  --on-light: 245 252 255;
+  --hover-light: 12 39 83;
+  --tone-wash: 120 146 171;
+  --tone-depth: 120 146 171;
+}
+
+/* ---------- The colours a section can live in ([data-look]) ---------- */
+:root,
+[data-look='deep'] {
+  --tone-surface: 6 20 43;
+}
+
+[data-look='navy'] {
+  --tone-surface: 12 39 83;
+}
+
+[data-look='slate'] {
+  --tone-surface: 41 67 104;
+}
+
+[data-look='ice'] {
+  --tone-surface: 207 237 248;
+  --tone-wash: 255 255 255;
+  --tone-depth: 245 252 255;
+}
+
+[data-look='pale'] {
+  --tone-surface: 233 250 253;
+  --tone-wash: 255 255 255;
+  --tone-depth: 207 237 248;
+}
+
+[data-look='frost'] {
+  --tone-surface: 245 252 255;
+  --tone-wash: 207 237 248;
+  --tone-depth: 233 250 253;
+}
+
+[data-look='white'] {
+  --tone-surface: 255 255 255;
+  --tone-wash: 233 250 253;
+  --tone-depth: 245 252 255;
+}
+
+/* ---------- The ink: what everything on the background is drawn in ----------
+   One background means one ink: scripts/system/backdrop.ts turns html[data-ink] where white and navy read
+   equally well. .on-photo keeps the dark set whatever the background, for anything on a photo or video. */
+:root,
+.on-photo {
+  --ink: 255 255 255;
+  --hair: 255 255 255;
+  --fill-k: 1; /* how strongly white glass shows */
+  --halo: 6 20 43; /* behind text */
+  --shade: 0 0 0; /* drop shadows */
+  --panel: 12 39 83; /* near-solid glass */
+  --error: #ffb4a9;
+}
+
+html[data-ink='light'] {
+  --ink: 6 20 43;
+  --hair: 12 39 83;
+  --fill-k: 3;
+  --halo: 255 255 255;
+  --shade: 41 67 104;
+  --panel: 255 255 255;
+  --error: #b42318;
+}
+
+:root,
+[data-tone],
+[data-division],
+.on-photo {
+  --tone-lit: var(--lit-dark);
+  --tone-on: var(--on-dark);
+  --tone-glow: var(--glow-dark);
+  --tone-hover: var(--hover-dark);
+}
+
+html[data-ink='light'],
+html[data-ink='light'] [data-tone],
+html[data-ink='light'] [data-division] {
+  --tone-lit: var(--lit-light);
+  --tone-on: var(--on-light);
+  --tone-glow: 120 146 171;
+  --tone-hover: var(--hover-light);
+}
+
+html[data-ink='light'] .on-photo {
+  --tone-lit: var(--lit-dark);
+  --tone-on: var(--on-dark);
+  --tone-glow: var(--glow-dark);
+  --tone-hover: var(--hover-dark);
+}
+
+/* ---------- Buttons ----------
+   A button's fill, its text and its hover. They follow the division's accent, except on Talent, where
+   buttons are lime: the only place lime appears, apart from Talent's name in the homepage intro. */
+:root,
+[data-tone],
+[data-division],
+.on-photo {
+  --press: var(--tone-lit);
+  --press-on: var(--tone-on);
+  --press-hover: var(--tone-hover);
+}
+
+[data-division='talent'],
+[data-tone='talent'],
+[data-division='talent'] .on-photo,
+[data-tone='talent'] .on-photo {
+  --press: 237 255 119;
+  --press-on: 6 20 43;
+  --press-hover: 255 255 255;
+}

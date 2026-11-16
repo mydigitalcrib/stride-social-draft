@@ -1,0 +1,41 @@
+---
+// PARKED (2026-11-10): /social/enquire now hands over to Stride OS, which takes brand briefs on its own site
+// (scripts/redirects/map.mjs, formRedirects). The underscore keeps this file out of the site's routes. To bring
+// the site's own form back: rename it to enquire.astro and take its line out of formRedirects.
+// Brand enquiry form page (docs/phase-2/03-sitemap.md: /social/enquire). Service and creator can be
+// prefilled: /social/enquire?service=ugc-production.
+import { getEntry } from 'astro:content';
+import SiteLayout from '@/layouts/SiteLayout.astro';
+import FormStage from '@/components/experience/FormStage.astro';
+import EnquiryForm from '@/components/social/EnquiryForm.astro';
+import { enquiryEmail } from '@/config/forms';
+
+const page = await getEntry('pages', 'social');
+if (!page) throw new Error('Missing src/content/pages/social.yaml');
+const { enquiry, final } = page.data.sections;
+const msg = (key: string) => enquiry.items?.find((i) => i.key === key)?.label ?? '';
+---
+
+<SiteLayout title="Start a campaign | Stride Social" description={enquiry.body} division="social" look="ice" headerOverlay>
+  <FormStage tone="social" look="ice" crumbs={[{ label: 'Stride Social', href: '/social' }, { label: 'Start a campaign' }]} eyebrow={enquiry.eyebrow} headline={final.headline ?? ''} body={enquiry.body} status={enquiry.status} email={enquiryEmail}>
+    <EnquiryForm tone="dark" messages={{ success: msg('success'), error: msg('error'), unavailable: msg('unavailable'), consent: msg('consent') }} />
+  </FormStage>
+</SiteLayout>
+
+<script>
+  // What the visitor picked on their way here starts their brief: services, and creators the roster shows.
+  const brief = document.querySelector<HTMLTextAreaElement>('textarea[name="brief"]');
+  if (brief && !brief.value) {
+    const q = new URLSearchParams(location.search);
+    const lines: string[] = [];
+    const services = (q.get('brief') ?? '').split('|').map((x) => x.trim()).filter(Boolean).slice(0, 24);
+    if (services.length) lines.push(`I'm interested in: ${services.join(', ')}.`);
+    const names = JSON.parse(brief.form?.dataset.names ?? '{}') as Record<string, string>;
+    const creators = (q.get('creators') ?? '').split(',').map((id) => names[id]).filter(Boolean);
+    if (creators.length) lines.push(`Creators I'd like to work with: ${creators.join(', ')}.`);
+    if (lines.length) {
+      brief.value = `${lines.join('\n')}\n\n`;
+      brief.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  }
+</script>

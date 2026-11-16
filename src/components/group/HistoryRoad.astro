@@ -1,0 +1,643 @@
+---
+// Our History, and About Stride's opening on desktop: a road you travel sideways. Scrolling (or dragging)
+// carries you along a line of glass panels, one per stop (a milestone, or a chapter of the story), each leaning
+// with your speed while Stride's mark, its four triangles in outline, drifts huge behind it at its own pace; the
+// panel you're at lights up, and the marks along the foot (the years, or the chapters' names) take you straight there.
+// Desktop also: arriving at a stop, a light runs once round its mark's triangles; the lit year along the foot glides
+// from one to the next; a drag can be thrown, and a sideways swipe on a trackpad travels the road; the keyboard
+// brings what it focuses into view, and the arrow keys go along the years. Past 1920×1080 it grows with the screen
+// (rem). Behaviour: src/scripts/system/history-road.ts. Phones and tablets travel the same road (2026-11-13), its panels
+// as wide as the screen allows, the years along the foot scrolling to the one you're at. With reduced motion it's a
+// plain vertical story.
+// Only verified milestones in production; preview also shows the previous site's, until Stride confirms.
+import Breadcrumbs from '../global/Breadcrumbs.astro';
+import { interfaceCopy } from '@/lib/ui-copy';
+
+export interface Props {
+  copy: { eyebrow?: string; headline?: string; body?: string };
+  stops: { id: string; mark: string; title?: string; body: string[]; image?: { src: string; alt: string } | null; chips?: string[] }[];
+  crumbs: { label: string; href?: string }[];
+  next?: { label: string; copy?: string; href: string }[]; // where to go on from the end of the road (none: the page just goes on)
+  hint: string;
+  /** The palette colour the page is on by the road's end: what follows it lives there (About's team: the same navy). */
+  to?: 'frost' | 'deep';
+}
+
+const { copy, stops, crumbs, next = [], hint, to = 'frost' } = Astro.props;
+const t = await interfaceCopy();
+const years = stops.every((s) => /^\d+$/.test(s.mark));
+---
+
+<section class="road" aria-labelledby="road-title" data-road data-tone="group" data-look="deep" data-to={to}>
+  <div class="road__pin" data-road-pin>
+    <span class="road__fade" aria-hidden="true" data-backdrop></span>
+    <ol class="road__track" role="list" data-road-track>
+      <li class="road__start" data-road-panel>
+        <Breadcrumbs items={crumbs} tone="dark" />
+        {copy.eyebrow && <p class="exp-label">{copy.eyebrow}</p>}
+        <h1 class="road__title exp-title" id="road-title" data-reveal-lines="load">{copy.headline}</h1>
+        {copy.body && <p class="road__lede">{copy.body}</p>}
+        <slot />
+        {stops.length > 0 && <p class="road__hint exp-label" aria-hidden="true">{hint} →</p>}
+      </li>
+
+      {stops.map((m) => {
+        const size = m.body.join('').length + (m.chips?.join('').length ?? 0);
+        return (
+          <li class="stop" data-road-panel data-road-stop={m.id} style={`--w: ${size > 700 ? '46rem' : size > 380 ? '38rem' : '30rem'}; --len: ${Math.max(4, m.mark.length)}`}>
+            {/* Behind the panel, drifting at its own pace: Stride's mark, its four triangles in outline (the owner's
+                call, 2026-11-11: no numbers behind the panels), on every screen. */}
+            <svg class="stop__mark" viewBox="0 0 106 106" aria-hidden="true">
+              <path d="M53 53H0L53 0v53Z"></path>
+              <path d="M53 106H0l53-53v53Z"></path>
+              <path d="M106 53H53l53-53v53Z"></path>
+              <path d="M106 106H53l53-53v53Z"></path>
+              {/* The light that runs round the triangles on arrival (a glow under it): invisible the rest of the time. */}
+              {['stop__trace stop__trace--glow', 'stop__trace'].map((c) => (
+                <g class={c}>
+                  <path d="M53 53H0L53 0v53Z" pathLength="1"></path>
+                  <path d="M53 106H0l53-53v53Z" pathLength="1"></path>
+                  <path d="M106 53H53l53-53v53Z" pathLength="1"></path>
+                  <path d="M106 106H53l53-53v53Z" pathLength="1"></path>
+                </g>
+              ))}
+            </svg>
+            <article class="stop__card glass">
+              <p class="exp-label stop__when">{m.mark}</p>
+              {m.title && <h2 class="stop__name exp-title">{m.title}</h2>}
+              {m.image && <img class="stop__image" src={m.image.src} alt={m.image.alt} sizes="(min-width: 1921px) 36vw, 600px" loading="lazy" decoding="async" draggable="false" />}
+              {m.body.map((p) => <p class="stop__text">{p}</p>)}
+              {m.chips && m.chips.length > 0 && <p class="stop__chips">{m.chips.map((c) => <span class="exp-chip">{c}</span>)}</p>}
+            </article>
+          </li>
+        );
+      })}
+
+      {next.length > 0 && (
+        <li class="road__end" data-road-panel>
+          <ul class="road__next" role="list">
+            {next.map((n) => (
+              <li>
+                <a class="road__link glass" href={n.href}>
+                  <span class="road__link-name exp-title">{n.label}</span>
+                  {n.copy && <span class="road__link-copy">{n.copy}</span>}
+                  <span class="exp-round" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg></span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </li>
+      )}
+    </ol>
+
+    {stops.length > 0 && (
+      <nav class="road__years glass" aria-label={years ? 'Jump to a year' : 'Jump to a chapter'}>
+        <span class="road__progress" aria-hidden="true"></span>
+        <span class="road__here" aria-hidden="true" data-road-here></span>
+        <button class="road__play" type="button" aria-pressed="false" aria-label={t('play.play')} data-play={t('play.play')} data-pause={t('play.pause')} data-road-play><svg class="play-on" viewBox="0 0 16 16" aria-hidden="true" style="fill: currentColor; stroke: none"><path d="M4 2l10 6-10 6z"></path></svg><svg class="play-off" viewBox="0 0 16 16" aria-hidden="true" style="fill: currentColor; stroke: none"><path d="M4 2h3v12H4zM9 2h3v12H9z"></path></svg></button>
+        {stops.map((m) => <a class="road__jump" href={`#${m.id}`} data-road-jump={m.id}>{m.mark}</a>)}
+      </nav>
+    )}
+  </div>
+</section>
+
+<style>
+  /* ---------- A plain story until the script takes over ---------- */
+  .road {
+    position: relative;
+    color: rgb(var(--ink));
+  }
+
+  .road__pin {
+    position: relative;
+    padding: calc(var(--header-h) + var(--space-4)) var(--margin) var(--space-7);
+    overflow: clip;
+  }
+
+  .road__fade {
+    display: none;
+  }
+
+  .road__track {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  .road__start {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-4);
+  }
+
+  .road__title {
+    font-size: clamp(3rem, 9vw, 9rem);
+  }
+
+  .road__lede {
+    max-width: 34rem;
+    font-size: var(--type-lead);
+    line-height: 1.36;
+    color: rgb(var(--ink) / 0.88);
+  }
+
+  .road__hint {
+    color: rgb(var(--tone-lit));
+  }
+
+  .stop {
+    position: relative;
+  }
+
+  .stop__mark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: -1;
+    width: min(calc(var(--w, 30rem) + 9vw), 92svh);
+    max-width: none; /* wider than its panel, on purpose */
+    aspect-ratio: 1;
+    overflow: visible;
+    fill: none;
+    stroke: rgb(var(--tone-lit) / 0.42);
+    stroke-width: 1.5px;
+    stroke-linejoin: miter;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .stop__mark path {
+    vector-effect: non-scaling-stroke;
+  }
+
+  .stop__card {
+    display: grid;
+    align-content: start;
+    gap: var(--space-3);
+    padding: clamp(22px, 2.4vw, 38px);
+    transition: box-shadow 400ms var(--ease-out);
+  }
+
+  .stop.is-here .stop__card {
+    box-shadow:
+      inset 0 0 0 1.5px rgb(var(--tone-lit) / 0.95),
+      inset 0 1px 0 rgb(var(--white-rgb) / 0.5),
+      0 0 40px -6px rgb(var(--tone-glow) / 0.65),
+      0 30px 60px -30px rgb(var(--shade) / 0.8);
+  }
+
+  .stop__when {
+    color: rgb(var(--tone-lit));
+  }
+
+  .stop__name {
+    font-size: clamp(1.5rem, 2.6vw, 2.5rem);
+    line-height: 0.98;
+  }
+
+  .stop__image {
+    width: 100%;
+    max-height: 30svh;
+    border-radius: 16px;
+    object-fit: cover;
+  }
+
+  .stop__text {
+    color: rgb(var(--ink) / 0.88);
+    text-shadow: 0 1px 12px rgb(var(--halo) / 0.6);
+  }
+
+  .stop__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .road__next {
+    display: grid;
+    gap: clamp(10px, 1vw, 16px);
+  }
+
+  .road__link {
+    position: relative;
+    display: grid;
+    gap: var(--space-2);
+    padding: clamp(18px, 1.8vw, 28px);
+    padding-right: 84px;
+    color: rgb(var(--ink));
+    transition:
+      translate 400ms var(--ease-out),
+      box-shadow 400ms var(--ease-out);
+  }
+
+  .road__link:hover,
+  .road__link:focus-visible {
+    translate: 0 -4px;
+    outline: none;
+    box-shadow:
+      inset 0 0 0 1.5px rgb(var(--tone-lit) / 0.95),
+      0 0 30px -4px rgb(var(--tone-glow) / 0.6);
+  }
+
+  .road__link .exp-round {
+    position: absolute;
+    top: 50%;
+    right: 20px;
+    margin-top: -23px;
+  }
+
+  .road__link-name {
+    font-size: clamp(1.375rem, 2.2vw, 2.25rem);
+  }
+
+  .road__link-copy {
+    font-size: 0.9375rem;
+    color: rgb(var(--ink) / 0.84);
+  }
+
+  .road__years {
+    display: none;
+  }
+
+  /* Desktop: the panels and the way on in rem, so past 1920×1080 they keep their proportions (the same up to it);
+     the mark's outline keeps its weight as it grows. */
+  /* Every screen (phones' own sizes at the end). */
+  @media all {
+    .stop__mark {
+      stroke-width: 0.09375rem;
+    }
+
+    .stop__card {
+      padding: clamp(1.375rem, 2.4vw, 2.375rem);
+    }
+
+    .stop.is-here .stop__card {
+      box-shadow:
+        inset 0 0 0 1.5px rgb(var(--tone-lit) / 0.95),
+        inset 0 1px 0 rgb(var(--white-rgb) / 0.5),
+        0 0 2.5rem -0.375rem rgb(var(--tone-glow) / 0.65),
+        0 1.875rem 3.75rem -1.875rem rgb(var(--shade) / 0.8);
+    }
+
+    .stop__image {
+      border-radius: 1rem;
+    }
+
+    .stop__text {
+      text-shadow: 0 0.0625rem 0.75rem rgb(var(--halo) / 0.6);
+    }
+
+    .stop__chips {
+      gap: 0.5rem;
+    }
+
+    .road__next {
+      gap: clamp(0.625rem, 1vw, 1rem);
+    }
+
+    .road__link {
+      padding: clamp(1.125rem, 1.8vw, 1.75rem);
+      padding-right: 5.25rem;
+    }
+
+    .road__link:hover,
+    .road__link:focus-visible {
+      translate: 0 -0.25rem;
+      box-shadow:
+        inset 0 0 0 1.5px rgb(var(--tone-lit) / 0.95),
+        0 0 1.875rem -0.25rem rgb(var(--tone-glow) / 0.6);
+    }
+
+    /* Centred on the link: the round button is 2.875rem on desktop (glass.css). */
+    .road__link .exp-round {
+      right: 1.25rem;
+      margin-top: -1.4375rem;
+    }
+
+    /* The light round the mark: a dash running once along each triangle, a glow under it (history-road.ts sets
+       --tw and --tg, two and six pixels in the drawing's own units, and .is-tracing). */
+    .stop__trace {
+      fill: none;
+      stroke: rgb(var(--tone-lit));
+      stroke-width: var(--tw, 0.5);
+      stroke-linecap: round;
+    }
+
+    .stop__trace--glow {
+      stroke-width: var(--tg, 1.5);
+      opacity: 0.22;
+    }
+
+    .stop__mark .stop__trace path {
+      vector-effect: none;
+      stroke-dasharray: 0.16 0.84;
+      stroke-dashoffset: 1;
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .stop__mark.is-tracing .stop__trace path {
+      animation: stop-trace 1100ms cubic-bezier(0.45, 0, 0.2, 1) both;
+    }
+
+    .stop__mark.is-tracing .stop__trace path:nth-child(2) {
+      animation-delay: 90ms;
+    }
+
+    .stop__mark.is-tracing .stop__trace path:nth-child(3) {
+      animation-delay: 180ms;
+    }
+
+    .stop__mark.is-tracing .stop__trace path:nth-child(4) {
+      animation-delay: 270ms;
+    }
+
+    @keyframes stop-trace {
+      0% {
+        stroke-dashoffset: 1;
+        opacity: 0;
+      }
+      15%,
+      75% {
+        opacity: 1;
+      }
+      100% {
+        stroke-dashoffset: 0;
+        opacity: 0;
+      }
+    }
+  }
+
+  /* ---------- The road itself ---------- */
+  .road.is-live .road__pin {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    min-height: 38.75rem;
+    padding: 0;
+    cursor: grab;
+    user-select: none;
+    touch-action: pan-y;
+  }
+
+  .road.is-dragging .road__pin {
+    cursor: grabbing;
+  }
+
+  /* Panels fade out before they reach the wheel at the left. */
+  .road.is-live .road__fade {
+    display: block;
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: 2;
+    /* Never narrower than the edge menu's labels need (a narrow laptop); 11vw from about 1745px wide. */
+    width: calc(var(--margin) + max(11vw, 12rem));
+    background: linear-gradient(to right, rgb(var(--backdrop, var(--tone-surface))) 34%, rgb(var(--backdrop, var(--tone-surface)) / 0.82) 50%, rgb(var(--backdrop, var(--tone-surface)) / 0.42) 70%, rgb(var(--backdrop, var(--tone-surface)) / 0.12) 88%, transparent);
+    opacity: 0;
+    pointer-events: none;
+    will-change: opacity;
+  }
+
+  .road.is-live .road__track {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    gap: clamp(5.625rem, 14vw, 15rem);
+    width: max-content;
+    padding: calc(var(--header-h) + var(--space-2)) 22vw 5.25rem var(--margin);
+    will-change: transform;
+  }
+
+  .road.is-live .road__start {
+    flex: none;
+    width: min(46vw, 44rem);
+  }
+
+  .road.is-live .road__title {
+    font-size: clamp(3rem, 7.4vw, 8rem);
+  }
+
+  .road.is-live .stop {
+    flex: none;
+    width: var(--w);
+    max-width: 62vw;
+  }
+
+  /* Leaning with the speed of travel; the one you're at comes forward. These panels never stop moving, so
+     live blur would be recalculated every frame: over plain navy a matching fill looks the same, and stays smooth. */
+  .road.is-live .stop__card,
+  .road.is-live .road__link {
+    background:
+      linear-gradient(165deg, rgb(var(--white-rgb) / calc(0.16 * var(--fill-k))), rgb(var(--white-rgb) / calc(0.07 * var(--fill-k))) 42%, rgb(var(--white-rgb) / calc(0.04 * var(--fill-k))) 62%, rgb(var(--white-rgb) / calc(0.09 * var(--fill-k)))),
+      rgb(var(--panel) / 0.86);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .road.is-live .stop__card {
+    transform-origin: 50% 100%;
+    will-change: transform, opacity;
+  }
+
+  .road.is-live .stop__mark {
+    will-change: transform;
+  }
+
+  .road.is-live .road__end {
+    flex: none;
+    width: min(32rem, 44vw);
+  }
+
+  .road.is-live .road__years {
+    position: absolute;
+    bottom: var(--space-4);
+    left: 50%;
+    z-index: 3;
+    display: flex;
+    gap: 0.125rem;
+    padding: 0.3125rem;
+    overflow: hidden;
+    border-radius: 999px;
+    transform: translateX(-50%);
+  }
+
+  .road__progress {
+    position: absolute;
+    inset: auto 0 0;
+    height: 2px;
+    background: rgb(var(--tone-lit));
+    box-shadow: 0 0 0.625rem rgb(var(--tone-glow));
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+
+  /* The year that is here: one lit capsule behind the years, gliding from one to the next (history-road.ts places it;
+     until it has, each year lights its own). */
+  .road__here {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    border-radius: 999px;
+    background: rgb(var(--tone-lit));
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .road__years.has-here .road__here {
+    opacity: 1;
+  }
+
+  .road__years.is-gliding .road__here {
+    transition:
+      transform 480ms var(--spring-soft, cubic-bezier(0.3, 1.25, 0.45, 1)),
+      width 480ms var(--spring-soft, cubic-bezier(0.3, 1.25, 0.45, 1)),
+      opacity 200ms var(--ease-out);
+  }
+
+  /* With the capsule placed, the years have no light of their own; the one it's coming to darkens as it arrives. */
+  .road__years.is-placed .road__jump.is-here {
+    background: none;
+    transition-delay: 140ms;
+  }
+
+  .road__jump {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.125rem;
+    padding-inline: var(--space-4);
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: var(--type-label);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgb(var(--ink) / 0.72);
+    transition:
+      background-color 300ms var(--ease-out),
+      color 300ms var(--ease-out);
+  }
+
+  .road__jump:hover {
+    color: rgb(var(--ink));
+  }
+
+  .road__jump.is-here {
+    background: rgb(var(--tone-lit));
+    color: rgb(var(--tone-on));
+  }
+
+  .road__jump:focus-visible {
+    outline: 2px solid rgb(var(--tone-lit));
+    outline-offset: 2px;
+  }
+
+  .road__play {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 2.125rem;
+    height: 2.125rem;
+    border-radius: 50%;
+    color: rgb(var(--ink));
+    transition: background-color 300ms var(--ease-out);
+  }
+
+  .road__play:hover {
+    background: rgb(var(--hair) / 0.14);
+  }
+
+  .road__play:focus-visible {
+    outline: 2px solid rgb(var(--tone-lit));
+    outline-offset: 2px;
+  }
+
+  .road__play svg {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .road__years.is-gliding .road__here {
+      transition: none;
+    }
+  }
+
+  /* ---------- Phones and tablets: the same road, sized for the screen (2026-11-13) ----------
+     Each panel nearly the screen's width, the next just showing; the words a little smaller so a long stop still
+     stands between the header and the years; no fade at the left (there's no edge menu there); the years scroll
+     sideways under the finger, the one you're at kept in view (history-road.ts). */
+  @media (max-width: 1023px) {
+    .road.is-live .road__fade {
+      display: none;
+    }
+
+    .road.is-live .road__track {
+      gap: clamp(3rem, 12vw, 6rem);
+      padding: calc(var(--header-h) + var(--space-2)) 12vw 5.5rem var(--margin);
+    }
+
+    .road.is-live .road__start,
+    .road.is-live .road__end {
+      width: min(84vw, 36rem);
+    }
+
+    .road.is-live .road__title {
+      font-size: clamp(2.75rem, 13vw, 5.5rem);
+    }
+
+    .road.is-live .stop {
+      width: min(var(--w), 84vw);
+      max-width: 84vw;
+    }
+
+    .stop__card {
+      gap: var(--space-2);
+      padding: 1.25rem;
+    }
+
+    .stop__name {
+      font-size: clamp(1.375rem, 6vw, 2rem);
+    }
+
+    .stop__text {
+      font-size: 0.9375rem;
+    }
+
+    .stop__image {
+      max-height: 26svh;
+    }
+
+    .road.is-live .road__years {
+      max-width: calc(100vw - 2 * var(--margin));
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scrollbar-width: none;
+    }
+
+    .road__years::-webkit-scrollbar {
+      display: none;
+    }
+
+    .road__jump,
+    .road__play {
+      flex: none;
+    }
+
+    .road__link {
+      padding-right: 4.5rem;
+    }
+  }
+</style>
+
+<script>
+  import { initHistoryRoads } from '@/scripts/system/history-road';
+  initHistoryRoads();
+</script>

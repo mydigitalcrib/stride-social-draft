@@ -1,0 +1,13 @@
+---
+// Stride Speakers: speaker bookings and speaking engagements (components/talent/SpecialistPage.astro).
+// Holding (noindex) until Stride confirms its speakers and engagements.
+import { getEntry } from 'astro:content';
+import SiteLayout from '@/layouts/SiteLayout.astro';
+import SpecialistPage from '@/components/talent/SpecialistPage.astro';
+
+const copy = (await getEntry('pages', 'speakers'))?.data.sections.hero;
+---
+
+<SiteLayout title="Stride Speakers | Book a speaker" description={copy?.body} division="talent" look="deep" headerOverlay noindex>
+  <SpecialistPage page="speakers" crumbs={[{ label: 'Stride Talent', href: '/talent' }, { label: 'Stride Speakers' }]} />
+</SiteLayout>

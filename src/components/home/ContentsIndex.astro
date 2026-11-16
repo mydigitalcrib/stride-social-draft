@@ -1,0 +1,1189 @@
+---
+// Homepage section 2, "Three sides of Stride": the intro (heading, one line) above the three businesses.
+// Desktop: three giant rows, one per division, margin to margin ("STRIDE" in outline, the name solid), who it
+// is for on the right (the owner's choice, 2026-11-12). Pointed at (or focused), a row opens: it takes most of
+// the height while the others close up and dim, and its world comes up behind it (Social: its campaigns, one
+// photograph after another; Talent: its creators, side by side in black and white; Academy: a creator's setup in
+// its colour, as it isn't open yet), with its line and the way in. Phones and tablets: a row of glass cards (an icon, the name,
+// who it is for, an arrow). Below, the brand partners: a scroll cue and the logos on their ticker (core/BrandTicker).
+// Desktop, in motion (the script below): the rows arrive with their lines drawing in and their names rising out of
+// them; a row opens only once the pointer has moved (never as the page scrolls under a still one) or from the
+// keyboard (the arrows move between the rows); its world opens as a soft circle from where the pointer came in, its
+// photographs drift a little against the pointer and its lines catch the light under it; Talent's faces develop into
+// colour under the pointer; the ticker rests while it's off the screen (its eased stop while pointed at is
+// core/BrandTicker's own).
+// On desktop this sits over the hero's frosted footage (home/HeroScene.astro); elsewhere on its own
+// navy. Logos follow the brand approval rule (lib/partners.ts).
+import { getEntry } from 'astro:content';
+import BrandTicker from '../core/BrandTicker.astro';
+import PlaceholderNotice from '../core/PlaceholderNotice.astro';
+import { getPartners } from '@/lib/partners';
+import { getRoster } from '@/lib/roster';
+
+type Division = 'social' | 'talent' | 'education';
+
+export interface Props {
+  headline: string;
+  body?: string;
+  items: {
+    key: Division;
+    label: string; // "Social"
+    audience: string; // "For brands"
+    copy?: string; // its line, shown when its row opens (desktop)
+    cta: string; // "Explore Stride Social" (the link's description)
+    href: string;
+  }[];
+  /** The brand partners strip: its cue and the brands (ids in the brands collection), in order. */
+  partners?: { cue: string; brands: string[] };
+}
+
+const { headline, body, items, partners } = Astro.props;
+
+const { shown, awaiting, interim } = await getPartners(partners?.brands ?? []);
+const full = (s: string) => (/[.!?]$/.test(s) ? s : `${s}.`);
+// Stride Academy isn't open yet: its row says so, in its own page's words.
+const soon = ((await getEntry('pages', 'education'))?.data.sections.soon?.lines ?? []).join(' ');
+// The worlds behind the rows (desktop): real photographs already on the site.
+const worlds: Record<Division, { src: string; alt: string }[]> = {
+  social: [
+    { src: '/assets/site/social-influencer-campaigns.webp', alt: '' },
+    { src: '/assets/site/social-experiences.webp', alt: '' },
+    { src: '/assets/site/social-commerce.webp', alt: '' },
+  ],
+  talent: [],
+  // Academy has no photography of its own yet: a licensed stock photograph of a creator's setup (a phone on a
+  // tripod under a ring light), never presented as Stride's talent. Source and licence: docs/ASSET-SOURCES.md.
+  education: [{ src: '/assets/site/academy-creator-setup.jpg', alt: '' }],
+};
+// Talent's world: the creators Stride Talent's own page features, through the roster's rules (consent, a photo).
+const featured = (await getEntry('pages', 'talent'))?.data.sections.hero?.featured ?? [];
+const roster = await getRoster();
+const faces = featured
+  .map((id) => roster.find((c) => c.id === id))
+  .filter((c) => c?.data.portrait)
+  .slice(0, 7)
+  .map((c) => ({ src: c!.data.portrait!.src, alt: '' }));
+---
+
+<section class="sides on-photo" aria-labelledby="sides-title">
+  {/* Where the Stride Group button lands (src/scripts/system/edge-nav.ts): this section filling the screen. */}
+  <span class="sides__anchor" id="stride-group" aria-hidden="true"></span>
+  <div class="sides__inner container-wide">
+    <header class="sides__intro">
+      <h2 class="sides__title" id="sides-title" data-reveal="from-left">{headline}</h2>
+      {body && <p class="sides__lede" data-reveal="from-left" style="--reveal-delay: 0.08s">{body}</p>}
+    </header>
+
+    {/* The giant rows (every screen; on phones and tablets the one in the middle of the screen stands open). */}
+    <ol class="sides__rows" role="list" data-sides-rows>
+      {items.map((item, i) => (
+        <li class={`sides__row sides__row--${item.key}`} style={`--i: ${i}`}>
+          <a class="sides__row-link" href={item.href} aria-label={`${item.cta}: ${full(item.audience)}`}>
+            <span class="sides__world" aria-hidden="true">
+              {worlds[item.key].map((w, k) => (
+                <img src={w.src} alt={w.alt} sizes="100vw" loading="lazy" decoding="async" draggable="false" style={`--k: ${k}; --of: ${worlds[item.key].length}`} />
+              ))}
+              {item.key === 'talent' && faces.length > 0 && (
+                <span class="sides__world-faces">
+                  {faces.map((f, k) => <img src={f.src} alt={f.alt} sizes="16vw" loading="lazy" decoding="async" draggable="false" style={`--k: ${k}`} />)}
+                </span>
+              )}
+            </span>
+            <span class="sides__row-name"><span class="sides__row-stride">Stride</span> <span>{item.label}</span></span>
+            <span class="sides__row-side">
+              <span class="sides__row-audience">{full(item.audience)}</span>
+              {item.copy && <span class="sides__row-copy">{item.copy}</span>}
+              <span class="sides__row-actions">
+                {item.key === 'education' && soon && <span class="sides__row-soon">{soon}</span>}
+                <span class="sides__row-go">
+                  {item.cta}
+                  <svg viewBox="0 0 24 24"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
+                </span>
+              </span>
+            </span>
+          </a>
+        </li>
+      ))}
+    </ol>
+
+  </div>
+
+  {partners && (
+    <div class="sides__partners">
+      <p class="sides__cue">
+        <span>{partners.cue}</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9.5 6 6 6-6"></path></svg>
+      </p>
+      <BrandTicker brands={shown} />
+      {(interim || awaiting.length > 0) && (
+        <div class="sides__notes container-wide">
+          {interim && <PlaceholderNotice variant="inline" label="Interim logos">— from the previous site, awaiting approval (Q5)</PlaceholderNotice>}
+          {awaiting.length > 0 && <PlaceholderNotice variant="inline" label="Logos needed">— {awaiting.join(', ')}: logo files and display approval</PlaceholderNotice>}
+        </div>
+      )}
+    </div>
+  )}
+</section>
+
+<script>
+  import { desktop } from '@/scripts/system/env';
+  // The rows' behaviour around the CSS that opens them: on desktop the pointer's row, on phones and tablets the row in
+  // the middle of the screen (below).
+  const rows = document.querySelector<HTMLElement>('[data-sides-rows]');
+  if (rows) {
+    const desk = desktop();
+    const motion = window.matchMedia('(prefers-reduced-motion: no-preference)').matches;
+    const STEP = 110; // ms between the rows as they arrive
+    const LANDS = 270 + 900; // ms from a row's start to its division's word landing
+    const links = [...rows.querySelectorAll<HTMLAnchorElement>('.sides__row-link')];
+
+    /* ---------- Arriving ----------
+       Once the rows are a third of the way up the screen: their lines draw in and their names rise (the CSS). Only if
+       they start below the screen; a row can open once the last has landed (and the pointer moves). The keyboard
+       doesn't wait. */
+    if (motion && rows.getBoundingClientRect().top > window.innerHeight) {
+      // Still too (below), so a row can't open while its name is still waiting under it.
+      rows.classList.add('is-waiting', 'is-still');
+      const io = new IntersectionObserver(
+        ([entry]) => {
+          if (!entry.isIntersecting) return;
+          io.disconnect();
+          rows.classList.replace('is-waiting', 'is-rising');
+          window.setTimeout(() => {
+            rows.classList.remove('is-rising');
+            rows.classList.add('is-still');
+          }, (links.length - 1) * STEP + LANDS + 60);
+        },
+        { rootMargin: '0px 0px -35% 0px' },
+      );
+      io.observe(rows);
+      rows.addEventListener(
+        'focusin',
+        () => {
+          io.disconnect();
+          rows.classList.remove('is-waiting', 'is-rising');
+        },
+        { once: true },
+      );
+    }
+
+    /* ---------- The keyboard: up and down (Home, End) move between the three rows ---------- */
+    rows.addEventListener('keydown', (e) => {
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      const i = links.indexOf(e.target as HTMLAnchorElement);
+      if (i < 0) return;
+      const moves: Record<string, number> = { ArrowDown: i + 1, ArrowUp: i - 1, Home: 0, End: links.length - 1 };
+      const to = moves[e.key];
+      if (to === undefined || !links[to]) return;
+      e.preventDefault();
+      links[to].focus();
+    });
+
+    if (desk) {
+    /* ---------- The open row under the pointer ----------
+       Its world opens from where the pointer came in (--px, --py, once), its photographs drift a little against the
+       pointer (--dx, --dy) and its lines catch the light under it (--lx), each eased behind the pointer, in one loop
+       that runs only while the pointer moves over an open row. Talent's face under the pointer develops (.is-lit),
+       the faces' places re-read while their strip still slides. With reduced motion, only the faces. */
+    type Aim = { row: HTMLElement; world: HTMLElement; photos: boolean; strip: HTMLElement | null; faces: HTMLElement[]; box: DOMRect; left: number; width: number; at: number };
+    let aim: Aim | null = null;
+    let ux = 0.5; // the pointer in the world, 0 to 1 each way
+    let uy = 0.5;
+    let dx = 0;
+    let dy = 0;
+    let lx = 50;
+    let lit: HTMLElement | null = null;
+    let raf = 0;
+    let lastX = -1; // where the pointer last really moved to
+    let lastY = -1;
+
+    const light = (face: HTMLElement | null) => {
+      if (face === lit) return;
+      lit?.classList.remove('is-lit');
+      face?.classList.add('is-lit');
+      lit = face;
+    };
+    const place = (e: PointerEvent) => {
+      if (!aim) return;
+      ux = Math.min(1, Math.max(0, (e.clientX - aim.box.left) / aim.box.width));
+      uy = Math.min(1, Math.max(0, (e.clientY - aim.box.top) / aim.box.height));
+    };
+    const frame = (now: number) => {
+      raf = 0;
+      if (!aim) return;
+      let more = false;
+      if (aim.strip && aim.faces.length) {
+        const r = aim.strip.getBoundingClientRect();
+        light(aim.faces[Math.floor(((lastX - r.left) / r.width) * aim.faces.length)] ?? null);
+        more = now - aim.at < 2400;
+      }
+      if (motion) {
+        const tx = (0.5 - ux) * 2.4; // %, against the pointer
+        const ty = (0.5 - uy) * 4;
+        const tl = ((lastX - aim.left) / aim.width) * 100;
+        dx += (tx - dx) * 0.08;
+        dy += (ty - dy) * 0.08;
+        lx += (tl - lx) * 0.14;
+        if (aim.photos) {
+          aim.world.style.setProperty('--dx', `${dx.toFixed(3)}%`);
+          aim.world.style.setProperty('--dy', `${dy.toFixed(3)}%`);
+        }
+        aim.row.style.setProperty('--lx', `${lx.toFixed(2)}%`);
+        more ||= Math.abs(tx - dx) > 0.005 || Math.abs(ty - dy) > 0.005 || Math.abs(tl - lx) > 0.05;
+      }
+      if (more) raf = requestAnimationFrame(frame);
+    };
+    const wake = () => {
+      if (!raf) raf = requestAnimationFrame(frame);
+    };
+
+    const enter = (row: HTMLElement, e: PointerEvent) => {
+      const world = row.querySelector<HTMLElement>('.sides__world');
+      if (!world) return;
+      const r = row.getBoundingClientRect();
+      const strip = world.querySelector<HTMLElement>('.sides__world-faces');
+      aim = {
+        row,
+        world,
+        photos: !!world.querySelector(':scope > img'),
+        strip,
+        faces: strip ? [...strip.querySelectorAll<HTMLElement>('img')] : [],
+        box: world.getBoundingClientRect(),
+        left: r.left,
+        width: r.width,
+        at: performance.now(),
+      };
+      place(e);
+      if (!motion) return;
+      world.style.setProperty('--px', `${(ux * 100).toFixed(1)}%`);
+      world.style.setProperty('--py', `${(uy * 100).toFixed(1)}%`);
+      dx = (0.5 - ux) * 2.4;
+      dy = (0.5 - uy) * 4;
+      lx = ((e.clientX - r.left) / r.width) * 100;
+      if (aim.photos) {
+        world.style.setProperty('--dx', `${dx.toFixed(3)}%`);
+        world.style.setProperty('--dy', `${dy.toFixed(3)}%`);
+      }
+      row.style.setProperty('--lx', `${lx.toFixed(2)}%`);
+    };
+    const leave = () => {
+      if (!aim) return;
+      light(null);
+      aim = null;
+    };
+
+    // Scrolling marks the rows still, so they don't open one after another as they pass under a pointer that isn't
+    // moving; a real movement (not the page moving under it) frees them, and the row under it opens from there.
+    window.addEventListener(
+      'scroll',
+      () => {
+        rows.classList.add('is-still');
+        leave();
+      },
+      { passive: true },
+    );
+    window.addEventListener(
+      'pointermove',
+      (e) => {
+        if (Math.abs(e.clientX - lastX) + Math.abs(e.clientY - lastY) < 3) return;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        const arriving = rows.classList.contains('is-waiting') || rows.classList.contains('is-rising');
+        const row = !arriving && e.target instanceof Element ? e.target.closest<HTMLElement>('.sides__row') : null;
+        if (row !== aim?.row) {
+          leave();
+          if (row) enter(row, e);
+        }
+        if (!arriving) rows.classList.remove('is-still');
+        if (!aim) return;
+        place(e);
+        wake();
+      },
+      { passive: true },
+    );
+    document.documentElement.addEventListener('pointerleave', leave);
+
+    /* ---------- The keyboard's open row ----------
+       Its world opens from the start of the name, still, and its lines' light sits under the name; Talent's faces
+       develop one after another, and go back to black and white. */
+    let wave: number[] = [];
+    const calm = () => {
+      wave.forEach((id) => window.clearTimeout(id));
+      wave = [];
+    };
+    rows.addEventListener('focusin', (e) => {
+      const link = e.target as HTMLElement;
+      if (!motion || !link.matches('.sides__row-link:focus-visible')) return;
+      const row = link.parentElement!;
+      const world = row.querySelector<HTMLElement>('.sides__world');
+      const name = row.querySelector<HTMLElement>('.sides__row-name');
+      if (!world || !name) return;
+      const r = row.getBoundingClientRect();
+      const n = name.getBoundingClientRect();
+      world.style.setProperty('--px', '12%');
+      world.style.setProperty('--py', '50%');
+      world.style.setProperty('--dx', '0%');
+      world.style.setProperty('--dy', '0%');
+      row.style.setProperty('--lx', `${(((n.left + n.width / 2 - r.left) / r.width) * 100).toFixed(1)}%`);
+      calm();
+      world.querySelectorAll<HTMLElement>('.sides__world-faces img').forEach((face, k) => {
+        wave.push(
+          window.setTimeout(() => face.classList.add('is-lit'), 200 + k * 140),
+          window.setTimeout(() => face.classList.remove('is-lit'), 650 + k * 140),
+        );
+      });
+    });
+    rows.addEventListener('focusout', () => {
+      calm();
+      rows.querySelectorAll('.sides__world-faces .is-lit').forEach((face) => {
+        if (face !== lit) face.classList.remove('is-lit');
+      });
+    });
+    } else {
+      /* ---------- Phones and tablets: the row in the middle of the screen ----------
+         No pointer to open a row, so the one at the middle of the screen opens as the page scrolls (.is-open, with
+         .is-auto: its CSS), read from where the screen's middle falls in the rows' fixed height (thirds), with a little
+         give at each edge so it doesn't flicker; none while the rows are off the screen. Its world opens from the start
+         of its name, as the keyboard's does on desktop, and Talent's faces develop one after another. A tap on a closed
+         row opens it (and holds it a moment against the scroll); on the open one, the link goes there. */
+      const list = [...rows.querySelectorAll<HTMLElement>('.sides__row')];
+      const GIVE = 0.06; // of the rows' height: how far past its edge the open row holds
+      let open = -1;
+      let heldAt: number | null = null; // the scroll position a tap opened a row at
+      let waves: number[] = [];
+      rows.classList.add('is-auto', 'is-still');
+      const develop = (row: HTMLElement) => {
+        waves.forEach((id) => window.clearTimeout(id));
+        waves = [];
+        const world = row.querySelector<HTMLElement>('.sides__world');
+        const name = row.querySelector<HTMLElement>('.sides__row-name');
+        if (!world || !name) return;
+        const r = row.getBoundingClientRect();
+        const n = name.getBoundingClientRect();
+        world.style.setProperty('--px', '12%');
+        world.style.setProperty('--py', '50%');
+        row.style.setProperty('--lx', `${(((n.left + n.width / 2 - r.left) / r.width) * 100).toFixed(1)}%`);
+        if (!motion) return;
+        world.querySelectorAll<HTMLElement>('.sides__world-faces img').forEach((face, k) => {
+          waves.push(
+            window.setTimeout(() => face.classList.add('is-lit'), 260 + k * 160),
+            window.setTimeout(() => face.classList.remove('is-lit'), 900 + k * 160),
+          );
+        });
+      };
+      const openRow = (i: number) => {
+        if (i === open) return;
+        open = i;
+        list.forEach((row, k) => row.classList.toggle('is-open', k === i));
+        if (i >= 0) develop(list[i]);
+      };
+      const pick = () => {
+        if (heldAt !== null) {
+          if (Math.abs(window.scrollY - heldAt) < 48) return;
+          heldAt = null;
+        }
+        const box = rows.getBoundingClientRect();
+        const mid = window.innerHeight / 2;
+        if (box.bottom < window.innerHeight * 0.3 || box.top > window.innerHeight * 0.7) return openRow(-1);
+        const f = (mid - box.top) / box.height;
+        let i = Math.min(list.length - 1, Math.max(0, Math.floor(f * list.length)));
+        if (open >= 0 && i !== open && f > open / list.length - GIVE && f < (open + 1) / list.length + GIVE) i = open;
+        openRow(i);
+      };
+      let queued = false;
+      window.addEventListener(
+        'scroll',
+        () => {
+          if (queued) return;
+          queued = true;
+          requestAnimationFrame(() => {
+            queued = false;
+            pick();
+          });
+        },
+        { passive: true },
+      );
+      window.addEventListener('resize', pick, { passive: true });
+      // Once the rows have arrived (their classes change), the middle one opens without waiting for the next scroll.
+      new MutationObserver(pick).observe(rows, { attributes: true, attributeFilter: ['class'] });
+      pick();
+      links.forEach((link, k) =>
+        link.addEventListener('click', (e) => {
+          if (k === open || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+          e.preventDefault();
+          heldAt = window.scrollY;
+          openRow(k);
+        }),
+      );
+    }
+
+    /* ---------- The brand ticker: resting while off the screen ----------
+       (Its eased stop while pointed at is core/BrandTicker.astro's own.) */
+    const ticker = document.querySelector<HTMLElement>('.sides__partners .brand-ticker');
+    if (motion && ticker) {
+      const tracks = () => [...ticker.querySelectorAll('.brand-ticker__track')].flatMap((t) => t.getAnimations());
+      new IntersectionObserver(([entry]) => tracks().forEach((a) => (entry.isIntersecting ? a.play() : a.pause()))).observe(ticker);
+    }
+  }
+</script>
+
+<style>
+  .sides {
+    position: relative;
+    padding-block: clamp(80px, 9vw, 150px) clamp(56px, 6vw, 96px);
+    color: rgb(var(--ink));
+    /* On its own (tablet, phone): deep navy lit softly from two corners. */
+    background:
+      radial-gradient(60% 55% at 12% 18%, rgb(41 67 104 / 0.5), transparent 70%),
+      radial-gradient(55% 50% at 88% 78%, rgb(var(--ice-rgb) / 0.07), transparent 70%),
+      linear-gradient(180deg, var(--navy-700), var(--navy-900));
+  }
+
+  /* ---------- Desktop: the giant rows ----------
+     Three rows sharing a fixed height: pointed at, one takes most of it (flex-grow) while the others close up,
+     their names shrinking and dimming, so nothing below moves. Its world comes up behind it: the photograph(s)
+     opening from where the pointer came in and settling, under a navy that's deepest behind the name. The height
+     follows the screen's (in rem, so past 1920×1080 the rows keep their proportions, tokens.css), never under
+     27.5rem: on a short laptop each row stays tall enough for who it is for to sit clear above the name. */
+  .sides__rows {
+    --rows: clamp(27.5rem, 64vh, 45rem);
+    /* An open row's height (2.5 of 3.7 shares): each world is this tall, so a row opening only uncovers it and
+       nothing inside it is resized. */
+    --open-h: calc(var(--rows) * 0.676);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: var(--rows);
+    margin-top: var(--space-6);
+    border-top: 1px solid transparent;
+  }
+
+  .sides__row {
+    position: relative;
+    flex: 1 1 0;
+    min-height: 0;
+    border-bottom: 1px solid transparent;
+    transition:
+      flex-grow 720ms var(--ease-out),
+      --sides-lit 300ms var(--ease-out);
+  }
+
+  /* The hairlines, drawn over the rows' transparent borders (the same pixels), so they can draw in as the rows
+     arrive, and the open row's two lines catch the light under the pointer (--lx, eased behind it; --sides-lit). */
+  .sides__rows::before,
+  .sides__row::before,
+  .sides__row::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 1;
+    height: 1px;
+    transform-origin: 0 50%;
+    pointer-events: none;
+  }
+
+  .sides__rows::before {
+    top: -1px;
+    background: rgb(var(--hair) / 0.22);
+  }
+
+  .sides__row::before,
+  .sides__row::after {
+    --light: linear-gradient(
+      90deg,
+      transparent calc(var(--lx, 50%) - 18vw),
+      rgb(var(--tone-lit) / calc(0.9 * var(--sides-lit))) var(--lx, 50%),
+      transparent calc(var(--lx, 50%) + 18vw)
+    );
+  }
+
+  .sides__row::before {
+    top: -1px;
+    background: var(--light);
+  }
+
+  .sides__row::after {
+    bottom: -1px;
+    background: var(--light), rgb(var(--hair) / 0.22);
+  }
+
+  /* A row opens when pointed at, but only once the pointer has moved, never as the page scrolls under a still one
+     (.is-still); or when it has the keyboard's focus (not a click's). Not while the rows are arriving (.is-rising). */
+  .sides__rows:not(.is-still, .is-rising):hover .sides__row,
+  .sides__rows:not(.is-rising):has(.sides__row-link:focus-visible) .sides__row {
+    flex-grow: 0.6;
+  }
+
+  .sides__rows:not(.is-still, .is-rising) .sides__row:hover,
+  .sides__rows:not(.is-rising) .sides__row:has(> .sides__row-link:focus-visible) {
+    flex-grow: 2.5;
+  }
+
+  .sides__row-link {
+    --pad: clamp(0.75rem, 1.6vw, 1.75rem);
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    padding-inline: var(--pad);
+    overflow: hidden;
+    isolation: isolate;
+    /* Each frame of a row opening is laid out and painted inside the row only. */
+    contain: layout paint;
+    color: rgb(var(--ink));
+  }
+
+  .sides__row-link:focus-visible {
+    outline: 2px solid rgb(var(--tone-lit));
+    outline-offset: -2px;
+  }
+
+  /* The name: the longest ("STRIDE ACADEMY") fits the width, and no taller than the screen and its row allow, so on a
+     short, wide screen it stays clear of who it is for; "STRIDE" in outline, the division solid. */
+  .sides__row-name {
+    flex: none;
+    font-family: var(--font-display);
+    font-size: min(calc((100vw - 2 * var(--margin) - 2 * var(--pad)) / 11.2), 14vh, var(--rows) * 0.22);
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    line-height: 0.86;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transform-origin: 0 50%;
+    transition:
+      scale 720ms var(--ease-out),
+      opacity 500ms var(--ease-out);
+  }
+
+  /* The outline in rem, so it keeps its weight as the type grows past 1920×1080. */
+  .sides__row-stride {
+    color: transparent;
+    -webkit-text-stroke: 0.09375rem rgb(var(--ink) / 0.85);
+  }
+
+  .sides__rows:not(.is-still, .is-rising):hover .sides__row:not(:hover) .sides__row-name,
+  .sides__rows:not(.is-rising):has(.sides__row-link:focus-visible) .sides__row:not(:has(> .sides__row-link:focus-visible)) .sides__row-name {
+    scale: 0.66;
+    opacity: 0.38;
+  }
+
+  /* Who it is for, always, in the top corner; the line and the way in at the foot once it opens. */
+  .sides__row-side {
+    position: absolute;
+    top: 0.875rem;
+    right: var(--pad);
+    bottom: 1.125rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.625rem;
+    max-width: min(30rem, 48%);
+    text-align: right;
+    pointer-events: none;
+  }
+
+  .sides__row-audience {
+    margin-bottom: auto;
+    font-family: var(--font-mono);
+    font-size: var(--type-label);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgb(var(--ink) / 0.8);
+    transition: opacity 500ms var(--ease-out);
+  }
+
+  .sides__rows:not(.is-still, .is-rising):hover .sides__row:not(:hover) .sides__row-audience,
+  .sides__rows:not(.is-rising):has(.sides__row-link:focus-visible) .sides__row:not(:has(> .sides__row-link:focus-visible)) .sides__row-audience {
+    opacity: 0;
+  }
+
+  /* The line and the way in stay laid out: they rise in as the row opens (the way in a beat after) and go quickly as
+     it closes, inside the row (it clips them), so the exit is never cut off. */
+  .sides__row-copy,
+  .sides__row-actions {
+    opacity: 0;
+    visibility: hidden;
+    translate: 0 0.625rem;
+    transition:
+      opacity 180ms cubic-bezier(0.55, 0, 1, 0.45),
+      translate 180ms cubic-bezier(0.55, 0, 1, 0.45),
+      visibility 0s linear 180ms;
+  }
+
+  .sides__rows:not(.is-still, .is-rising) .sides__row:hover :is(.sides__row-copy, .sides__row-actions),
+  .sides__rows:not(.is-rising) .sides__row:has(> .sides__row-link:focus-visible) :is(.sides__row-copy, .sides__row-actions) {
+    opacity: 1;
+    visibility: visible;
+    translate: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .sides__rows:not(.is-still, .is-rising) .sides__row:hover :is(.sides__row-copy, .sides__row-actions),
+    .sides__rows:not(.is-rising) .sides__row:has(> .sides__row-link:focus-visible) :is(.sides__row-copy, .sides__row-actions) {
+      transition:
+        opacity 520ms var(--ease-out),
+        translate 520ms var(--ease-out),
+        visibility 0s;
+    }
+
+    .sides__rows:not(.is-still, .is-rising) .sides__row:hover .sides__row-actions,
+    .sides__rows:not(.is-rising) .sides__row:has(> .sides__row-link:focus-visible) .sides__row-actions {
+      transition-delay: 90ms;
+    }
+  }
+
+  .sides__row-copy {
+    display: block;
+    max-width: 22rem;
+    font-size: clamp(1rem, 1.25vw, 1.25rem);
+    line-height: 1.4;
+    color: rgb(var(--ink) / 0.92);
+    text-wrap: balance;
+  }
+
+  /* Academy's "Coming soon" sits beside its way in, on one line. */
+  .sides__row-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+  }
+
+  .sides__row-soon,
+  .sides__row-go {
+    display: inline-flex;
+    white-space: nowrap;
+  }
+
+  .sides__row-soon {
+    align-items: center;
+    min-height: 1.625rem;
+    padding: 0 0.75rem;
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1px rgb(var(--ink) / 0.4);
+    font-family: var(--font-mono);
+    font-size: var(--type-label);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  /* The way in: the desktop's glass (styles/system/glass.css, the edge menu's capsule), brighter while pointed at. */
+  .sides__row-go {
+    align-items: center;
+    gap: 0.625rem;
+    min-height: 2.75rem;
+    padding: 0 1.125rem 0 1.375rem;
+    border-radius: 999px;
+    background: var(--gb-fill);
+    box-shadow: var(--gb-edge);
+    font-family: var(--font-mono);
+    font-size: var(--type-label);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    backdrop-filter: var(--gb-blur);
+    -webkit-backdrop-filter: var(--gb-blur);
+    transition:
+      background 300ms var(--ease-out),
+      box-shadow 300ms var(--ease-out);
+  }
+
+  .sides__row-link:hover .sides__row-go {
+    background: var(--gb-fill-on);
+    box-shadow: var(--gb-edge-on);
+  }
+
+  .sides__row-go svg {
+    width: 0.9375rem;
+    height: 0.9375rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: translate 300ms var(--ease-out);
+  }
+
+  .sides__row-link:is(:hover, :focus-visible) .sides__row-go svg {
+    translate: 0.1875rem 0;
+  }
+
+  /* Its world, behind it: set where its open row will be (the first row opens downwards, the last upwards, the
+     middle one both ways), so it stays put while the row grows over it. */
+  .sides__world {
+    position: absolute;
+    top: calc(50% - var(--open-h) / 2);
+    left: 0;
+    right: 0;
+    z-index: -1;
+    height: var(--open-h);
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 600ms var(--ease-out);
+  }
+
+  .sides__row:first-child .sides__world {
+    top: 0;
+  }
+
+  .sides__row:last-child .sides__world {
+    top: auto;
+    bottom: 0;
+  }
+
+  .sides__world::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(90deg, rgb(var(--navy-900-rgb) / 0.82), rgb(var(--navy-900-rgb) / 0.5) 45%, rgb(var(--navy-900-rgb) / 0.62)),
+      linear-gradient(rgb(var(--navy-900-rgb) / 0.12), rgb(var(--navy-900-rgb) / 0.12));
+  }
+
+  .sides__rows:not(.is-still, .is-rising) .sides__row:hover .sides__world,
+  .sides__rows:not(.is-rising) .sides__row:has(> .sides__row-link:focus-visible) .sides__world {
+    opacity: 1;
+  }
+
+  /* Its photographs drift a little against the pointer (--dx, --dy, src below). */
+  .sides__world > img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 40%;
+    scale: 1.1;
+    translate: var(--dx, 0%) var(--dy, 0%);
+    transition: scale 1600ms var(--ease-out);
+  }
+
+  .sides__rows:not(.is-still, .is-rising) .sides__row:hover .sides__world > img,
+  .sides__rows:not(.is-rising) .sides__row:has(> .sides__row-link:focus-visible) .sides__world > img {
+    scale: 1;
+  }
+
+  /* With motion: the world opens as a soft circle from where the pointer came in (--px, --py, set as the row opens;
+     from the start of the name for the keyboard) and simply fades as the row closes, so passing from row to row
+     never shows two shapes; its photographs settle a touch larger, to hide the drift's edges; the lines catch the
+     light. */
+  @media (prefers-reduced-motion: no-preference) {
+    .sides__world {
+      -webkit-mask-image: radial-gradient(circle at var(--px, 50%) var(--py, 50%), #000 calc(var(--sides-r) - 12%), transparent var(--sides-r));
+      mask-image: radial-gradient(circle at var(--px, 50%) var(--py, 50%), #000 calc(var(--sides-r) - 12%), transparent var(--sides-r));
+      transition:
+        opacity 400ms var(--ease-out),
+        --sides-r 0s linear 400ms;
+    }
+
+    .sides__rows:not(.is-still, .is-rising) .sides__row:hover .sides__world,
+    .sides__rows:not(.is-rising) .sides__row:has(> .sides__row-link:focus-visible) .sides__world {
+      --sides-r: 115%;
+      will-change: opacity;
+      transition:
+        opacity 200ms var(--ease-out),
+        --sides-r 700ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .sides__rows:not(.is-still, .is-rising) .sides__row:hover .sides__world > img,
+    .sides__rows:not(.is-rising) .sides__row:has(> .sides__row-link:focus-visible) .sides__world > img {
+      scale: 1.04;
+    }
+
+    .sides__rows:not(.is-still, .is-rising) .sides__row:hover,
+    .sides__rows:not(.is-rising) .sides__row:has(> .sides__row-link:focus-visible) {
+      --sides-lit: 1;
+    }
+  }
+
+  /* Registered, so the light on the lines and the world's opening can ease. */
+  @property --sides-lit {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 0;
+  }
+
+  @property --sides-r {
+    syntax: '<percentage>';
+    inherits: false;
+    initial-value: 0%;
+  }
+
+  /* Social: its campaigns, one photograph after another (each in turn for a third of the round). */
+  .sides__row--social .sides__world > img {
+    opacity: 0;
+    animation: sides-turn 9s linear calc(var(--k) * 3s - 0.01s) infinite;
+    animation-play-state: paused;
+  }
+
+  .sides__row--social .sides__world > img:first-child {
+    opacity: 1;
+  }
+
+  .sides__rows:not(.is-still, .is-rising) .sides__row--social:hover .sides__world > img,
+  .sides__rows:not(.is-rising) .sides__row--social:has(> .sides__row-link:focus-visible) .sides__world > img {
+    animation-play-state: running;
+  }
+
+  @keyframes sides-turn {
+    0% {
+      opacity: 0;
+    }
+    6%,
+    33% {
+      opacity: 1;
+    }
+    40%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  /* Talent: its creators side by side, in black and white, drifting slowly sideways. The face under the pointer
+     develops into colour like a print, and goes back to grey more slowly than it came, so a short trail of colour
+     follows the pointer along the row (.is-lit, src below). */
+  .sides__world-faces {
+    position: absolute;
+    inset: 0 -8%;
+    display: flex;
+    transition: translate 2400ms var(--ease-out);
+  }
+
+  .sides__world-faces img {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 25%;
+    filter: grayscale(1) contrast(1.05);
+    transition: filter 900ms var(--ease-out);
+  }
+
+  .sides__world-faces img.is-lit {
+    filter: grayscale(0) contrast(1.05) brightness(1.06);
+    transition-duration: 450ms;
+  }
+
+  .sides__rows:not(.is-still, .is-rising) .sides__row:hover .sides__world-faces,
+  .sides__rows:not(.is-rising) .sides__row:has(> .sides__row-link:focus-visible) .sides__world-faces {
+    translate: -4% 0;
+  }
+
+  /* Academy: a creator's setup in its colour (the photograph lends only its light to the slate). */
+  .sides__row--education .sides__world {
+    background:
+      radial-gradient(70% 120% at 80% 50%, rgb(var(--ink) / 0.08), transparent 70%),
+      var(--slate);
+  }
+
+  .sides__row--education .sides__world > img {
+    object-position: 50% 58%;
+    mix-blend-mode: luminosity;
+    filter: contrast(1.08);
+  }
+
+  /* Arriving (src below, with motion allowed, if the rows start below the screen): one row after another, its line
+     draws in and its name rises out of the row, "STRIDE" first and the division a beat behind; who it is for comes
+     after. At the end everything is exactly where it rests. The names' words are boxes only meanwhile, so they can
+     move, and inline again for the journey to their page. */
+  .sides__rows.is-waiting::before,
+  .sides__rows.is-waiting .sides__row::after {
+    transform: scaleX(0);
+  }
+
+  .sides__rows:is(.is-waiting, .is-rising) .sides__row-name > span {
+    display: inline-block;
+  }
+
+  .sides__rows.is-waiting .sides__row-name > span {
+    translate: 0 calc(var(--rows) / 6 + 0.6em);
+  }
+
+  .sides__rows.is-waiting .sides__row-audience {
+    opacity: 0;
+  }
+
+  .sides__rows.is-rising::before,
+  .sides__rows.is-rising .sides__row::after {
+    transition: transform 700ms var(--ease-in-out) calc(var(--i, 0) * 110ms);
+  }
+
+  .sides__rows.is-rising .sides__row-name > span {
+    transition: translate 900ms cubic-bezier(0.2, 0.8, 0.2, 1) calc(180ms + var(--i) * 110ms);
+  }
+
+  .sides__rows.is-rising .sides__row-name > span + span {
+    transition-delay: calc(270ms + var(--i) * 110ms);
+  }
+
+  .sides__rows.is-rising .sides__row-audience {
+    transition: opacity 400ms var(--ease-out) calc(320ms + var(--i) * 110ms);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sides__row,
+    .sides__row-name,
+    .sides__row-copy,
+    .sides__row-actions,
+    .sides__world,
+    .sides__world > img,
+    .sides__world-faces {
+      transition: none;
+    }
+
+    /* The faces still develop under the pointer, quickly and without a trail. */
+    .sides__world-faces img,
+    .sides__world-faces img.is-lit {
+      transition: filter 150ms var(--ease-out);
+    }
+
+    .sides__row--social .sides__world > img {
+      animation: none;
+    }
+  }
+
+  /* A screen above the section's foot, less the page's scroll padding: jumping here puts its foot at
+     the bottom of the screen. */
+  .sides__anchor {
+    position: absolute;
+    bottom: calc(100vh - var(--header-h) - var(--division-bar-h));
+    left: 0;
+  }
+
+  .sides__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(40px, 5vw, 96px);
+  }
+
+  /* ---------- Intro ---------- */
+  .sides__intro {
+    display: grid;
+    gap: var(--space-4);
+    align-content: center;
+  }
+
+  .sides__title {
+    font-family: var(--font-display);
+    font-size: clamp(2.4rem, 3.7vw, 4.25rem);
+    font-weight: 800;
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+
+  .sides__lede {
+    max-width: 30ch;
+    font-size: clamp(1rem, 1.15vw, 1.2rem);
+    line-height: 1.5;
+    color: rgb(var(--ink) / 0.72);
+  }
+
+  /* ---------- Brand partners ---------- */
+  .sides__partners {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-5);
+    margin-top: clamp(64px, 7vw, 112px);
+  }
+
+  .sides__cue {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: var(--type-label);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgb(var(--ink) / 0.74);
+  }
+
+  .sides__cue svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    animation: sides-cue 2.4s var(--ease-in-out) infinite;
+  }
+
+  @keyframes sides-cue {
+    0%,
+    100% {
+      translate: 0 0;
+      opacity: 0.6;
+    }
+
+    50% {
+      translate: 0 4px;
+      opacity: 1;
+    }
+  }
+
+  .sides__notes {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-3);
+  }
+
+  /* ---------- Desktop: all of it, down to the ticker, fits one screen, sized to its height too ---------- */
+  @media (min-width: 1024px) {
+    .sides__inner {
+      gap: clamp(1.5rem, 4vh, 3rem);
+    }
+
+    .sides__title {
+      font-size: clamp(2.4rem, min(3vw, 6vh), 3.25rem);
+    }
+
+    .sides__partners {
+      margin-top: clamp(1.75rem, 5vh, 4rem);
+    }
+
+    /* Only the footer follows here, so "Keep scrolling" has nothing to promise. */
+    .sides__cue {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sides__cue svg {
+      animation: none;
+    }
+  }
+
+  /* ---------- Phones and tablets: the desktop's giant rows (the owner, 2026-11-13) ----------
+     The same three rows, "STRIDE" in outline and the division solid, margin to margin, sharing a fixed height. There's
+     no pointer to open one, so the row in the middle of the screen opens as the page scrolls (.is-open on .is-auto
+     rows, the script): it takes most of the height while the others close up and dim, its world comes up behind it
+     (opening from the start of its name), and its line and way in rise in. A tap on a closed row opens it; on the open
+     one, it goes there. Who it is for sits top left, the line and the way in at the open row's foot. */
+  @media (max-width: 1023px) {
+    .sides__rows {
+      --rows: clamp(28rem, 78svh, 42rem);
+      margin-top: var(--space-5);
+    }
+
+    .sides__row-link {
+      --pad: clamp(0.25rem, 1.5vw, 0.75rem);
+    }
+
+    .sides__row-name {
+      font-size: calc((100vw - 2 * var(--margin) - 2 * var(--pad)) / 11.2);
+    }
+
+    .sides__row-stride {
+      -webkit-text-stroke-width: 0.0625rem;
+    }
+
+    .sides__row-side {
+      top: 0.75rem;
+      right: var(--pad);
+      bottom: 1rem;
+      left: var(--pad);
+      align-items: flex-start;
+      max-width: none;
+      text-align: left;
+    }
+
+    .sides__row-copy {
+      max-width: 26rem;
+      font-size: 1rem;
+      text-wrap: pretty;
+    }
+
+    .sides__row-actions {
+      flex-wrap: wrap;
+    }
+
+    .sides__rows.is-auto:not(.is-waiting, .is-rising):has(.sides__row.is-open) .sides__row {
+      flex-grow: 0.6;
+    }
+
+    .sides__rows.is-auto:not(.is-waiting, .is-rising):has(.sides__row.is-open) .sides__row.is-open {
+      flex-grow: 2.5;
+    }
+
+    .sides__rows.is-auto:not(.is-waiting, .is-rising):has(.sides__row.is-open) .sides__row:not(.is-open) .sides__row-name {
+      scale: 0.66;
+      opacity: 0.38;
+    }
+
+    .sides__rows.is-auto:not(.is-waiting, .is-rising):has(.sides__row.is-open) .sides__row:not(.is-open) .sides__row-audience {
+      opacity: 0;
+    }
+
+    .sides__rows.is-auto:not(.is-waiting, .is-rising) .sides__row.is-open :is(.sides__row-copy, .sides__row-actions) {
+      opacity: 1;
+      visibility: visible;
+      translate: none;
+    }
+
+    .sides__rows.is-auto:not(.is-waiting, .is-rising) .sides__row.is-open .sides__world {
+      opacity: 1;
+    }
+
+    .sides__rows.is-auto:not(.is-waiting, .is-rising) .sides__row.is-open .sides__world > img {
+      scale: 1;
+    }
+
+    .sides__rows.is-auto:not(.is-waiting, .is-rising) .sides__row--social.is-open .sides__world > img {
+      animation-play-state: running;
+    }
+
+    .sides__rows.is-auto:not(.is-waiting, .is-rising) .sides__row.is-open .sides__world-faces {
+      translate: -4% 0;
+    }
+
+    /* Only the footer follows the rows, here too: no "Keep scrolling". */
+    .sides__cue {
+      display: none;
+    }
+  }
+
+  /* With motion, as desktop's: the world opens as a circle, the line and the way in rise in, the lines catch light. */
+  @media (max-width: 1023px) and (prefers-reduced-motion: no-preference) {
+    .sides__rows.is-auto:not(.is-waiting, .is-rising) .sides__row.is-open {
+      --sides-lit: 1;
+    }
+
+    .sides__rows.is-auto:not(.is-waiting, .is-rising) .sides__row.is-open .sides__world {
+      --sides-r: 115%;
+      will-change: opacity;
+      transition:
+        opacity 200ms var(--ease-out),
+        --sides-r 700ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .sides__rows.is-auto:not(.is-waiting, .is-rising) .sides__row.is-open .sides__world > img {
+      scale: 1.04;
+    }
+
+    .sides__rows.is-auto:not(.is-waiting, .is-rising) .sides__row.is-open :is(.sides__row-copy, .sides__row-actions) {
+      transition:
+        opacity 520ms var(--ease-out),
+        translate 520ms var(--ease-out),
+        visibility 0s;
+    }
+
+    .sides__rows.is-auto:not(.is-waiting, .is-rising) .sides__row.is-open .sides__row-actions {
+      transition-delay: 90ms;
+    }
+  }
+
+  /* Tablets: a little more room for the open row's line beside its way in. */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .sides__rows {
+      --rows: clamp(28rem, 66svh, 40rem);
+    }
+
+    .sides__row-side {
+      left: auto;
+      align-items: flex-end;
+      max-width: min(26rem, 56%);
+      text-align: right;
+    }
+  }
+</style>

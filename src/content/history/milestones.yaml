@@ -1,0 +1,252 @@
+# Our History milestones: About's story (group/StoryReel.astro) and Our History (group/HistoryRoad.astro).
+# Stride's own history, supplied by the owner on 2026-11-13 ("Strides History _ About Stride.pdf", then dated
+# moments with their photographs) in place of the previous site's timeline. The facts, figures, dates and photographs
+# are the owner's; the wording is edited for spelling and grammar, and the titles and captions are drafted by us, both
+# for the owner to read over. On desktop About shows each body in full with its photographs (`images`); phones and
+# tablets show its first paragraph. Months live in the words (the year is the chapter's mark); `order` is the timeline.
+- id: m2019
+  year: 2019
+  title: "Alex builds an audience"
+  body: |-
+    Alex, known as Alxhendy on social media, grew his following to just under 6 million with pranks and comedy sketches made with his sister and friends. He signed with several talent management companies and found they fell short: they could do more for their talent's day-to-day lives, not just chase commercial deals.
+
+    So Alex started helping his creator friends himself, with brand deals and content strategy.
+  # Two of Alex's own TikToks, from the owner (2026-11-13): they play muted in their prints while the chapter is on.
+  images:
+    - src: /assets/history/2019-alxhendy-1.jpg
+      video: /assets/video/history-2019-alxhendy-1.mp4
+      alt: "A still from @alxhendy's TikTok prank I kissed his GF: two friends playing a lie-detector game in a garden"
+      caption: "@alxhendy on TikTok"
+    - src: /assets/history/2019-alxhendy-2.jpg
+      video: /assets/video/history-2019-alxhendy-2.mp4
+      alt: "A still from @alxhendy's TikTok Sour Candy Prank On sister: a tube of super sour sweets held up to the camera"
+  # His profile, previewed over the page from a button (the owner, 2026-11-13).
+  tiktok: alxhendy
+  status: verified
+  source: Stride's history, from the owner (2026-11-13); the videos are Alex's own TikToks
+  order: 1
+- id: m2021
+  year: 2021
+  title: "The first logo and the start of Stride Social"
+  body: |-
+    Alex took the idea of an influencer agency to Ollie, who was starting CMA Media, a paid ads agency, at the time. Together they decided to build it, with one mission: to simplify how brands work with influencers.
+  images:
+    - src: /assets/history/2021-first-logo-1.jpg
+      alt: "Stride Social's first logo, two pairs of black triangles beside the words Stride Social, on a screen, with a member of the Stride team beside it"
+      caption: "Stride Social's first logo"
+    - src: /assets/history/2021-first-logo-2.jpg
+      alt: "Stride Social's first logo on a screen, with another member of the Stride team beside it"
+  status: verified
+  source: Stride's history and photographs, from the owner (2026-11-13)
+  order: 2
+- id: m2021-ims
+  year: 2021
+  title: "Our first influencer show"
+  body: |-
+    Alex and Ollie at Stride's first influencer show in London: the Influencer Marketing Show.
+  images:
+    - src: /assets/history/2021-influencer-marketing-show.jpg
+      alt: "Alex Hendy and Ollie Kitson holding up their Influencer Marketing Show badges, which name them for Stride Social Ltd"
+      caption: "The Influencer Marketing Show, London"
+    - src: /assets/history/2021-influencer-marketing-show-card.jpg
+      alt: "The Influencer Marketing Show Europe's title card, dated 26 October 2023"
+  status: verified
+  source: The owner (2026-11-13), with the photograph and the show's title card
+  order: 3
+- id: m2022
+  year: 2022
+  title: "Stride Talent opens"
+  body: |-
+    Stride Social opens its influencer management arm, Stride Talent, with one goal: to make being a creator a better experience, down to getting talent into real-life events like film premieres and brand events.
+  # Some of Stride Talent's creators (the owner, 2026-11-13): the first three its page features, by the roster's rules.
+  creators: 3
+  status: verified
+  source: Stride's history, from the owner (2026-11-13)
+  order: 4
+- id: m2024-ims
+  year: 2024
+  title: "The Influencer Marketing Show"
+  body: |-
+    Stride Social, the advertising arm, has a clear vision: to connect influencers with fast-growing e-commerce and Amazon brands. In January 2024, sponsoring the Influencer Marketing Show in London marked a turning point. Standing beside such a high-profile event cemented Stride Social's reputation as a leader in influencer marketing: more than a sponsorship, it was a statement of intent to drive the industry forward.
+
+    Stride also won an award from Hello Partners, which listed it among the world's top 30 influencer marketing companies to work with.
+  # The owner's two pictures (2026-11-13): the stand, then the show's title card (it reads USA, 3-4 June 2024).
+  images:
+    - src: /assets/history/2024-influencer-marketing-show.jpg
+      alt: "Three members of the Stride team at Stride Social's stand at the Influencer Marketing Show, a Stride Social sign above them and a floor sign in front reading 'Ready to succeed with Influencers overseas?'"
+      caption: "Stride Social's stand at the show"
+    - src: /assets/history/2024-influencer-marketing-show-card.jpg
+      alt: "The Influencer Marketing Show USA's title card, dated 3 to 4 June 2024"
+  status: verified
+  source: Stride's history, from the owner (2026-11-13), with the owner's photograph and the show's title card
+  order: 5
+- id: m2024-ces
+  year: 2024
+  title: "CES Las Vegas"
+  body: |-
+    At CES in Las Vegas, Stride meets its overseas partners, Insta360 among them.
+  images:
+    - src: /assets/history/2024-ces-las-vegas.jpg
+      alt: "Three people at CES in Las Vegas wearing event lanyards, two of them giving a thumbs up, in front of a screen showing a rally car"
+      caption: "Stride × Insta360 at CES"
+    - src: /assets/history/2024-ces-las-vegas-2.jpg
+      alt: "Ollie Kitson at CES in Las Vegas, his badge on a lanyard, under the big CES sign by the escalators"
+    - src: /assets/history/2024-ces-las-vegas-3.jpg
+      alt: "A member of the Stride team standing behind the giant #CES2024 letters outside in Las Vegas, under a cloudy sky"
+  status: verified
+  source: The owner (2026-11-13), with the photograph
+  order: 6
+- id: m2024
+  year: 2024
+  title: "Over 200 talent"
+  body: |-
+    Stride Talent grows to over 200 talent in less than a year and successfully enters the UK and US markets.
+  # More of Stride Talent's creators (the owner, 2026-11-13): the next four its page features, after 2022's.
+  creators: 4
+  status: verified
+  source: Stride's history, from the owner (2026-11-13)
+  order: 7
+- id: m2024-christmas
+  year: 2024
+  title: "Stride's first Christmas"
+  body: |-
+    At Christmas 2024, Stride sends its first gifts to its talent: parcels and cards, packed by hand at the office table.
+  images:
+    - src: /assets/history/2024-first-christmas.jpg
+      alt: "Two of the Stride team at a table covered in padded envelopes and red cards, packing Christmas gifts for Stride's talent"
+    - src: /assets/history/2024-first-christmas-2.jpg
+      alt: "Christmas presents wrapped in red, white and brown paper with ribbons, on a wooden table, softly out of focus"
+  status: verified
+  source: The owner (2026-11-13), with the photograph; the words drafted by us
+  order: 8
+- id: m2025
+  year: 2025
+  title: "New divisions"
+  body: |-
+    Stride Talent officially launches divisions for each kind of content its talent publish: Gaming, AI, Family, Fashion, Technology, Beauty, Outdoors and Lifestyle.
+  # One creator from each of these niches that is a division on the roster (the owner, 2026-11-13); AI, Technology and
+  # Outdoors have none yet.
+  divisions: [gaming, family, fashion, beauty, lifestyle]
+  status: verified
+  source: Stride's history, from the owner (2026-11-13)
+  order: 9
+- id: m2025-socialjet
+  year: 2025
+  title: "Stride × SocialJet"
+  body: |-
+    Stride partners with SocialJet to support growth in the UK market.
+  images:
+    - src: /assets/history/2025-socialjet-1.jpg
+      alt: "A member of the Stride team in a Stride Social T-shirt beside a guest, by a pool among palm trees, in a story captioned @stridetalent x @socialjet.sg, Exciting times ahead"
+    - src: /assets/history/2025-socialjet-2.jpg
+      alt: "Four people at an exhibition stand in front of SocialJet's banners, in a story captioned Great partnership today! @socialjet.sg x @stridetalent"
+  status: verified
+  source: The owner (2026-11-13), with the photographs
+  order: 10
+- id: m2025-europe
+  year: 2025
+  title: "Stride Talent in Europe"
+  body: |-
+    In November 2025, Stride Talent expands to Europe, opening its German and French departments.
+  images:
+    - src: /assets/history/2025-europe-stride-group.jpg
+      alt: "The Stride Group neon sign glowing in the open doorway of a pale house with tiled walls, a palm in a pot beside it"
+    - src: /assets/history/2025-europe.jpg
+      alt: "The flag of the European Union: a circle of twelve gold stars on blue"
+  status: verified
+  source: The owner (2026-11-13)
+  order: 11
+- id: m2025-ugc
+  year: 2025
+  title: "In-house UGC production"
+  body: |-
+    In November 2025, Stride launches its own in-house production for UGC content.
+  images:
+    - src: /assets/history/2025-ugc-production-1.jpg
+      alt: "Stride Social briefs laid out along a wooden table, a card on a wooden peg reading Production shoot"
+      caption: "The first production shoot"
+    - src: /assets/history/2025-ugc-production-2.jpg
+      alt: "A UGC shoot in a living room seen from the stairs: a phone on a tripod films a delivery at the front door while one of the crew watches"
+  status: verified
+  source: The owner (2026-11-13), with the photographs
+  order: 12
+- id: m2026
+  year: 2026
+  title: "Stride Suite"
+  body: |-
+    Stride launches Stride Suite, a dedicated platform where creators track their campaigns, payments and invoices, because we want full transparency for all our talent.
+  status: verified
+  source: Stride's history, from the owner (2026-11-13)
+  order: 13
+- id: m2026-holly
+  year: 2026
+  title: "Holly heads Stride Talent"
+  body: |-
+    In April 2026, Holly becomes Head of Stride Talent UK and US.
+  images:
+    - src: /assets/team/blue/holly.jpg
+      alt: "Holly, Head of Stride Talent UK and US"
+  # Little prints of Stride Lifestyle creators behind her (the owner, 2026-11-13).
+  behind: { division: lifestyle, count: 4 }
+  status: verified
+  source: The owner (2026-11-13); the photograph is Our Team's
+  order: 14
+- id: m2026-ben
+  year: 2026
+  title: "Ben heads Stride Sport"
+  body: |-
+    In September 2026, Ben becomes Head of Stride Sport UK and US. Stride Sport officially launches and now manages over 150 athletes and sports creators across football, rugby, cricket, golf and fitness.
+
+    Across Stride Group, Stride Talent reaches 700 signed athletes and creators, with 110 junior and senior talent managers.
+  images:
+    - src: /assets/team/blue/ben.jpg
+      alt: "Ben, Head of Stride Sport UK and US"
+  # Little prints of Stride Sport's athletes and creators behind him (the owner, 2026-11-13).
+  behind: { division: sport, count: 4 }
+  status: verified
+  source: Stride's history and the owner (2026-11-13); the photograph is Our Team's
+  order: 15
+- id: m2026-lisbon
+  year: 2026
+  title: "Lisbon retreat"
+  body: |-
+    In September 2026, the Stride team spends its retreat together in Lisbon.
+  # From Our Sponsorships, where it was first put (the owner, 2026-11-13: a retreat, not a sponsorship). The team with
+  # the Stride Group sign in front, the rest as little prints round it.
+  images:
+    - src: /assets/sponsorships/lisbon-retreat-2026-2.jpg
+      alt: "Seven of the Stride team in front of a house in the sun, two of them holding a clear Stride Group sign"
+      caption: "The Stride team in Lisbon"
+    - src: /assets/sponsorships/lisbon-retreat-2026-1.jpg
+      alt: "The Stride team at lunch around a table on the deck of a boat, raising their glasses, the water behind them"
+      small: true
+    - src: /assets/sponsorships/lisbon-retreat-2026-3.jpg
+      alt: "Five of the Stride team at a table outside a beach bar in the evening sun, the sea behind them"
+      small: true
+    - src: /assets/sponsorships/lisbon-retreat-2026-4.jpg
+      alt: "The Stride team sitting on the front deck of a boat under a blue sky with white clouds"
+      small: true
+    - src: /assets/sponsorships/lisbon-retreat-2026-5.jpg
+      alt: "The Stride team at a picnic table beside a padel court, holding up their rackets"
+      small: true
+    - src: /assets/sponsorships/lisbon-retreat-2026-6.jpg
+      alt: "The Stride team at dinner around a long table in a garden, smiling at the camera"
+      small: true
+  status: verified
+  source: The owner (2026-11-12), with the photographs and the caption "Lisbon Retreat for Stride Team September 2026"
+  order: 16
+- id: m2026-youdao
+  year: 2026
+  title: "Stride meets Youdao"
+  body: |-
+    In October 2026, Stride meets the Youdao Ads team in China. Youdao (NYSE: DAO) is part of NetEase.
+  images:
+    - src: /assets/history/2026-youdao-netease-1.jpg
+      alt: "A member of the Stride team in a Stride Social T-shirt with two of the Youdao Ads team at NetEase's reception desk"
+      caption: "With the Youdao Ads team"
+    - src: /assets/history/2026-youdao-netease-2.jpg
+      alt: "An open-plan office of desks and screens, the NetEase name large on a yellow wall at the back"
+      caption: "NetEase, China"
+  status: verified
+  source: The owner (2026-11-13), with the photographs
+  order: 17

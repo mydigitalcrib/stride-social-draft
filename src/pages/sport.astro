@@ -1,0 +1,13 @@
+---
+// Stride Sport: its own page, right after Stride Talent in the navigation (components/talent/SpecialistPage.astro).
+// Holding (noindex) until Stride confirms its athletes and placements.
+import { getEntry } from 'astro:content';
+import SiteLayout from '@/layouts/SiteLayout.astro';
+import SpecialistPage from '@/components/talent/SpecialistPage.astro';
+
+const copy = (await getEntry('pages', 'sport'))?.data.sections.hero;
+---
+
+<SiteLayout title="Stride Sport | Athletes and sport creators" description={copy?.body} division="talent" look="deep" headerOverlay noindex>
+  <SpecialistPage page="sport" crumbs={[{ label: 'Stride Sport' }]} />
+</SiteLayout>

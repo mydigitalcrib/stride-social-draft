@@ -1,0 +1,164 @@
+# The words on the site's interactions: labels, hints and prompts, all written by us. Draft until the
+# owner approves them. Keys are read through src/lib/ui-copy.ts.
+sections:
+  ui:
+    status: draft
+    items:
+      # The homepage opening (desktop): Stride's own lines, never quotes from clients
+      - { key: opening.label, label: Stride opening }
+      - { key: opening.enter, label: Enter Stride }
+      - { key: opening.from, label: Stride }
+      - { key: opening.when, label: now }
+      - { key: opening.m1, label: We find the creators. }
+      - { key: opening.m2, label: We make the content. }
+      - { key: opening.m3, label: We report what worked. }
+      # The shortlist tray
+      - { key: tray.brief.title, label: Your brief }
+      - { key: tray.brief.action, label: Start a campaign }
+      - { key: tray.creators.title, label: Meet our talents }
+      - { key: tray.creators.action, label: Get to know them }
+      - { key: tray.remove, label: Remove }
+      - { key: tray.close, label: Close }
+      # Services
+      - { key: door.add, label: + Add to brief }
+      - { key: door.added, label: ✓ In your brief }
+      - { key: stories.rings, label: The services }
+      - { key: stories.picture, label: Picture to come }
+      - { key: stories.see, label: See the service }
+      - { key: stories.prev, label: The service before }
+      - { key: stories.next, label: The service after }
+      - { key: service.includes, label: What's included }
+      - { key: service.add, label: add it to your brief }
+      - { key: service.hint, label: Press a line to add it to your brief }
+      - { key: service.more, label: Read more }
+      - { key: service.less, label: Read less }
+      # Talent
+      - { key: picker.hint, label: Point at a division to meet its creators }
+      - { key: picker.creators, label: creators }
+      - { key: picker.see, label: Click to see them below }
+      - { key: picker.page, label: Click for its own page }
+      - { key: work.hint, label: Drag to explore our work · click a project to open it }
+      - { key: work.views, label: View }
+      - { key: work.hand, label: Move with your hand }
+      - { key: work.handOff, label: Camera off }
+      - { key: work.handPrivate, label: Only on this device · nothing is recorded }
+      - { key: work.handStart, label: Starting the camera… }
+      - { key: work.handNote, label: Move your hand to move our work · make a fist over a project to open it }
+      - { key: work.handNo, label: The camera isn't available here }
+      - { key: work.grid, label: Grid }
+      - { key: work.list, label: List }
+      - { key: work.case, label: Case study }
+      - { key: work.results, label: Results }
+      - { key: work.words, label: In their words }
+      - { key: work.creators, label: Creators }
+      - { key: work.clips, label: Clips }
+      - { key: work.clip, label: Clip }
+      - { key: work.close, label: Close the preview }
+      - { key: work.chapters, label: The case study's parts }
+      - { key: work.prev, label: Previous project }
+      - { key: work.next, label: Next project }
+      - { key: career.hint, label: "Click what you need to put it in the spotlight. Click it again to turn it off." }
+      - { key: photocall.shoot, label: Click to get to know }
+      - { key: photocall.kept, label: Added · click again to take out }
+      - { key: photocall.creators, label: creators }
+      - { key: photocall.divisions, label: divisions }
+      - { key: sheet.open, label: Open their profile }
+      - { key: sheet.profile, label: Full profile }
+      - { key: sheet.prev, label: The creator before }
+      - { key: sheet.next, label: The creator after }
+      - { key: sheet.close, label: Close }
+      - { key: card.enquire, label: Enquire }
+      - { key: card.enquireAbout, label: Enquire about }
+      - { key: hand.keep, label: Add }
+      - { key: hand.kept, label: ✓ Added }
+      - { key: profile.flip, label: Flip the card }
+      - { key: profile.platforms, label: Find them on }
+      - { key: profile.prev, label: Previous creator }
+      - { key: profile.next, label: Next creator }
+      - { key: profile.hint, label: Swipe the card for the next creator }
+      - { key: door.handle, label: Open the door }
+      - { key: door.hint, label: Drag the handle to open the door }
+      # Work
+      - { key: reel.chapter, label: Go to }
+      # Forms
+      - { key: steps.count, label: 'Question {n} of {total}' }
+      - { key: steps.next, label: Next }
+      - { key: steps.back, label: Back }
+      # Contact
+      - { key: chat.name, label: "What's your name?" }
+      - { key: chat.email, label: 'Nice to meet you, {name}. What email should we reply to?' }
+      - { key: chat.emailBad, label: "That doesn't look like an email address. Try again?" }
+      - { key: chat.topic, label: "What's it about?" }
+      - { key: chat.message, label: 'Go on, what would you like to say?' }
+      - { key: chat.ready, label: Ready to send it? }
+      - { key: chat.send, label: Send it }
+      - { key: chat.placeholder, label: Type here }
+      - { key: chat.submit, label: Send }
+      # Academy
+      - { key: find.open, label: Find my level }
+      - { key: find.q1, label: Do you post content regularly? }
+      - { key: find.q2, label: Have you worked with a brand yet? }
+      - { key: find.q3, label: Do you know what to charge for your work? }
+      - { key: find.yes, label: 'Yes' }
+      - { key: find.no, label: Not yet }
+      - { key: find.result, label: 'Start at level {n}: {title}' }
+      # About and History
+      - { key: play.play, label: Play the story }
+      - { key: play.pause, label: Pause the story }
+      - { key: story.hint, label: Scroll to run the story }
+      - { key: story.skip, label: Skip the story }
+      - { key: story.note, label: "Short on time? Press “Skip the story” below to jump straight to the team." }
+      - { key: tiktok.open, label: 'See {handle} on TikTok' }
+      - { key: tiktok.title, label: TikTok profile }
+      - { key: tiktok.close, label: Close }
+      - { key: news.latest, label: Read the latest edition }
+      - { key: news.recent, label: Latest editions }
+      - { key: news.preview, label: LinkedIn newsletter preview }
+      - { key: news.close, label: Close }
+      - { key: news.read, label: Read on LinkedIn }
+      # Team
+      - { key: team.brand, label: "I'm a brand" }
+      - { key: team.creator, label: "I'm a creator" }
+      # Careers
+      - { key: ticket.tear, label: Tear to apply }
+      - { key: careers.open, label: open roles }
+      - { key: careers.open1, label: open role }
+      - { key: careers.scheme, label: Placement scheme }
+      - { key: careers.apply, label: Apply by email }
+      - { key: careers.read, label: Read the role }
+      - { key: role.hint, label: Tick what sounds like you }
+      - { key: role.count, label: '{n} of {total} sound like you' }
+      - { key: role.tick, label: This sounds like me }
+      - { key: role.body, label: 'These parts of the role sound like me:' }
+      # Insights
+      - { key: insights.any, label: Any time }
+      - { key: insights.latest, label: Latest }
+      # Our Sponsorships (desktop)
+      - { key: sponsor.hint, label: Point at an event to see it }
+      - { key: sponsor.open, label: See it large }
+      - { key: sponsor.prev, label: Previous photo }
+      - { key: sponsor.next, label: Next photo }
+      - { key: sponsor.close, label: Close }
+      - { key: sponsor.of, label: '{n} of {total}' }
+      - { key: sponsor.photos, label: '{n} photos' }
+      - { key: insights.upto, label: '{n} min or less' }
+      - { key: article.share, label: Share on X }
+      - { key: article.copy, label: Copy link }
+      - { key: article.copied, label: Link copied }
+      - { key: article.sections, label: Sections }
+      # Stride Sport, Stride Podcasts, Stride Speakers (desktop)
+      - { key: spec.sport.count, label: athletes and sport creators }
+      - { key: spec.sport.all, label: See all athletes }
+      - { key: spec.sport.squad, label: Your squad. }
+      - { key: spec.sport.squadHint, label: Click an athlete above to put them in your squad. Eleven on the pitch. }
+      - { key: spec.sport.bench, label: '+{n} on the bench' }
+      - { key: spec.podcasts.count, label: shows }
+      - { key: spec.podcasts.onair, label: On air }
+      - { key: spec.speakers.count, label: speakers }
+      - { key: spec.speakers.stages, label: engagements }
+      - { key: spec.speakers.live, label: Live }
+      - { key: spec.speakers.slides, label: Click the screen or use the arrow keys for the next one. }
+      - { key: spec.speakers.post, label: See the post }
+      - { key: spec.prev, label: Previous }
+      - { key: video.play, label: Play }
+      - { key: spec.next, label: Next }

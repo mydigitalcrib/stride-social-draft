@@ -1,0 +1,70 @@
+---
+// Insights archive: the latest article large, then every article as a big headline whose picture follows
+// the pointer (group/Headlines). Narrow it by topic and by how long you've got; the choice is kept in the
+// URL (/insights?category=creator-economy). Only topics with articles get a filter; the mapping is
+// proposed (Gate 2).
+import { getEntry } from 'astro:content';
+import SiteLayout from '@/layouts/SiteLayout.astro';
+import Headlines from '@/components/group/Headlines.astro';
+import PlaceholderNotice from '@/components/core/PlaceholderNotice.astro';
+import { categoryLabels, formatDate, getArticles, readingMinutes, type Article } from '@/lib/insights';
+import { routes } from '@/lib/routes';
+import { isPreview } from '@/lib/env';
+import { interfaceCopy } from '@/lib/ui-copy';
+import BackVideo from '@/components/core/BackVideo.astro';
+const t = await interfaceCopy();
+
+const page = await getEntry('pages', 'insights');
+const copy = page?.data.sections.hero;
+if (!page || !copy) throw new Error('Missing src/content/pages/insights.yaml');
+const s = page.data.sections;
+const articles = await getArticles();
+const lead = articles.find((a) => a.data.featured) ?? articles[0];
+const rest = articles.filter((a) => a !== lead);
+type Category = keyof typeof categoryLabels;
+const used = (Object.keys(categoryLabels) as Category[]).filter((c) => rest.some((a) => a.data.category === c));
+const ui = (key: string, fallback: string) => s.filters?.items?.find((i) => i.key === key)?.label ?? fallback;
+
+const toItem = (a: Article) => {
+  const minutes = readingMinutes(a);
+  return {
+    id: a.id,
+    title: a.data.title,
+    href: routes.article(a.id),
+    cover: a.data.cover.src,
+    category: a.data.category,
+    categoryLabel: categoryLabels[a.data.category],
+    date: formatDate(a.data.date),
+    minutes,
+    standfirst: a.data.standfirst,
+  };
+};
+const items = rest.map(toItem);
+const maxMinutes = Math.max(1, ...items.map((i) => i.minutes));
+---
+
+<SiteLayout title="Insights | Stride" description={copy.body} look="navy" headerOverlay>
+  {/* On navy; on desktop in front of the homepage's showreel as its opening shows it. */}
+  <BackVideo look="deep" mp4="/assets/video/stride-showreel-desktop.mp4" webm="/assets/video/stride-showreel-desktop.webm" poster="/assets/site/stride-showreel-desktop-poster.jpg" blur={12} />
+  <Headlines
+    copy={copy}
+    lead={lead ? toItem(lead) : undefined}
+    items={items}
+    categories={used.map((c) => ({ id: c, label: categoryLabels[c] }))}
+    maxMinutes={maxMinutes}
+    crumbs={[{ label: 'Insights' }]}
+    ui={{
+      topic: ui('topic', 'Topic'),
+      time: ui('time', "How long have you got?"),
+      all: ui('all', 'All'),
+      any: t('insights.any'),
+      upto: t('insights.upto'),
+      read: ui('read', 'Read the article'),
+      more: ui('more', 'Load more'),
+      empty: ui('empty', 'No articles match. Try another topic or time.'),
+      clear: ui('clear', 'Show all articles'),
+      latest: t('insights.latest'),
+    }}
+  />
+  {isPreview && <PlaceholderNotice variant="inline" label="Categories proposed">— article mapping to confirm (Gate 2); no articles yet in Education</PlaceholderNotice>}
+</SiteLayout>

@@ -1,0 +1,9 @@
+# From slide 15 of Stride's talent deck ("Behind Stride Talent", 2026), at the owner's instruction (2026-11-11): the
+# name, the role and the photograph are the slide's. The department is proposed from the role.
+name: Priya
+role: "Talent Manager"
+department: talent
+photo:
+  src: /assets/team/blue/priya.jpg
+  alt: "Priya, Talent Manager at Stride"
+order: 8

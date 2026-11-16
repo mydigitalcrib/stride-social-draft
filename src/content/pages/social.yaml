@@ -1,0 +1,140 @@
+# Stride Social landing copy (docs/phase-2/05-wireframes.md §B). status: approved = from the
+# client brief or signed off; draft = written by us, shows a "Draft copy" tag in preview and
+# blocks production.
+sections:
+  hero:
+    status: approved
+    eyebrow: Stride Social
+    lines: [The right, creators., Real impact.]
+    body: We build influencer campaigns that put brands in front of the audiences that matter, through talent, content, and social-first strategy.
+    items:
+      - label: Speak To Our Team
+        href: /social/enquire
+      - label: Explore Our Work
+        href: /work
+
+  logos:
+    status: approved
+    eyebrow: Trusted by brands
+    # Named in the brief; no approved vector logo yet (Q5).
+    awaiting: [Samsung, Adobe, P&G, Govee, XGIMI, Temu]
+
+  intro:
+    status: draft
+    headline: Influence is more than a post.
+    body: |-
+      We plan and run creator-led campaigns across TikTok, Instagram, YouTube, Twitch and podcasts, in formats from seeded unboxings to paid UGC and live shopping streams, for brands selling in several markets at once.
+
+      Each campaign starts with a business outcome you can measure, whether that is awareness, app downloads or sales. We pick creators for audience fit before reach, brief them clearly and give them room to make content their followers want to watch.
+
+      Strong creator relationships make that possible. We handle outreach, content approvals and reporting, so you deal with one team from brief to results.
+
+  # Creator globe (CreatorGlobe.astro): the messages that change with each scroll step, as written in the
+  # owner's mock-ups (2026-11-04); Stride to confirm. Regions and creators: src/config/creator-regions.ts.
+  creators:
+    status: draft
+    items:
+      - label: Influence is more than a post.
+        copy: We plan and execute creator-led campaigns across TikTok, Instagram, YouTube, Twitch, and podcasts from product seeding and UGC to social commerce and livestreams.
+      - label: The right creators. The right audiences.
+        copy: Every campaign starts with a clear business objective. We select creators for audience fit, develop authentic content, and manage everything from execution to reporting.
+      - label: Creators where your audience lives.
+        copy: We connect brands with the right creators across platforms, formats, and markets to build campaigns that reach the audiences that matter.
+
+  services:
+    status: approved
+    eyebrow: What we do
+    headline: Our services.
+    cta: { label: All services, href: /social/services }
+
+  # The page's menu (SocialMenu.astro), Our Strategies: as written in the owner's mock-up
+  # (2026-11-04); Stride to confirm. Each key is the service its card opens.
+  menu:
+    status: draft
+    items:
+      - key: influencer-activations
+        image: /assets/site/social-influencer-campaigns.webp
+        alt: A Stride Social team member at a conference, crouching and smiling, pointing at the floor with both hands
+        label: Influencer Campaigns
+        copy: Authentic creator partnerships, product seeding and influencer activations.
+      - key: ugc-production
+        label: Content & UGC
+        copy: Creator-produced content for organic social media and paid advertising.
+      - key: tiktok-shop
+        image: /assets/site/social-commerce.webp
+        alt: A creator with eyes closed, holding a gold lip mask to the mouth and a box of Body Blendz collagen facial masks
+        position: 30% 50%
+        label: Social Commerce
+        copy: TikTok Shop campaigns and livestream experiences that turn attention into action.
+      - key: influencer-events
+        image: /assets/site/social-experiences.webp
+        alt: Two staff in red caps and aprons laughing and serving a guest at a food counter during a brand event
+        # Which part of the photo stays in view when the card is narrow.
+        position: 27% 50%
+        label: Experiences & Audio
+        copy: Creator events, PR activations and podcast partnerships that bring brands into relevant conversations.
+
+  # Intro for the services index page (/social/services).
+  servicesPage:
+    status: draft
+    eyebrow: Stride Social
+    headline: Our services.
+    body: Seven ways we put brands in front of the audiences that matter.
+
+  industries:
+    status: approved
+    eyebrow: Who we work with
+    headline: Industries we work in.
+
+  featured:
+    status: approved
+    eyebrow: Selected work
+    headline: Featured campaigns.
+    cta: { label: Explore Our Work, href: /work }
+
+  # Steps from the brief; chapter copy adapted from the previous site's process copy.
+  approach:
+    status: draft
+    eyebrow: How we work
+    headline: Our approach.
+    items:
+      # Pictures from Stride's own decks (the owner, 2026-11-12).
+      - label: Strategy
+        copy: We start with your brand, your goals and the customer you want to reach. Then we build the campaign around your budget, your brand voice and the results that matter to you. No copy-paste templates.
+        image: /assets/site/social-team.jpg
+        alt: The Stride Social team together in their office, in black and white
+        position: 50% 40%
+      - label: Creator Selection
+        copy: We source and vet creators who match your audience, checking quality, brand fit and authenticity, and we handle every conversation from pitch to post.
+        image: /assets/site/social-street-interview.jpg
+        alt: A presenter holding a microphone, interviewing a young man in the street
+        position: 55% 40%
+      - label: Campaign Execution
+        copy: We manage briefs, content approvals, posting schedules and creator relationships, so content lands on time and is ready to reuse across ads, email and social.
+        image: /assets/site/social-events-dinner.jpg
+        alt: Guests at a candlelit dinner on a terrace at night, a city's lights below
+      - label: Reporting
+        copy: You get clear reports on reach, engagement and content performance, written so anyone in your business can read them, and we use them to sharpen the next wave.
+        image: /assets/site/social-tiktok-phones.jpg
+        alt: Three phones showing a creator's TikTok Shop video, the product page and the checkout
+
+  final:
+    status: approved
+    headline: Your next campaign starts here.
+    cta: { label: Talk To Stride Social, href: /social/enquire }
+
+  # Brand enquiry form (inline on /social and at /social/enquire). Response times need Q13.
+  enquiry:
+    status: draft
+    eyebrow: Brand enquiries
+    headline: Start a campaign.
+    body: Tell us about your brand, your market and what you want to achieve.
+    items:
+      - key: success
+        label: "Thanks, {name}. Our team will be in touch."
+      - key: error
+        label: Your enquiry was not sent. Try again, or email us directly.
+      - key: unavailable
+        label: The form is temporarily unavailable. Email us and we'll pick it up from there.
+      - key: consent
+        label: We use these details to reply to your enquiry. See our privacy policy.

@@ -1,0 +1,10 @@
+# Hidden on 2026-11-11: not on slide 15 of Stride's 2026 talent deck, which the team now follows. Set `visible: true`
+# (and give a blue-background photograph) if still at Stride.
+name: Ellie
+role: Talent Manager
+department: talent
+photo:
+  src: /assets/team/blue/0d6c53ad-untitled-design-21-1-.jpg
+  alt: Ellie, Talent Manager at Stride
+order: 7
+visible: false

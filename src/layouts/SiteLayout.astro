@@ -1,0 +1,161 @@
+---
+// Phase 3 layout for every redesigned page. Sets the division theme (data-division), renders the
+// new header/division bar/footer and loads the motion scripts. Phase 1 pages keep BaseLayout
+// until each one is replaced. `data-area` is the page's place on the dial (global/EdgeNav.astro; -1 the
+// homepage), which a page change on desktop follows (motion.css: `dial-down`, `dial-up`).
+import '@/styles/system/index.css';
+import Seo from '@/components/global/Seo.astro';
+import SiteHeader from '@/components/global/SiteHeader.astro';
+import SiteFooter from '@/components/global/SiteFooter.astro';
+import ConsentBanner from '@/components/global/ConsentBanner.astro';
+import CursorBuddy from '@/components/global/CursorBuddy.astro';
+import PageLoader from '@/components/global/PageLoader.astro';
+import Ambient from '@/components/experience/Ambient.astro';
+import { plausibleDomain } from '@/config/analytics';
+import { site } from '@/config/site';
+import { modes, modeOf, type DivisionKey } from '@/config/navigation';
+import type { Look } from '@/lib/experience';
+
+export interface Props {
+  title: string;
+  description?: string | null;
+  ogImage?: string | null;
+  ogType?: 'website' | 'article' | 'profile';
+  division?: DivisionKey;
+  /** The page opens with a full-bleed dark hero: header starts transparent with light text. */
+  headerOverlay?: boolean;
+  /** The colour the page opens in; it then follows its sections as it scrolls. */
+  look?: Look;
+  jsonLd?: Record<string, unknown>[];
+  noindex?: boolean;
+  /** Desktop only: the page ends without the footer (the homepage). Phones and tablets keep it. */
+  noDeskFooter?: boolean;
+}
+
+const { title, description, ogImage, ogType, division = 'group', headerOverlay = false, look = 'deep', jsonLd, noindex, noDeskFooter = false } = Astro.props;
+const ink = ['deep', 'navy', 'slate'].includes(look) ? 'dark' : 'light';
+const path = Astro.url.pathname.replace(/\.html$/, '').replace(/(.)\/$/, '$1') || '/';
+const area = path === '/' ? -1 : Math.max(0, modes.findIndex((m) => m.key === modeOf(path)));
+---
+
+<!doctype html>
+<html lang="en" data-division={division} data-area={area} data-look={headerOverlay ? look : undefined} data-ink={headerOverlay ? ink : undefined} class={headerOverlay ? 'has-backdrop' : undefined}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>
+      document.documentElement.classList.add('js');
+      // Safety net: if the motion scripts never start, show everything rather than hidden content.
+      setTimeout(() => {
+        const root = document.documentElement;
+        if (!root.classList.contains('motion-ready')) root.classList.remove('js');
+      }, 3000);
+    </script>
+    <Seo title={title} description={description} ogImage={ogImage} ogType={ogType} path={path} jsonLd={jsonLd} noindex={noindex} />
+    <link rel="icon" href={site.favicon} type="image/png" />
+    <link rel="apple-touch-icon" href={site.appleTouchIcon} />
+    <slot name="head" />
+    <script is:inline>
+      // A link to a single case study opens it over Our Work instead (the case pages are out of date, the owner,
+      // 2026-11-13; work-canvas.ts reads the address), on every screen since Our Work's canvas came to phones.
+      document.addEventListener('click', function (e) {
+        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        var a = e.target && e.target.closest ? e.target.closest('a[href^="/work/"]') : null;
+        var m = a && a.getAttribute('href').match(/^\/work\/([^/?#]+)\/?$/);
+        if (!m) return;
+        e.preventDefault();
+        location.assign('/work#' + m[1]);
+      });
+    </script>
+    <script is:inline>
+      // Desktop: the header and the dial have layers of their own while the page changes (motion.css), named only
+      // for the change, since a named element's glass can't blur what's behind it. The dial's turn starts with the
+      // change (edge-nav.ts reads window.strideReveal).
+      (function () {
+        var desk = matchMedia('(min-width: 1024px)');
+        var name = function (on) {
+          var chrome = document.querySelector('[data-chrome]');
+          var dial = document.querySelector('[data-radial]');
+          if (chrome) chrome.style.viewTransitionName = on ? 'site-chrome' : '';
+          if (dial) dial.style.viewTransitionName = on ? 'site-nav' : '';
+        };
+        addEventListener('pageswap', function (e) {
+          if (e.viewTransition && desk.matches) name(true);
+        });
+        addEventListener('pageshow', function (e) {
+          if (e.persisted) name(false);
+        });
+        addEventListener('pagereveal', function (e) {
+          var vt = e.viewTransition;
+          window.strideReveal = vt || null;
+          if (!vt) return;
+          if (desk.matches) {
+            name(true);
+            vt.finished.then(function () { name(false); }, function () { name(false); });
+          }
+          if (!vt.types) return;
+          // The page follows the dial (desktop): to an area further down it, the page rises from below;
+          // further up, it comes down from above. The last page left where it was (edge-nav.ts).
+          if (!desk.matches) return;
+          try {
+            var rec = JSON.parse(sessionStorage.getItem('stride:dial') || 'null');
+            var area = Number(document.documentElement.dataset.area);
+            if (rec && Date.now() - rec.t < 2000 && typeof rec.area === 'number' && rec.area !== area) vt.types.add(area > rec.area ? 'dial-down' : 'dial-up');
+          } catch (_) {}
+        });
+      })();
+    </script>
+    {/* Cookieless analytics needs no consent banner (Q14 decides which tool, if any). */}
+    {plausibleDomain && <script is:inline defer data-domain={plausibleDomain} src="https://plausible.io/js/script.js"></script>}
+  </head>
+  <body>
+    {/* The loading screen, first in the page so it's there before anything else (it only shows when a page is slow). */}
+    <PageLoader />
+    {headerOverlay && <div class="backdrop" aria-hidden="true" data-backdrop><Ambient /></div>}
+    <a class="skip-link" href="#main">Skip to content</a>
+    <SiteHeader path={path} overlay={headerOverlay} />
+    <main id="main" class:list={['page', { 'page--overlay': headerOverlay }]}>
+      <slot />
+    </main>
+    <SiteFooter noDesk={noDeskFooter} />
+    <CursorBuddy />
+    <ConsentBanner />
+    <script>
+      import { initSmoothScroll } from '@/scripts/system/smooth-scroll';
+      import { initBackdrop } from '@/scripts/system/backdrop';
+      import { initReveal } from '@/scripts/system/reveal';
+      import { initRevealLines } from '@/scripts/system/reveal-lines';
+      import { initParallax, initMagnetic } from '@/scripts/system/motion';
+      // Ready: and if the safety net in the head gave up on a slow load, put `js` back, or anything styled for it
+      // (the desktop layouts that need the scripts) stays in its no-script version.
+      document.documentElement.classList.add('js', 'motion-ready');
+      initSmoothScroll();
+      initBackdrop();
+      initReveal();
+      initRevealLines();
+      initParallax();
+      initMagnetic();
+    </script>
+  </body>
+</html>
+
+<style>
+  .page {
+    padding-top: var(--header-h);
+  }
+
+  .page--overlay {
+    padding-top: 0;
+  }
+
+  /* The one background behind the whole page; its own layer, so changing colour redraws nothing else. */
+  .backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    background: rgb(var(--backdrop, var(--tone-surface)));
+    transform: translateZ(0);
+    pointer-events: none;
+  }
+</style>

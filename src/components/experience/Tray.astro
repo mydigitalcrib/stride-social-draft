@@ -1,0 +1,348 @@
+---
+// What the visitor has picked so far, in glass at the corner of the screen, leading to the enquiry form
+// (which starts from it). It stays out of sight until there's something in it. The list itself and its
+// rules: src/scripts/system/shortlist.ts. On every screen (phones and tablets since 2026-11-13: along the foot); sized in
+// rem, so past 1920×1080 it grows with the screen (tokens.css). What's added comes in on its own (the rest stay put), what's taken out leaves and the others close
+// up, the count rolls like a counter, emptied it goes as it came, and it glides when it moves out of a deck's way.
+import { interfaceCopy } from '@/lib/ui-copy';
+
+export interface Props {
+  list: 'brief' | 'creators';
+  tone?: 'social' | 'talent' | 'education' | 'group';
+  /** Which corner, to stay clear of the page's own controls. */
+  side?: 'left' | 'right';
+}
+
+const { list, tone = list === 'brief' ? 'social' : 'talent', side = 'right' } = Astro.props;
+const t = await interfaceCopy();
+const form = list === 'creators' ? '/talent/enquire' : '/social/enquire';
+---
+
+<aside class:list={['tray', `tray--${side}`]} aria-label={t(`tray.${list}.title`)} data-tray={list} data-remove={t('tray.remove')} data-tone={tone} hidden>
+  <p class="tray__head">
+    <span class="exp-label">{t(`tray.${list}.title`)}</span>
+    <span class="tray__end">
+      <span class="tray__count"><span data-tray-count>0</span></span>
+      {/* Closes it until something new is added (shortlist.ts); what's in it stays kept. */}
+      <button class="tray__close" type="button" aria-label={t('tray.close')} data-tray-close>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"></path></svg>
+      </button>
+    </span>
+  </p>
+  <ul class="tray__items" role="list" data-tray-items data-lenis-prevent></ul>
+  <div class="tray__actions">
+    {list === 'creators' ? (
+      /* The creators picked: their profiles, one after another, over the page (creator-sheet.ts). */
+      <button class="exp-pill" type="button" data-tray-meet>
+        {t(`tray.${list}.action`)}
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
+      </button>
+    ) : (
+      <a class="exp-pill" href={form} data-keep-cta={list} data-keep-base={form}>
+        {t(`tray.${list}.action`)}
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
+      </a>
+    )}
+  </div>
+</aside>
+
+<style>
+  .tray {
+    position: fixed;
+    bottom: var(--space-4);
+    z-index: 95;
+    display: grid;
+    gap: var(--space-2);
+    width: min(30rem, calc(100vw - 2 * var(--space-5)));
+    padding: 1rem 1.125rem;
+    border-radius: 1.5rem;
+    background: rgb(var(--panel) / 0.8);
+    box-shadow:
+      inset 0 0 0 1px rgb(var(--hair) / 0.2),
+      inset 0 1px 0 rgb(var(--white-rgb) / 0.3),
+      0 1.875rem 3.75rem -1.5rem rgb(var(--shade) / 0.8);
+    backdrop-filter: blur(1.375rem) saturate(150%);
+    -webkit-backdrop-filter: blur(1.375rem) saturate(150%);
+    color: rgb(var(--ink));
+    animation: tray-in 480ms var(--spring-pop, cubic-bezier(0.2, 1.4, 0.35, 1));
+  }
+
+  .tray--right {
+    right: var(--space-4);
+  }
+
+  .tray--left {
+    left: var(--space-4);
+  }
+
+  .tray[hidden] {
+    display: none;
+  }
+
+  /* Out of the way while a section with its own way on is on screen (Stride Talent's plan, career.ts). */
+  .tray {
+    transition:
+      opacity 280ms var(--ease-out),
+      translate 360ms var(--ease-out);
+  }
+
+  .tray.is-away {
+    opacity: 0;
+    translate: 0 1.125rem;
+    pointer-events: none;
+  }
+
+  /* Up under the header while a deck's bar is on screen at the foot (deck.ts, deck-lineup.ts; shortlist.ts glides it
+     there). */
+  .tray.is-up {
+    top: calc(var(--header-h) + var(--space-2));
+    bottom: auto;
+  }
+
+  @keyframes tray-in {
+    from {
+      opacity: 0;
+      transform: translateY(1.5rem) scale(0.96);
+    }
+  }
+
+  .tray__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .tray__end {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* The ×: a small round of glass. */
+  .tray__close {
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgb(var(--white-rgb) / calc(0.08 * var(--fill-k)));
+    box-shadow:
+      inset 0 0 0 1px rgb(var(--hair) / 0.26),
+      inset 0 1px 0 rgb(var(--white-rgb) / 0.22);
+    color: rgb(var(--ink));
+    cursor: pointer;
+    transition:
+      background-color 200ms var(--ease-out),
+      scale 200ms var(--ease-out);
+  }
+
+  .tray__close:hover {
+    background: rgb(var(--white-rgb) / calc(0.2 * var(--fill-k)));
+  }
+
+  .tray__close:active {
+    scale: 0.9;
+  }
+
+  .tray__close:focus-visible {
+    outline: 2px solid rgb(var(--tone-lit));
+    outline-offset: 2px;
+  }
+
+  .tray__close svg {
+    width: 0.875rem;
+    height: 0.875rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+
+  .tray__count {
+    display: grid;
+    place-items: center;
+    min-width: 1.625rem;
+    height: 1.625rem;
+    padding-inline: 0.375rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgb(var(--tone-lit));
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: rgb(var(--tone-on));
+  }
+
+  .tray__items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    max-height: 4.5rem;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+
+  /* Creators: a strip of small press prints, the name along each foot, side by side (scrolling sideways when long),
+     in a tray only as wide as it needs. */
+  .tray[data-tray='creators'] {
+    width: auto;
+    min-width: 17rem;
+    max-width: min(30rem, calc(100vw - 2 * var(--space-5)));
+    padding: 0.75rem 0.875rem;
+  }
+
+  .tray[data-tray='creators'] .tray__items {
+    flex-wrap: nowrap;
+    max-height: none;
+    padding: 0.125rem 0.125rem 0.375rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .tray__items :global(.tray__print) {
+    position: relative;
+    display: grid;
+    flex: none;
+    gap: 0.25rem;
+    width: 3.125rem;
+    padding: 0.1875rem 0.1875rem 0.3125rem;
+    border-radius: 0.1875rem;
+    background: linear-gradient(180deg, #f6f8fa, #e4e9ee);
+    box-shadow: 0 0.5rem 1rem -0.625rem rgb(0 0 0 / 0.8);
+    rotate: -2deg;
+  }
+
+  /* Only what has just been added comes in (shortlist.ts); a print that's flying in from a shot waits for it to land
+     (shot.ts), then simply shows. */
+  .tray__items :global(:is(.tray__print, .tray__chip).is-new) {
+    animation: tray-print 520ms cubic-bezier(0.2, 1.4, 0.4, 1);
+  }
+
+  .tray__items :global(.is-incoming) {
+    opacity: 0;
+    animation: none;
+  }
+
+  .tray__items :global(.tray__print:nth-child(even)) {
+    rotate: 2deg;
+  }
+
+  .tray__items :global(.tray__print img) {
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    object-position: 50% 25%;
+  }
+
+  .tray__items :global(.tray__print span) {
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: 0.5rem;
+    letter-spacing: 0.08em;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: rgb(16 24 42 / 0.78);
+  }
+
+  .tray__items :global(.tray__print button) {
+    position: absolute;
+    top: -0.375rem;
+    right: -0.375rem;
+    display: grid;
+    place-items: center;
+    width: 1.125rem;
+    height: 1.125rem;
+    border-radius: 50%;
+    background: var(--navy-900);
+    box-shadow: inset 0 0 0 1px rgb(var(--white-rgb) / 0.4);
+    font-size: 0.75rem;
+    line-height: 1;
+    color: var(--white);
+    opacity: 0;
+    transition: opacity 200ms var(--ease-out);
+  }
+
+  .tray__items :global(.tray__print:hover button),
+  .tray__items :global(.tray__print button:focus-visible) {
+    opacity: 1;
+  }
+
+  @keyframes tray-print {
+    from {
+      opacity: 0;
+      translate: 0 0.875rem;
+      scale: 0.8;
+    }
+  }
+
+  .tray__items :global(.tray__chip) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    max-width: 100%;
+    padding: 0.25rem 0.375rem 0.25rem 0.75rem;
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1px rgb(var(--hair) / 0.26);
+    font-size: 0.8125rem;
+  }
+
+  .tray__items :global(.tray__chip span) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tray__items :global(.tray__chip button) {
+    flex: none;
+    width: 1.375rem;
+    height: 1.375rem;
+    border-radius: 50%;
+    line-height: 1;
+    color: inherit;
+  }
+
+  .tray__items :global(.tray__chip button:hover) {
+    background: rgb(var(--press));
+    color: rgb(var(--press-on));
+  }
+
+  .tray__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .tray__actions :global(.exp-pill) {
+    min-height: 2.375rem;
+    padding: 0.375rem 0.875rem;
+    font-size: 0.6875rem;
+    white-space: nowrap;
+  }
+
+  /* Phones and tablets: along the foot of the screen, clear of its rounded corners and home bar. */
+  @media (max-width: 767px) {
+    .tray--left,
+    .tray--right,
+    .tray[data-tray='creators'] {
+      right: var(--space-3);
+      bottom: max(var(--space-3), env(safe-area-inset-bottom));
+      left: var(--space-3);
+      width: auto;
+      max-width: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tray,
+    .tray__items :global(.is-new) {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  import { initShortlists } from '@/scripts/system/shortlist';
+  initShortlists();
+</script>

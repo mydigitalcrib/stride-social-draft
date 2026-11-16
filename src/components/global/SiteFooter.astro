@@ -1,0 +1,325 @@
+---
+// Comprehensive footer (brief §3.10; columns per docs/phase-2/03-sitemap.md §2). On desktop it has no
+// colour of its own: the background stays as the page ended (src/scripts/system/backdrop.ts) and its text,
+// lines and logo use the live ink. Phones and tablets go to dark navy here (data-look).
+// Every screen (phones and tablets since 2026-11-13): it arrives once, like a film's closing credits, as it comes into
+// view (the lockup rises, the line is written in, the columns follow one after another, the rule above the base draws
+// itself across), and its links underline as the pointer, a finger or the keyboard reaches them. Without the script, or
+// with reduced motion, it's simply there.
+import StrideLogo from '../core/StrideLogo.astro';
+import { footerColumns, legalLinks } from '@/config/navigation';
+import { consentRequired } from '@/config/analytics';
+import { site, socials } from '@/config/site';
+
+export interface Props {
+  /** Desktop only: no footer on this page (the homepage). */
+  noDesk?: boolean;
+}
+
+const { noDesk = false } = Astro.props;
+
+const contactRoutes = [
+  { label: 'Brand enquiries', href: '/social/enquire' },
+  { label: 'Creator applications', href: '/talent/apply' },
+  { label: 'Academy', href: '/academy' },
+  { label: 'General enquiries', href: '/contact' },
+];
+// The Contact column's place in the credits: after the others.
+const lastCol = footerColumns.length;
+---
+
+<footer class:list={['footer', { 'footer--no-desk': noDesk }]} data-look="deep" data-footer>
+  <div class="footer__inner">
+    <div class="footer__brand">
+      <a href="/" aria-label="Stride home"><StrideLogo tone="dark" /></a>
+      <p class="footer__line">Built around creators.</p>
+    </div>
+
+    <nav class="footer__cols" aria-label="Footer">
+      {footerColumns.map((col, c) => (
+        <div class="footer__col" style={`--c: ${c}`}>
+          <p class="footer__title">{col.title}</p>
+          <ul role="list">
+            {col.links.map((l, r) => <li style={`--r: ${r}`}><a href={l.href}>{l.label}</a></li>)}
+          </ul>
+        </div>
+      ))}
+      <div class="footer__col" style={`--c: ${lastCol}`}>
+        <p class="footer__title">Contact</p>
+        <ul role="list">
+          {contactRoutes.map((l, r) => <li style={`--r: ${r}`}><a href={l.href}>{l.label}</a></li>)}
+        </ul>
+        <ul class="footer__social" role="list">
+          {socials.map((s, r) => <li style={`--r: ${contactRoutes.length + r}`}><a href={s.href} target="_blank" rel="noopener">{s.label}</a></li>)}
+        </ul>
+      </div>
+    </nav>
+
+    <div class="footer__base">
+      <p>© {new Date().getFullYear()} {site.legalName} · {site.companyNumber}</p>
+      <ul class="footer__legal" role="list">
+        {legalLinks.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+        {consentRequired && <li><button class="footer__consent" type="button" data-consent-open>Cookie settings</button></li>}
+      </ul>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    position: relative;
+    z-index: 1;
+    color: rgb(var(--ink));
+  }
+
+  @media (min-width: 1024px) {
+    .footer--no-desk {
+      display: none;
+    }
+  }
+
+  .footer :global(.logo) {
+    color: inherit;
+  }
+
+  .footer__inner {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: var(--space-8) var(--gutter);
+    max-width: calc(var(--container-wide) + 2 * var(--margin));
+    margin-inline: auto;
+    padding: var(--space-9) var(--margin) var(--space-6);
+  }
+
+  .footer__brand {
+    grid-column: 1 / 5;
+    display: grid;
+    gap: var(--space-4);
+    align-content: start;
+  }
+
+  .footer__line {
+    max-width: 26ch;
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    font-style: italic;
+    line-height: 1.25;
+    color: rgb(var(--ink) / 0.85);
+  }
+
+  .footer__cols {
+    grid-column: 5 / -1;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--space-6);
+  }
+
+  .footer__title {
+    margin-bottom: var(--space-4);
+    font-family: var(--font-mono);
+    font-size: var(--type-label);
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgb(var(--tone-lit));
+  }
+
+  .footer__col ul {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .footer__col a,
+  .footer__consent {
+    font: inherit;
+    color: inherit;
+  }
+
+  .footer__consent:hover {
+    text-decoration: underline;
+  }
+
+  .footer__legal a {
+    font-size: var(--type-small);
+    color: rgb(var(--ink) / 0.78);
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+
+  .footer__col a:hover,
+  .footer__legal a:hover {
+    color: rgb(var(--ink));
+  }
+
+  .footer__social {
+    margin-top: var(--space-5);
+  }
+
+  .footer__base {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding-top: var(--space-5);
+    border-top: 1px solid rgb(var(--hair) / 0.16);
+    font-size: var(--type-small);
+    color: rgb(var(--ink) / 0.74);
+  }
+
+  .footer__legal {
+    display: flex;
+    gap: var(--space-5);
+  }
+
+  /* Narrow desktops: the five columns need the whole width (eight of twelve columns can't hold their longest words,
+     so Contact would run past the margin): the lockup and its line go above them. */
+  @media (min-width: 1024px) and (max-width: 1279px) {
+    .footer__brand,
+    .footer__cols {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* The links underline as they're reached, the line growing from the left and running out to the right as it goes
+     (core/Button's text link, in reverse). The rule above the base is drawn by its own layer, so it can draw itself in;
+     the border stays, clear, to keep the spacing exactly as it was. Every screen. */
+  @media all {
+    .footer__col a,
+    .footer__legal a,
+    .footer__consent {
+      background: linear-gradient(currentColor, currentColor) 100% 100% / 0% 1px no-repeat;
+      transition:
+        background-size 360ms var(--ease-out),
+        color var(--dur-fast) var(--ease-out);
+    }
+
+    .footer__col a,
+    .footer__legal a {
+      padding-bottom: 0.125rem;
+    }
+
+    .footer__col a:is(:hover, :focus-visible),
+    .footer__legal a:is(:hover, :focus-visible),
+    .footer__consent:is(:hover, :focus-visible) {
+      background-position: 0 100%;
+      background-size: 100% 1px;
+      text-decoration: none;
+    }
+
+    .footer__base {
+      position: relative;
+      border-top-color: transparent;
+    }
+
+    .footer__base::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      right: 0;
+      left: 0;
+      height: 1px;
+      background: rgb(var(--hair) / 0.16);
+      transform-origin: 0 50%;
+    }
+  }
+
+  /* The credits (the script adds .is-armed, then .is-in once the footer is a quarter in view). */
+  @media (prefers-reduced-motion: no-preference) {
+    .footer.is-armed .footer__brand > a {
+      transition:
+        opacity 600ms var(--ease-out),
+        translate 600ms var(--ease-out);
+    }
+
+    .footer.is-armed .footer__line {
+      transition: clip-path 1100ms var(--ease-in-out) 150ms;
+    }
+
+    .footer.is-armed .footer__title {
+      transition: opacity 600ms var(--ease-out) calc(var(--c) * 70ms);
+    }
+
+    .footer.is-armed .footer__col li {
+      transition:
+        opacity 640ms var(--ease-out),
+        translate 640ms var(--ease-out);
+      transition-delay: calc(var(--c) * 70ms + var(--r, 0) * 30ms + 80ms);
+    }
+
+    .footer.is-armed .footer__base::before {
+      transition: scale 1200ms var(--ease-out) 300ms;
+    }
+
+    .footer.is-armed .footer__base > * {
+      transition: opacity 600ms var(--ease-out) 600ms;
+    }
+
+    .footer.is-armed:not(.is-in) .footer__brand > a,
+    .footer.is-armed:not(.is-in) .footer__title,
+    .footer.is-armed:not(.is-in) .footer__col li,
+    .footer.is-armed:not(.is-in) .footer__base > * {
+      opacity: 0;
+    }
+
+    .footer.is-armed:not(.is-in) .footer__brand > a {
+      translate: 0 0.5rem;
+    }
+
+    .footer.is-armed:not(.is-in) .footer__col li {
+      translate: 0 0.875rem;
+    }
+
+    .footer.is-armed:not(.is-in) .footer__line {
+      clip-path: inset(0 100% 0 0);
+    }
+
+    .footer.is-armed:not(.is-in) .footer__base::before {
+      scale: 0 1;
+    }
+  }
+
+  @media (max-width: 1023px) {
+    .footer__brand,
+    .footer__cols {
+      grid-column: 1 / -1;
+    }
+
+    .footer__cols {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (max-width: 599px) {
+    .footer__cols {
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-6) var(--space-4);
+    }
+  }
+</style>
+
+<script>
+  // The credits run once, with motion allowed (every screen), when a quarter of the footer is in view. (The observer also
+  // calls as its first pixel comes in, which is too early for them to be seen, so the share is checked too.) A footer
+  // that's already on screen when the page opens (a short page) has been seen whole, so it simply stays: hiding it
+  // only to bring it back would flash.
+  const footer = document.querySelector<HTMLElement>('[data-footer]');
+  const inner = footer?.querySelector<HTMLElement>('.footer__inner');
+  if (
+    footer &&
+    inner &&
+    window.matchMedia('(prefers-reduced-motion: no-preference)').matches &&
+    !footer.classList.contains('footer--no-desk') &&
+    inner.getBoundingClientRect().top >= window.innerHeight
+  ) {
+    footer.classList.add('is-armed');
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((e) => e.isIntersecting && e.intersectionRatio >= 0.24)) return;
+        io.disconnect();
+        footer.classList.add('is-in');
+      },
+      { threshold: 0.25 },
+    );
+    io.observe(inner);
+  }
+</script>

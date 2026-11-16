@@ -1,0 +1,1315 @@
+---
+// Stride Social's opening: the creator globe. A stylised, cut-away globe (the top of a sphere sliced across,
+// its cross-section showing below the rim) acts as a region selector; a phone shows the selected
+// region's creator content as a reel. Drag or swipe the globe, scroll through the section (the
+// stage stays pinned while each region takes a turn), or use the region list. Behaviour:
+// src/scripts/system/creator-globe.ts. Regions and creators: src/config/creator-regions.ts.
+// A creator appears only if published (src/lib/roster.ts: in production, with confirmed consent) and with a
+// recorded country; otherwise a region shows its case study's own footage, labelled "Interim", or a
+// labelled empty state. Nothing is invented.
+// On desktop with motion the brand ticker runs along the top of the screen, with no header over it; it
+// stays through the regions and leaves with the stage.
+// `embedded` (inside another page): an h2, not the page's h1.
+// `background` (desktop): a video behind the stage, under a navy overlay and noise (.exp-haze).
+// Desktop: the region is named once, large; the list is its numbers (the name shows on hover); the three messages
+// share out the regions in order; the notification drops into the phone's own screen. `close` (desktop): after
+// the last region the planet turns and sinks with the phone, and the closing line rises over its lit horizon
+// with the way in (creator-globe.ts, --end), a word at a time, as light comes up behind the planet and settles.
+// Desktop, with motion: a region chosen pings from its light on the planet, a signal runs up the beam and the phone
+// catches it (.is-receiving); pointing at a light swells it and lights its number in the list (and the other way
+// round), and a click on it travels there. The phone and everything in it is in rem on desktop, so it keeps its
+// share of the screen however large.
+import { getEntry, getEntries } from 'astro:content';
+import BrandTicker from '../core/BrandTicker.astro';
+import DraftTag from '../core/DraftTag.astro';
+import PlaceholderNotice from '../core/PlaceholderNotice.astro';
+import { creatorRegions } from '@/config/creator-regions';
+import { getRoster, handleOf } from '@/lib/roster';
+import { workPreviews } from '@/lib/previews';
+import { routes } from '@/lib/routes';
+
+export interface Props {
+  copy: { status: 'approved' | 'draft'; items?: { label: string; copy?: string }[] };
+  brands?: { name: string; logo: string }[];
+  embedded?: boolean;
+  background?: { video: string; poster: string; speed?: number };
+  close?: { headline: string; label: string; href: string };
+}
+
+const { copy, brands = [], embedded = false, background, close } = Astro.props;
+const Title = embedded ? 'h2' : 'h1';
+const messages = copy.items ?? [];
+const roster = await getRoster();
+const byId = new Map(roster.map((c) => [c.id, c]));
+const countryName = new Intl.DisplayNames(['en'], { type: 'region' });
+const platformOf = (p: Record<string, string | undefined>) =>
+  p.tiktok ? 'TikTok' : p.instagram ? 'Instagram' : p.youtube ? 'YouTube' : p.twitch ? 'Twitch' : undefined;
+
+// What a region's phone plays: its creators' reels, or else its case study's footage, or nothing yet.
+const creatorOf = async (id: string) => {
+  const c = byId.get(id);
+  if (!c?.data.country) return null;
+  return {
+    name: c.data.name,
+    handle: handleOf(c) ?? `@${c.data.name}`,
+    confirmed: c.data.consent.status === 'confirmed',
+    href: routes.creator(c.id),
+    country: countryName.of(c.data.country) ?? c.data.country,
+    platform: platformOf(c.data.platforms),
+    // The first of the niches in the sheet's words, which say more than its filter ("Other").
+    niche: c.data.niche?.split(',')[0].trim() ?? (c.data.mainCategory ? (await getEntry(c.data.mainCategory))?.data.label : undefined),
+  };
+};
+const regions = await Promise.all(
+  creatorRegions.map(async (r) => {
+    const reels = (
+      await Promise.all(
+        (r.reels ?? []).map(async (reel) => {
+          const creator = await creatorOf(reel.creator);
+          return creator ? { creator: { ...creator, country: reel.place ?? creator.country }, work: null, video: { src: reel.src, poster: reel.poster, label: `${creator.name}: creator video` } } : null;
+        }),
+      )
+    ).filter((x) => !!x);
+    const w = r.work && !reels.length ? await getEntry('work', r.work) : undefined;
+    const brand = w ? await getEntry(w.data.client) : undefined;
+    const services = w ? await getEntries(w.data.services) : [];
+    const work = w
+      ? {
+          id: w.id,
+          title: w.data.title,
+          href: routes.caseStudy(w.id),
+          brand: brand?.data.name ?? w.data.title,
+          service: services[0]?.data.name,
+          video: workPreviews[w.id],
+          poster: (w.data.homeTile?.front ?? w.data.hero ?? w.data.card).src,
+        }
+      : null;
+    const fallback = { creator: null, work, video: work?.video ? { src: work.video, poster: work.poster, label: `${work.brand} campaign footage` } : null };
+    return { key: r.key, label: r.label, lat: r.lat, lon: r.lon, work, clips: reels.length ? reels : [fallback] };
+  }),
+);
+const globeData = JSON.stringify(regions.map(({ key, label, lat, lon }) => ({ key, label, lat, lon })));
+const pad = (n: number) => String(n).padStart(2, '0');
+// The closing line, a word at a time (desktop, with motion); its text stays whole for screen readers.
+const closeWords = close?.headline.split(/\s+/).filter(Boolean) ?? [];
+---
+
+<section class="globe" aria-labelledby="globe-title" data-tone="social" data-look="deep" data-creator-globe data-regions={globeData} style={`--steps: ${regions.length}`}>
+  <div class="globe__stage">
+    {background && (
+      <div class="exp-haze globe__haze" aria-hidden="true">
+        <video muted loop playsinline preload="none" poster={background.poster} tabindex="-1" data-haze-video data-speed={background.speed}>
+          <source src={background.video} type="video/mp4" />
+        </video>
+      </div>
+    )}
+    <canvas class="globe__canvas" data-globe-canvas aria-hidden="true"></canvas>
+
+    <div class="globe__intro" data-reveal="from-left">
+      {/* The selected region, editorial-size. */}
+      <div class="globe__readout" aria-hidden="true">
+        {regions.map((r, i) => (
+          <p class:list={['globe__now', { 'is-active': i === 0 }]} data-globe-now={i}>{r.label}</p>
+        ))}
+      </div>
+      <div class="globe__regions" role="tablist" aria-label="Regions" data-globe-tabs>
+        {regions.map((r, i) => (
+          <button
+            class="globe__region"
+            type="button"
+            role="tab"
+            id={`globe-tab-${r.key}`}
+            aria-selected={i === 0 ? 'true' : 'false'}
+            aria-controls="globe-phone"
+            tabindex={i === 0 ? 0 : -1}
+            data-globe-tab={i}
+          >
+            <span class="globe__region-num" aria-hidden="true">{pad(i + 1)}</span><span class="globe__region-name">{r.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+
+    {/* The phone: one screen per region, the selected one in front, each playing its reels in turn. */}
+    <div class="phone on-photo" id="globe-phone" role="tabpanel" aria-labelledby={`globe-tab-${regions[0].key}`} data-globe-phone>
+      <div class="phone__body">
+        <span class="phone__island" aria-hidden="true"></span>
+        {regions.map((r, i) => (
+          <div class:list={['phone__screen', { 'is-active': i === 0 }]} data-globe-screen={i} aria-hidden={i === 0 ? undefined : 'true'}>
+            {r.clips.map((clip, k) => (
+              <div class:list={['phone__clip', { 'is-active': k === 0 }]} data-globe-clip aria-hidden={k === 0 ? undefined : 'true'}>
+                {clip.video ? (
+                  <video class="phone__media" muted loop={r.clips.length === 1} playsinline preload="none" poster={clip.video.poster} aria-label={clip.video.label} data-globe-video>
+                    <source src={clip.video.src} type="video/mp4" />
+                  </video>
+                ) : (
+                  <PlaceholderNotice variant="block" label={`Creator for ${r.label}`} class="phone__empty">— awaiting Stride: creator, consent and content</PlaceholderNotice>
+                )}
+
+                <div class="phone__ui">
+                  <p class="phone__top" aria-hidden="true"><span>Reels</span><span class="phone__cam"></span></p>
+                  {clip.video && <ul class="phone__actions" role="list" aria-hidden="true">
+                    <li><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z" fill="none" stroke="currentColor" stroke-width="1.8"></path></svg></li>
+                    <li><svg viewBox="0 0 24 24"><path d="M5 18.5V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H8.5L5 18.5Z" fill="none" stroke="currentColor" stroke-width="1.8"></path></svg></li>
+                    <li><svg viewBox="0 0 24 24"><path d="M4 12 20 4l-6 16-2.5-6.5L4 12Z" fill="none" stroke="currentColor" stroke-width="1.8"></path></svg></li>
+                  </ul>}
+                  <div class="phone__meta">
+                    {clip.creator ? (
+                      <a class="phone__handle" href={clip.creator.href}>{clip.creator.handle}</a>
+                    ) : clip.work && (
+                      <p class="phone__handle phone__handle--pending">Creator to be confirmed</p>
+                    )}
+                    {clip.work && <a class="phone__caption" href={clip.work.href}>{clip.work.brand}{clip.work.service && ` · ${clip.work.service}`}</a>}
+                    <p class="phone__chips">
+                      <span class="phone__chip"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14s5-4.2 5-8A5 5 0 0 0 3 6c0 3.8 5 8 5 8Z M8 7.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" fill="none" stroke="currentColor" stroke-width="1.3"></path></svg>{clip.creator ? clip.creator.country : r.label}</span>
+                      {clip.creator?.platform && <span class="phone__chip">{clip.creator.platform}</span>}
+                      {clip.creator?.niche && <span class="phone__chip">{clip.creator.niche}</span>}
+                    </p>
+                  </div>
+                </div>
+                {clip.creator && !clip.creator.confirmed && <PlaceholderNotice label="Consent pending" class="phone__interim"><span class="phone__interim-text">— preview only until Stride confirms</span></PlaceholderNotice>}
+                {!clip.creator && clip.work && <PlaceholderNotice label="Interim" class="phone__interim"><span class="phone__interim-text">— case study footage; creator and location to be confirmed</span></PlaceholderNotice>}
+              </div>
+            ))}
+            {r.clips.length > 1 && (
+              <span class="phone__dots" aria-hidden="true">
+                {r.clips.map((_, k) => <i class:list={{ 'is-on': k === 0 }} data-globe-dot></i>)}
+              </span>
+            )}
+          </div>
+        ))}
+        <button class="phone__toggle" type="button" data-globe-toggle aria-label="Pause video">
+          <svg class="phone__icon phone__icon--pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2h3v12H4zM9 2h3v12H9z" fill="currentColor"></path></svg>
+          <svg class="phone__icon phone__icon--play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2l10 6-10 6z" fill="currentColor"></path></svg>
+        </button>
+        <button class="phone__sound" type="button" aria-pressed="false" aria-label="Turn the sound on" data-globe-sound>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path class="phone__sound-speaker" d="M4 9.500v5h3.500L12 18.500v-13L7.500 9.500H4Z"></path>
+            <path class="phone__sound-off" d="m16 9.500 5 5m0-5-5 5"></path>
+            <path class="phone__sound-on" d="M15.500 9a4.200 4.200 0 0 1 0 6M18 6.500a7.800 7.800 0 0 1 0 11"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    {/* The message: a new one with each scroll step (the script). */}
+    <div class="globe__messages" data-reveal="from-right">
+      {messages.map((m, i) => {
+        const Heading = i === 0 ? Title : 'p';
+        return (
+          <div class:list={['globe__message', { 'is-active': i === 0 }]} aria-hidden={i === 0 ? undefined : 'true'} data-globe-message={i}>
+            <Heading class="globe__title" id={i === 0 ? 'globe-title' : undefined}>{m.label}</Heading>
+            {m.copy && <p class="globe__body">{m.copy}</p>}
+          </div>
+        );
+      })}
+      <DraftTag status={copy.status} />
+    </div>
+
+    <p class="globe__status" aria-live="polite" data-globe-status></p>
+
+    <div class="globe__ticker"><BrandTicker brands={brands} /></div>
+
+    {/* Desktop: the notification comes in at the top of the screen, outside the phone, as the homepage's do
+        (the owner, 2026-11-13); the logo stripe fades under it while it's there. */}
+    <div class="globe__note exp-note" aria-hidden="true" data-globe-note>
+      <span class="exp-note__avatar">
+        <svg viewBox="0 0 106 106">
+          <path d="M53 53H0L53 0v53Z"></path>
+          <path d="M53 106H0l53-53v53Z"></path>
+          <path d="M106 53H53l53-53v53Z"></path>
+          <path d="M106 106H53l53-53v53Z"></path>
+        </svg>
+      </span>
+      <span class="exp-note__body">
+        <span class="exp-note__from">Stride <span>now</span></span>
+        <span class="exp-note__text">Scroll here for more reels · drag the globe to travel</span>
+      </span>
+    </div>
+
+    {close && (
+      <div class="globe__close" data-globe-close>
+        <h2 class="globe__close-title" style={`--n: ${closeWords.length}`}>
+          {closeWords.map((w, i) => <><span class="globe__close-word" style={`--k: ${i}`}>{w}</span>{i < closeWords.length - 1 ? ' ' : ''}</>)}
+        </h2>
+        <a class="globe__close-cta exp-pill exp-pill--glass" href={close.href} data-magnetic>
+          {close.label}
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
+        </a>
+      </div>
+    )}
+  </div>
+</section>
+
+<style>
+  /* The section is as tall as one screen per region; the stage stays pinned while each takes a turn. */
+  .globe {
+    --end: 0;
+    --close-in: 0;
+    position: relative;
+    height: calc(100svh + (var(--steps) - 1) * 55svh);
+    color: rgb(var(--ink));
+  }
+
+  .globe__stage {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    min-height: 640px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: var(--gutter);
+    padding: calc(var(--header-h) + var(--space-5)) var(--margin) 0;
+  }
+
+  /* The night sky with its shooting stars (social-sky.mp4, also behind the menu above, so the two are one sky):
+     barely blurred or shaded, or the stars and their trails would go. It melts in at both ends. */
+  .globe__haze {
+    --haze-blur: 0.0375rem;
+    --haze-shade: 0.16;
+    --haze-mask: linear-gradient(to bottom, transparent, #000 10%, #000 90%, transparent);
+  }
+
+  /* The globe fills the lower part of the stage, behind everything. */
+  .globe__canvas {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 64%;
+    /* The atmosphere fades out at the top of the canvas instead of stopping at its edge. */
+    mask-image: linear-gradient(to bottom, transparent, #000 12%);
+    touch-action: pan-y;
+    cursor: grab;
+  }
+
+  .globe.is-dragging .globe__canvas {
+    cursor: grabbing;
+  }
+
+  /* ---------- Left: the region and the list ---------- */
+  .globe__intro {
+    position: relative;
+    align-self: start;
+    display: grid;
+    gap: var(--space-4);
+    padding-top: clamp(8px, 4vh, 40px);
+    container-type: inline-size;
+  }
+
+  /* ---------- Right: the message ---------- */
+  .globe__messages {
+    position: relative;
+    align-self: start;
+    justify-self: end;
+    display: grid;
+    max-width: 28rem;
+    padding-top: clamp(0px, 2vh, 24px);
+    text-align: right;
+  }
+
+  .globe__message {
+    grid-area: 1 / 1;
+    display: grid;
+    gap: var(--space-3);
+    align-content: start;
+    opacity: 0;
+    transform: translateY(16px);
+    filter: blur(6px);
+    pointer-events: none;
+    transition:
+      opacity 400ms var(--ease-out),
+      transform 600ms var(--ease-out),
+      filter 500ms var(--ease-out);
+  }
+
+  .globe__message.is-active {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    pointer-events: auto;
+  }
+
+  .globe__title {
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 2.7vw, 3rem);
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    line-height: 0.95;
+    letter-spacing: -0.015em;
+    text-transform: uppercase;
+  }
+
+  .globe__body {
+    color: rgb(var(--ink) / 0.8);
+  }
+
+  .globe__regions {
+    display: grid;
+    justify-items: start;
+    gap: 2px;
+    margin-top: var(--space-4);
+  }
+
+  .globe__region {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 36px;
+    padding: 0 var(--space-4) 0 var(--space-3);
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: var(--type-label);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgb(var(--ink) / 0.74);
+    transition:
+      background-color var(--dur-base) var(--ease-out),
+      color var(--dur-base) var(--ease-out);
+  }
+
+  .globe__region-num {
+    color: var(--ice);
+  }
+
+  .globe__region:hover {
+    color: rgb(var(--ink));
+  }
+
+  .globe__region[aria-selected='true'] {
+    background: rgb(var(--tone-lit));
+    color: rgb(var(--tone-on));
+  }
+
+  .globe__region[aria-selected='true'] .globe__region-num {
+    color: rgb(var(--tone-on));
+  }
+
+  .globe__region:focus-visible {
+    outline: 2px solid var(--ice);
+    outline-offset: 2px;
+  }
+
+  /* ---------- Phone ---------- */
+  .phone {
+    position: relative;
+    z-index: 2;
+    align-self: start;
+    margin-top: clamp(8px, 4vh, 40px);
+  }
+
+  .phone__body {
+    position: relative;
+    height: min(60svh, 600px);
+    aspect-ratio: 9 / 19;
+    overflow: hidden;
+    border-radius: 44px;
+    background: #000;
+    box-shadow:
+      0 0 0 2px var(--navy-500),
+      0 0 0 9px var(--navy-900),
+      0 0 0 10px var(--navy-500),
+      0 40px 80px rgb(var(--shade) / 0.55);
+    isolation: isolate;
+  }
+
+  .phone__island {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    z-index: 5;
+    width: 30%;
+    height: 24px;
+    border-radius: 999px;
+    background: #000;
+    translate: -50% 0;
+  }
+
+  /* Screens stack; the selected one sits in front. A change slides the new reel up, like a swipe. */
+  .phone__screen {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transform: translateY(100%);
+    transition:
+      transform 620ms var(--ease-out),
+      opacity 300ms var(--ease-out),
+      filter 620ms var(--ease-out);
+  }
+
+  .phone__screen.is-active {
+    z-index: 1;
+    opacity: 1;
+    transform: none;
+  }
+
+  .phone__screen.is-before {
+    transform: translateY(-30%);
+    filter: blur(6px);
+  }
+
+  /* A region's reels, one after another: the next slides up, like a swipe. */
+  .phone__clip {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transform: translateY(100%);
+    transition:
+      transform 620ms var(--ease-out),
+      opacity 300ms var(--ease-out),
+      filter 620ms var(--ease-out);
+  }
+
+  .phone__clip.is-active {
+    z-index: 1;
+    opacity: 1;
+    transform: none;
+  }
+
+  .phone__clip.is-before {
+    transform: translateY(-30%);
+    filter: blur(6px);
+  }
+
+  .phone__media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* A region still waiting for its creator: a quiet, centred empty screen with its label. */
+  .globe :global(.phone__empty) {
+    position: absolute;
+    inset: 0;
+    align-content: center;
+    justify-items: center;
+    padding: var(--space-8) var(--space-5);
+    border: 0;
+    border-radius: 0;
+    background:
+      radial-gradient(90% 60% at 50% 40%, rgb(var(--ice-rgb) / 0.16), transparent 70%),
+      var(--navy-700);
+    text-align: center;
+    font-size: var(--type-small);
+    color: rgb(var(--ink) / 0.75);
+  }
+
+  .globe :global(.phone__interim) {
+    top: 48px;
+    left: var(--space-3);
+    right: auto;
+    max-width: calc(100% - var(--space-5));
+  }
+
+  .phone__ui {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    padding: 46px var(--space-4) var(--space-5);
+    background: linear-gradient(to top, rgb(0 0 0 / 0.6), transparent 38%);
+    pointer-events: none;
+  }
+
+  .phone__ui a {
+    pointer-events: auto;
+  }
+
+  .phone__top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9375rem;
+    font-weight: 700;
+  }
+
+  .phone__cam {
+    width: 20px;
+    height: 16px;
+    border: 1.6px solid currentColor;
+    border-radius: 4px;
+  }
+
+  .phone__actions {
+    align-self: end;
+    justify-self: end;
+    display: grid;
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+
+  .phone__actions svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .phone__meta {
+    display: grid;
+    gap: 6px;
+    font-size: 0.8125rem;
+  }
+
+  .phone__handle {
+    font-weight: 700;
+  }
+
+  .phone__handle--pending {
+    color: rgb(var(--ink) / 0.7);
+    font-weight: 500;
+  }
+
+  .phone__caption {
+    color: rgb(var(--ink) / 0.9);
+    text-decoration: underline;
+    text-decoration-color: rgb(var(--white-rgb) / 0.4);
+    text-underline-offset: 3px;
+  }
+
+  .phone__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .phone__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgb(var(--white-rgb) / calc(0.16 * var(--fill-k)));
+    font-size: 0.6875rem;
+    backdrop-filter: blur(4px);
+  }
+
+  .phone__chip svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .phone__toggle {
+    position: absolute;
+    right: var(--space-3);
+    top: 44px;
+    z-index: 4;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgb(0 0 0 / 0.35);
+    color: rgb(var(--ink));
+  }
+
+  .phone__toggle:focus-visible {
+    outline: 2px solid var(--ice);
+  }
+
+  .phone__icon {
+    width: 12px;
+    height: 12px;
+  }
+
+  .phone__icon--play,
+  .phone.is-paused .phone__icon--pause {
+    display: none;
+  }
+
+  .phone.is-paused .phone__icon--play {
+    display: block;
+  }
+
+  .phone.has-no-video .phone__toggle,
+  .phone.has-no-video .phone__sound {
+    display: none;
+  }
+
+  /* Desktop: play and stop in the middle of the screen, when the pointer is on the phone or it's stopped. */
+  @media (min-width: 1024px) {
+    .phone__toggle {
+      top: 50%;
+      right: auto;
+      left: 50%;
+      width: 4.25rem;
+      height: 4.25rem;
+      background: rgb(var(--navy-900-rgb) / 0.55);
+      opacity: 0;
+      translate: -50% -50%;
+      transition:
+        opacity 220ms var(--ease-out),
+        scale 220ms var(--ease-out);
+    }
+
+    .phone:hover .phone__toggle,
+    .phone__toggle:focus-visible,
+    .phone.is-paused .phone__toggle {
+      opacity: 1;
+    }
+
+    .phone__toggle:hover {
+      scale: 1.08;
+    }
+
+    .phone__icon {
+      width: 1.5rem;
+      height: 1.5rem;
+    }
+
+    /* The sound button takes the camera's place. */
+    .phone__cam {
+      visibility: hidden;
+    }
+  }
+
+  /* Just under the notification, and clear of the reel's actions however tall its details get (desktop only, so
+     in rem: it grows with the phone). */
+  .phone__sound {
+    position: absolute;
+    top: 7.75rem;
+    right: 0.5rem;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: rgb(var(--navy-900-rgb) / 0.55);
+    color: var(--white);
+    transition: background-color 220ms var(--ease-out);
+  }
+
+  .phone__sound:hover {
+    background: rgb(var(--navy-900-rgb) / 0.8);
+  }
+
+  .phone__sound:focus-visible {
+    outline: 2px solid var(--ice);
+  }
+
+  .phone__sound svg {
+    width: 1.375rem;
+    height: 1.375rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .phone__sound-speaker {
+    fill: currentColor;
+  }
+
+  .phone__sound-on,
+  .phone.has-sound .phone__sound-off {
+    display: none;
+  }
+
+  .phone.has-sound .phone__sound-on {
+    display: block;
+  }
+
+  /* Which of the region's reels this is (desktop only). */
+  .phone__dots {
+    position: absolute;
+    top: 50%;
+    left: 0.5rem;
+    z-index: 3;
+    display: grid;
+    gap: 0.3125rem;
+    translate: 0 -50%;
+    pointer-events: none;
+  }
+
+  .phone__dots i {
+    width: 0.3125rem;
+    height: 0.3125rem;
+    border-radius: 50%;
+    background: rgb(var(--white-rgb) / 0.45);
+    box-shadow: 0 0 0.1875rem rgb(var(--navy-900-rgb) / 0.7);
+    transition:
+      background-color 240ms var(--ease-out),
+      scale 240ms var(--ease-out);
+  }
+
+  .phone__dots i.is-on {
+    background: var(--white);
+    scale: 1.45;
+  }
+
+  /* ---------- Desktop: the phone in rem ----------
+     The same as drawn up to 1920×1080, then growing with the screen (tokens.css), so it keeps its share of the
+     stage on a 4K or 8K screen and its words keep their room. On a narrow desktop (about 1024 wide) its width
+     keeps the side columns clear: no taller than 47vw. */
+  @media (min-width: 1024px) {
+    .globe__stage {
+      min-height: 40rem;
+    }
+
+    .globe__intro {
+      padding-top: clamp(0.5rem, 4vh, 2.5rem);
+    }
+
+    .phone {
+      margin-top: clamp(0.5rem, 4vh, 2.5rem);
+    }
+
+    .globe__messages {
+      padding-top: clamp(0rem, 2vh, 1.5rem);
+    }
+
+    .globe__message {
+      transform: translateY(1rem);
+      filter: blur(0.375rem);
+    }
+
+    .phone__screen.is-before,
+    .phone__clip.is-before {
+      filter: blur(0.375rem);
+    }
+
+    .phone__body {
+      height: min(60svh, 37.5rem, 47vw);
+      border-radius: 2.75rem;
+      box-shadow:
+        0 0 0 2px var(--navy-500),
+        0 0 0 0.5625rem var(--navy-900),
+        0 0 0 calc(0.5625rem + 1px) var(--navy-500),
+        0 2.5rem 5rem rgb(var(--shade) / 0.55);
+    }
+
+    .phone__island {
+      top: 0.625rem;
+      height: 1.5rem;
+    }
+
+    .phone__ui {
+      padding: 2.875rem var(--space-4) var(--space-5);
+    }
+
+    .phone__cam {
+      width: 1.25rem;
+      height: 1rem;
+      border-radius: 0.25rem;
+    }
+
+    .phone__actions svg {
+      width: 1.625rem;
+      height: 1.625rem;
+    }
+
+    .phone__meta,
+    .phone__chips {
+      gap: 0.375rem;
+    }
+
+    .phone__caption {
+      text-underline-offset: 0.1875rem;
+    }
+
+    .phone__chip {
+      gap: 0.25rem;
+      padding: 0.1875rem 0.5rem;
+      backdrop-filter: blur(0.25rem);
+    }
+
+    .phone__chip svg {
+      width: 0.75rem;
+      height: 0.75rem;
+    }
+
+    .globe :global(.phone__interim) {
+      top: 3rem;
+    }
+
+    /* A light on the planet under the pointer can be pressed (the glass cursor shows its hand, data-press). */
+    .globe__canvas[data-press] {
+      cursor: pointer;
+    }
+  }
+
+  /* Narrow desktops: the messages' longest word fits its column beside the phone. */
+  @media (min-width: 1024px) and (max-width: 1199px) {
+    .globe__title {
+      font-size: clamp(1.375rem, 2.2vw, 3rem);
+    }
+  }
+
+  /* ---------- The region's name ---------- */
+  .globe__readout {
+    display: grid;
+    min-width: 0;
+  }
+
+  /* One-line names sit at the foot of the room two-line ones need, right above the list. */
+  .globe__now {
+    grid-area: 1 / 1;
+    align-self: end;
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 12.4cqi, 4rem);
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    line-height: 0.92;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    opacity: 0;
+    transform: translateY(16px);
+    filter: blur(6px);
+    transition:
+      opacity 400ms var(--ease-out),
+      transform 600ms var(--ease-out),
+      filter 500ms var(--ease-out);
+  }
+
+  .globe__now.is-active {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  @media (min-width: 1024px) {
+    .globe__now:not(.is-active) {
+      transform: translateY(1rem);
+      filter: blur(0.375rem);
+    }
+  }
+
+  .globe__status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  /* ---------- The logo stripe: at the top of the first screen ---------- */
+  .globe__ticker {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .globe__ticker {
+      position: absolute;
+      inset: 0 0 auto;
+      z-index: 3;
+      display: grid;
+    }
+
+  }
+
+  /* ---------- Tablets: the desktop's three columns (the owner, 2026-11-13: phones and tablets as desktop) ----------
+     The region named large on the left over its numbers, the phone in the middle, the message on the right; the
+     sound button takes the camera's place, as on desktop. */
+  @media (max-width: 1023px) {
+    .phone__body {
+      height: min(56svh, 31rem);
+    }
+
+    .phone__cam {
+      visibility: hidden;
+    }
+  }
+
+  /* ---------- Phones: the desktop's three columns, one above the other ----------
+     The region named large with its numbers under it, the phone, then the message (right-aligned, as desktop's
+     right-hand column), over the planet's lit horizon; the logo stripe along the top and the notification there
+     too, as on desktop (the owner, 2026-11-13). */
+  @media (max-width: 767px) {
+    .globe {
+      height: calc(100svh + (var(--steps) - 1) * 45svh);
+    }
+
+    .globe__stage {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto auto auto 1fr;
+      align-items: start;
+      gap: var(--space-3);
+      /* Clear of the logo stripe and the notification along the top, as desktop's columns are. */
+      padding-top: calc(var(--header-h) + var(--space-6));
+    }
+
+    .globe__intro {
+      gap: 0.25rem;
+      padding-top: 0;
+    }
+
+    .globe__now {
+      font-size: clamp(1.75rem, 9.5cqi, 2.75rem);
+    }
+
+    .globe__regions {
+      margin-top: 0.25rem;
+    }
+
+    .phone {
+      justify-self: center;
+      margin-top: 0;
+    }
+
+    .phone__body {
+      height: min(42svh, 380px);
+      border-radius: 34px;
+    }
+
+    .globe__messages {
+      justify-self: stretch;
+      max-width: none;
+      padding-top: 0;
+    }
+
+    .globe__title {
+      font-size: clamp(1.5rem, 7vw, 2.25rem);
+    }
+
+    .globe__body {
+      font-size: 0.9375rem;
+    }
+
+    .globe__canvas {
+      height: 44%;
+    }
+
+    /* On a phone-sized screen the label alone says it; the detail would cover the reel. */
+    .globe :global(.phone__interim-text) {
+      display: none;
+    }
+  }
+
+  /* Desktop: the notification at the top of the screen, outside the phone, in the homepage's notification style
+     (home/OpeningFilm.astro, the shared .exp-note): it drops in from above, and the logo stripe under it steps
+     back while it's there, so the two never sit on each other. */
+  .globe__note {
+    display: none;
+  }
+
+  /* (Every screen since 2026-11-13: phones and tablets have the notification at the top too.) */
+  @media all {
+    /* One line where the screen allows, so it stays short and clear of the words either side of the phone. */
+    .globe__note {
+      position: absolute;
+      top: 1.625rem;
+      inset-inline: 0;
+      z-index: 7;
+      display: flex;
+      width: max-content;
+      max-width: min(34rem, 52vw);
+      margin-inline: auto;
+      transform-origin: 50% 0;
+      translate: 0 -1.5rem;
+    }
+
+    .globe__note.is-shown {
+      opacity: 1;
+      translate: 0 0;
+      scale: 1;
+    }
+
+    .globe__ticker {
+      transition: opacity 500ms var(--ease-out);
+    }
+
+    .globe:has(> .globe__stage > .globe__note.is-shown) > .globe__stage > .globe__ticker {
+      opacity: 0.12;
+    }
+  }
+
+  /* ---------- The list is its numbers (desktop; every screen since 2026-11-13) ----------
+     The region is named once, large, above; each number lights with a line under it when its region is on, and
+     shows its name below on hover or focus. */
+  @media all {
+    .globe__regions {
+      grid-auto-flow: column;
+      justify-content: start;
+      gap: 0.125rem;
+      margin-left: -0.625rem;
+    }
+
+    .globe__region {
+      position: relative;
+      min-height: 2.5rem;
+      padding: 0 0.625rem;
+      border-radius: 0;
+      font-size: 0.8125rem;
+      letter-spacing: 0.08em;
+      color: rgb(var(--ink) / 0.42);
+    }
+
+    .globe__region-num {
+      color: inherit;
+    }
+
+    .globe__region::after {
+      content: '';
+      position: absolute;
+      right: 0.625rem;
+      bottom: 0.3125rem;
+      left: 0.625rem;
+      height: 1px;
+      background: rgb(var(--tone-lit));
+      box-shadow: 0 0 0.625rem rgb(var(--tone-glow) / 0.9);
+      scale: 0 1;
+      transition: scale 420ms var(--ease-out);
+    }
+
+    /* .is-pointed: its light is pointed at on the planet (creator-globe.ts), so it looks as it does on hover. */
+    .globe__region:hover,
+    .globe__region.is-pointed,
+    .globe__region[aria-selected='true'] {
+      background: none;
+      color: rgb(var(--ink));
+    }
+
+    .globe__region[aria-selected='true'] .globe__region-num {
+      color: inherit;
+    }
+
+    .globe__region[aria-selected='true']::after {
+      scale: 1 1;
+    }
+
+    /* Out of sight but still the button's name, for screen readers. */
+    .globe__region-name {
+      position: absolute;
+      top: calc(100% + 0.125rem);
+      left: 0.625rem;
+      font-size: 0.6875rem;
+      white-space: nowrap;
+      color: rgb(var(--ink) / 0.72);
+      opacity: 0;
+      translate: 0 -0.25rem;
+      pointer-events: none;
+      transition:
+        opacity 240ms var(--ease-out),
+        translate 240ms var(--ease-out);
+    }
+
+    .globe__region:hover .globe__region-name,
+    .globe__region.is-pointed .globe__region-name,
+    .globe__region:focus-visible .globe__region-name {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+
+  /* ---------- Desktop: the words wait for the phone ----------
+     While the menu's photos fall onto the planet (meteors.ts, .is-landing), the region, the list, the message
+     and the logos stay out of the way; once the phone has arrived they come in, one after another. */
+  @media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+    .globe > .globe__stage > .globe__ticker,
+    .globe > .globe__stage > .globe__intro,
+    .globe > .globe__stage > .globe__messages {
+      transition:
+        opacity 700ms var(--ease-out) var(--w-delay, 0s),
+        translate 900ms var(--ease-out) var(--w-delay, 0s),
+        filter 600ms var(--ease-out),
+        transform 900ms var(--ease-out);
+    }
+
+    .globe > .globe__stage > .globe__intro {
+      --w-delay: 140ms;
+    }
+
+    .globe > .globe__stage > .globe__messages {
+      --w-delay: 280ms;
+    }
+
+    .globe.is-landing > .globe__stage > .globe__ticker,
+    .globe.is-landing > .globe__stage > .globe__intro,
+    .globe.is-landing > .globe__stage > .globe__messages {
+      opacity: 0;
+      translate: 0 1.75rem;
+      pointer-events: none;
+      transition-duration: 260ms;
+      transition-delay: 0s;
+    }
+  }
+
+  /* ---------- The close (every screen since 2026-11-13) ----------
+     One more stretch of scroll after the last region (--end, 0 to 1, creator-globe.ts): the words and the phone
+     go, the planet turns and sinks, its lit edge becoming a horizon, and the closing line rises over it with the
+     way in (--close-in). */
+  @media all {
+    .globe:has(> .globe__stage > .globe__close) {
+      height: calc(100svh + (var(--steps) - 1) * 55svh + 90svh);
+    }
+
+    .globe.is-closing > .globe__stage > .globe__ticker,
+    .globe.is-closing > .globe__stage > .globe__intro,
+    .globe.is-closing > .globe__stage > .globe__messages {
+      opacity: calc(1 - var(--end) * 3.4);
+      pointer-events: none;
+      transition: none;
+    }
+
+    .globe.is-closing .phone,
+    .globe.is-closing .globe__canvas {
+      pointer-events: none;
+    }
+
+    .globe.is-closing .phone {
+      opacity: calc(1 - var(--end) * 2.2);
+    }
+
+    .globe__close {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      gap: clamp(1.5rem, 4vh, 2.5rem);
+      padding: 0 var(--margin) 20vh;
+      text-align: center;
+      opacity: var(--close-in);
+      pointer-events: none;
+    }
+
+    .globe.is-closed .globe__close {
+      pointer-events: auto;
+    }
+
+    .globe__close-title {
+      font-family: var(--font-display);
+      font-size: clamp(2.75rem, 5.4vw, 6.25rem);
+      font-weight: 850;
+      font-stretch: var(--stretch-wide);
+      line-height: 0.92;
+      letter-spacing: -0.025em;
+      text-transform: uppercase;
+      text-wrap: balance;
+      translate: 0 calc((1 - var(--close-in)) * 4.375rem);
+    }
+
+    /* Its rise is a transform, so the magnetic pull (translate, the global motion.ts) adds to it. */
+    .globe__close-cta {
+      gap: 0.75rem;
+      min-height: 3.25rem;
+      padding-inline: 1.75rem;
+      transform: translateY(calc((1 - var(--close-in)) * 2.5rem));
+    }
+
+    .globe__close-cta svg {
+      width: 1rem;
+      height: 1rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: translate 300ms var(--ease-out);
+    }
+
+    .globe__close-cta:hover svg {
+      translate: 0.1875rem 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* It sinks (its foot melting away where the stage ends is drawn on the canvas, creator-globe.ts, so only the
+       move is left to the page here, and nothing repaints a mask over the whole width every frame). */
+    .globe.is-closing .globe__canvas {
+      translate: 0 calc(var(--end) * 34%);
+    }
+
+    .globe.is-closing .phone {
+      translate: 0 calc(var(--end) * 60vh);
+      scale: calc(1 - var(--end) * 0.35);
+    }
+
+    /* The closing line rises over the horizon a word at a time, all driven by --close-in, and lands whole. */
+    .globe__close-word {
+      --w: clamp(0, calc((var(--close-in) - var(--k) * 0.07) / max(0.3, 1 - (var(--n) - 1) * 0.07)), 1);
+      display: inline-block;
+      opacity: var(--w);
+      translate: 0 calc((1 - var(--w)) * 0.55em);
+    }
+
+    /* The phone catches the signal sent up the beam (creator-globe.ts): a glow at its foot and a small nudge. */
+    .phone::after {
+      content: '';
+      position: absolute;
+      bottom: -1.25rem;
+      left: -20%;
+      z-index: -1;
+      width: 140%;
+      height: 2.5rem;
+      border-radius: 50%;
+      background: radial-gradient(closest-side, rgb(var(--ice-rgb) / 0.55), transparent);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .phone.is-receiving::after {
+      animation: phone-catch 600ms var(--ease-out) both;
+    }
+
+    .phone.is-receiving .phone__body {
+      animation: phone-nudge 260ms var(--spring-pop, cubic-bezier(0.2, 1.4, 0.35, 1)) both;
+    }
+
+    @keyframes phone-catch {
+      0%,
+      100% {
+        opacity: 0;
+      }
+      35% {
+        opacity: 1;
+      }
+    }
+
+    @keyframes phone-nudge {
+      0%,
+      100% {
+        translate: 0 0;
+      }
+      40% {
+        translate: 0 -0.1875rem;
+      }
+    }
+  }
+
+  /* Phones: the notification within the screen's margins, clear of a notch. */
+  @media (max-width: 767px) {
+    .globe__note {
+      top: max(0.75rem, env(safe-area-inset-top));
+      max-width: calc(100vw - 2 * var(--margin));
+    }
+  }
+
+  /* Phones: the closing line at a phone's size, clear of the foot. */
+  @media (max-width: 767px) {
+    .globe__close {
+      padding-bottom: 14svh;
+    }
+
+    .globe__close-title {
+      font-size: clamp(2.25rem, 11vw, 3.25rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .phone__screen,
+    .phone__clip,
+    .globe__now,
+    .globe__message {
+      transition: none;
+    }
+
+    .globe__close-title {
+      translate: none;
+    }
+
+    .globe__close-cta {
+      transform: none;
+    }
+  }
+</style>
+
+<script>
+  import { initCreatorGlobes } from '@/scripts/system/creator-globe';
+  initCreatorGlobes();
+</script>

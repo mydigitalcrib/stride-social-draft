@@ -1,0 +1,9 @@
+# From slide 15 of Stride's talent deck ("Behind Stride Talent", 2026), at the owner's instruction (2026-11-11): the
+# name, the role and the photograph are the slide's. The department is proposed from the role.
+name: Irem
+role: "Head of Campaigns"
+department: campaigns
+photo:
+  src: /assets/team/blue/irem.jpg
+  alt: "Irem, Head of Campaigns at Stride"
+order: 3

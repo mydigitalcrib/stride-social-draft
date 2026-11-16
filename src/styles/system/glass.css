@@ -1,0 +1,851 @@
+/* The shared language of the redesigned pages: frosted glass over deep navy, wide uppercase headlines,
+   mono labels, pills. Each page brings its own interaction; these keep them one family. The colours come
+   from [data-tone] (tokens.css). */
+.glass {
+  border-radius: 26px;
+  background: linear-gradient(165deg, rgb(var(--white-rgb) / calc(0.13 * var(--fill-k))), rgb(var(--white-rgb) / calc(0.05 * var(--fill-k))) 42%, rgb(var(--white-rgb) / calc(0.025 * var(--fill-k))) 62%, rgb(var(--white-rgb) / calc(0.07 * var(--fill-k))));
+  box-shadow:
+    inset 0 0 0 1px rgb(var(--hair) / 0.18),
+    inset 0 1px 0 rgb(var(--white-rgb) / 0.3),
+    0 30px 60px -34px rgb(var(--shade) / 0.7);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+}
+
+/* Desktop: the same sizes in rem, so past 1920×1080 they grow with the screen as the rest of the page does
+   (tokens.css); up to it they're the pixels above. The desktop blocks below do the same for each piece. */
+@media (min-width: 1024px) {
+  .glass {
+    border-radius: 1.625rem;
+    box-shadow:
+      inset 0 0 0 1px rgb(var(--hair) / 0.18),
+      inset 0 1px 0 rgb(var(--white-rgb) / 0.3),
+      0 1.875rem 3.75rem -2.125rem rgb(var(--shade) / 0.7);
+    backdrop-filter: blur(1.25rem) saturate(150%);
+    -webkit-backdrop-filter: blur(1.25rem) saturate(150%);
+  }
+}
+
+.exp-label {
+  font-family: var(--font-mono);
+  font-size: var(--type-label);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(var(--ink) / 0.8);
+}
+
+.exp-title {
+  font-family: var(--font-display);
+  font-weight: 850;
+  font-stretch: var(--stretch-wide);
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+.exp-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: 8px var(--space-5);
+  border-radius: 999px;
+  background: rgb(var(--press));
+  font-family: var(--font-mono);
+  font-size: var(--type-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(var(--press-on));
+  transition:
+    background-color 300ms var(--ease-out),
+    color 300ms var(--ease-out),
+    box-shadow 300ms var(--ease-out);
+}
+
+.exp-pill:hover {
+  background: rgb(var(--press-hover));
+}
+
+.exp-pill svg {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.exp-pill--ghost {
+  background: rgb(var(--white-rgb) / calc(0.05 * var(--fill-k)));
+  box-shadow: inset 0 0 0 1px rgb(var(--hair) / 0.34);
+  color: rgb(var(--ink));
+}
+
+.exp-pill--ghost:hover {
+  background: rgb(var(--press));
+  color: rgb(var(--press-on));
+}
+
+/* Frosted glass instead of a solid colour (`.exp-pill--glass`). On desktop it's every button on Stride Talent's pages
+   and in its sections (the forms' buttons and the creator cards' Enquire too): no lime there, the owner's choice
+   (2026-11-07); phones keep lime. */
+.exp-pill--glass {
+  background: linear-gradient(135deg, rgb(var(--white-rgb) / calc(0.17 * var(--fill-k))), rgb(var(--white-rgb) / calc(0.05 * var(--fill-k))));
+  box-shadow:
+    inset 0 0 0 1px rgb(var(--hair) / 0.38),
+    inset 0 1px 0 rgb(var(--hair) / 0.5),
+    0 12px 28px -14px rgb(3 10 24 / 0.85);
+  color: rgb(var(--ink));
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+}
+
+.exp-pill--glass:hover {
+  background: linear-gradient(135deg, rgb(var(--white-rgb) / calc(0.26 * var(--fill-k))), rgb(var(--white-rgb) / calc(0.1 * var(--fill-k))));
+  color: rgb(var(--ink));
+}
+
+/* ---------- Every button is glass (the owner, 2026-11-12, desktop; every screen since 2026-11-13: "update the buttons ... it should be glassdoor") ----------
+   The recipe is the edge menu's capsule (global/EdgeNav.astro): a clear, glossy pill that blurs what's behind it, its
+   rim catching the light along the top, a fine dark edge outside. Two weights: the ways forward (`.exp-pill`, the
+   primary buttons, a big card's action, a page's closing link, a creator card's Enquire) are the brighter glass;
+   the quieter ones (ghost pills, secondary buttons, round arrows, filter chips, the chat's answers, the cookie
+   choices) are fainter glass. Pointed at, either brightens; a chosen one (aria-pressed) stays bright with a ring.
+   The recipe is in variables (--gb-*) so a component whose own styles go deeper can use it too (About's play
+   button); a component that wants the whole of it, easing and light included, gives its button the class `glass-btn`.
+   Phones and tablets have the same glass since 2026-11-13 (they had solid buttons, lime on Stride Talent's, before).
+   In each list the last, doubled selector
+   matches nothing: it only lifts the rule above the components' own scoped styles.
+   How it answers (the owner's brief, 2026-11-12: feedback at every size): the change between rest and lit eases,
+   since both looks are written once from --gb-on (0 at rest, 1 pointed at, focused or chosen; a gradient can't
+   transition, a number can), and a chosen one's ring from --gb-pick. The light under the pointer catches on the glass
+   (--gb-glint, at --gb-gx/--gb-gy: scripts/system/motion.ts), and keyboard focus gets the same light at the top of the
+   rim with the focus ring. A press pushes the button in a little (`scale`, so it composes with a magnet's
+   `translate`), and the arrow at the end of a pill nudges on. At rest every button looks exactly as before. Each
+   var() of these carries its resting value as a fallback, so a browser without @property still draws the glass
+   (it just doesn't ease). */
+@property --gb-on {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+@property --gb-pick {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+@property --gb-glint {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+@property --gb-gx {
+  syntax: '<length-percentage>';
+  inherits: false;
+  initial-value: 50%;
+}
+
+@property --gb-gy {
+  syntax: '<length-percentage>';
+  inherits: false;
+  initial-value: -30%;
+}
+
+@media all {
+  :root {
+    --gb-fill: linear-gradient(180deg, rgb(var(--white-rgb) / 0.26) 0%, rgb(var(--white-rgb) / 0.1) 48%, rgb(var(--white-rgb) / 0.05) 52%, rgb(var(--white-rgb) / 0.14) 100%);
+    /* In rem, so the glow and the shadow keep their size against the button on a larger screen (tokens.css). */
+    --gb-edge:
+      inset 0 0 0 1px rgb(var(--white-rgb) / 0.3),
+      inset 0 1px 0.5px rgb(var(--white-rgb) / 0.7),
+      inset 0 -1px 0.5px rgb(var(--white-rgb) / 0.18),
+      inset 0 -0.625rem 1rem -0.75rem rgb(var(--white-rgb) / 0.32),
+      0 0 0 1px rgb(2 8 22 / 0.34),
+      0 0.875rem 1.875rem -1rem rgb(0 0 0 / 0.6);
+    --gb-fill-on: linear-gradient(180deg, rgb(var(--white-rgb) / 0.36) 0%, rgb(var(--white-rgb) / 0.16) 48%, rgb(var(--white-rgb) / 0.09) 52%, rgb(var(--white-rgb) / 0.2) 100%);
+    --gb-edge-on:
+      inset 0 0 0 1px rgb(var(--white-rgb) / 0.44),
+      inset 0 1px 0.5px rgb(var(--white-rgb) / 0.85),
+      inset 0 -1px 0.5px rgb(var(--white-rgb) / 0.22),
+      inset 0 -0.625rem 1rem -0.75rem rgb(var(--white-rgb) / 0.4),
+      0 0 0 1px rgb(2 8 22 / 0.34),
+      0 0 1.5rem -0.375rem rgb(var(--ice-rgb) / 0.45),
+      0 0.875rem 1.875rem -1rem rgb(0 0 0 / 0.6);
+    --gb-blur: blur(1.25rem) saturate(135%);
+  }
+
+  /* Both weights, written once. The rest values below are the brighter weight's (--gb-fill and --gb-edge above);
+     lit, both become --gb-fill-on and --gb-edge-on, and chosen, the ring replaces the rim. Each shadow keeps its
+     place in the list in every state (transparent where a state has none), so nothing jumps as they ease. */
+  html body :is(.exp-pill, .btn--primary, .bigcard__action, .eclose__action, .ccc__enquire, .js .deck--made .deck__tab--link, .glass-btn.glass-btn.glass-btn.glass-btn),
+  html body :is(.exp-pill--ghost, .btn--secondary, .exp-round, .exp-chip, .chat__answer, .consent__btn, .glass-btn.glass-btn.glass-btn.glass-btn) {
+    --gb-f0: 0.26;
+    --gb-f1: 0.1;
+    --gb-f2: 0.05;
+    --gb-f3: 0.14;
+    --gb-rim: 0.3;
+    --gb-top: 0.7;
+    --gb-bot: 0.18;
+    --gb-pool: 0.32;
+    --gb-dark: 0.34;
+    --gb-y: 0.875rem;
+    --gb-b: 1.875rem;
+    --gb-sa: 0.6;
+    --gb-light: radial-gradient(5.5rem 3.5rem at var(--gb-gx, 50%) var(--gb-gy, -30%), rgb(var(--white-rgb) / calc(0.3 * var(--gb-glint, 0))), rgb(var(--white-rgb) / 0) 70%);
+    border-color: transparent;
+    background:
+      var(--gb-light),
+      linear-gradient(
+        180deg,
+        rgb(var(--white-rgb) / calc(var(--gb-f0) + (0.36 - var(--gb-f0)) * var(--gb-on, 0))) 0%,
+        rgb(var(--white-rgb) / calc(var(--gb-f1) + (0.16 - var(--gb-f1)) * var(--gb-on, 0))) 48%,
+        rgb(var(--white-rgb) / calc(var(--gb-f2) + (0.09 - var(--gb-f2)) * var(--gb-on, 0))) 52%,
+        rgb(var(--white-rgb) / calc(var(--gb-f3) + (0.2 - var(--gb-f3)) * var(--gb-on, 0))) 100%
+      );
+    box-shadow:
+      inset 0 0 0 1px rgb(var(--white-rgb) / calc((var(--gb-rim) + (0.44 - var(--gb-rim)) * var(--gb-on, 0)) * (1 - var(--gb-pick, 0)))),
+      inset 0 0 0 1.5px rgb(var(--tone-lit) / calc(0.9 * var(--gb-pick, 0))),
+      inset 0 1px 0.5px rgb(var(--white-rgb) / calc(var(--gb-top) + (0.85 - var(--gb-top)) * var(--gb-on, 0))),
+      inset 0 -1px 0.5px rgb(var(--white-rgb) / calc((var(--gb-bot) + (0.22 - var(--gb-bot)) * var(--gb-on, 0)) * (1 - var(--gb-pick, 0)))),
+      inset 0 -0.625rem 1rem -0.75rem rgb(var(--white-rgb) / calc((var(--gb-pool) + (0.4 - var(--gb-pool)) * var(--gb-on, 0)) * (1 - var(--gb-pick, 0)))),
+      0 0 0 1px rgb(2 8 22 / calc(var(--gb-dark) + (0.34 - var(--gb-dark)) * var(--gb-on, 0))),
+      0 0 1.5rem -0.375rem rgb(var(--ice-rgb) / calc(0.45 * var(--gb-on, 0) * (1 - var(--gb-pick, 0)))),
+      0 0 1.5rem -0.375rem rgb(var(--tone-glow, 207 237 248) / calc(0.55 * var(--gb-pick, 0))),
+      0 calc(var(--gb-y) + (0.875rem - var(--gb-y)) * var(--gb-on, 0)) calc(var(--gb-b) + (1.875rem - var(--gb-b)) * var(--gb-on, 0)) -1rem rgb(0 0 0 / calc(var(--gb-sa) + (0.6 - var(--gb-sa)) * var(--gb-on, 0)));
+    color: var(--white);
+    backdrop-filter: var(--gb-blur);
+    -webkit-backdrop-filter: var(--gb-blur);
+    /* The light comes on quicker than it goes (240ms, .has-glint); a press goes in fast and springs back out. */
+    transition:
+      --gb-on 320ms var(--ease-out),
+      --gb-pick 320ms var(--ease-out),
+      --gb-glint var(--gb-glint-t, 420ms) var(--ease-out),
+      color 300ms var(--ease-out),
+      scale var(--gb-press-t, 420ms) var(--gb-press-e, var(--spring-pop, cubic-bezier(0.2, 1.4, 0.35, 1)));
+  }
+
+  /* The quieter ones: fainter glass at rest. */
+  html body :is(.exp-pill--ghost, .btn--secondary, .exp-round, .exp-chip, .chat__answer, .consent__btn, .glass-btn.glass-btn.glass-btn.glass-btn) {
+    --gb-f0: 0.13;
+    --gb-f1: 0.05;
+    --gb-f2: 0.02;
+    --gb-f3: 0.07;
+    --gb-rim: 0.22;
+    --gb-top: 0.45;
+    --gb-bot: 0.12;
+    --gb-pool: 0;
+    --gb-dark: 0.28;
+    --gb-y: 0.75rem;
+    --gb-b: 1.625rem;
+    --gb-sa: 0.5;
+  }
+
+  /* The chat's answers also lift a little when pointed at (group/ContactChat), so their translate keeps its easing;
+     the other glass buttons leave translate to the magnets, which write it every frame. */
+  html body :is(.chat__answer, .glass-btn.glass-btn.glass-btn.glass-btn) {
+    transition:
+      --gb-on 320ms var(--ease-out),
+      --gb-pick 320ms var(--ease-out),
+      --gb-glint var(--gb-glint-t, 420ms) var(--ease-out),
+      color 300ms var(--ease-out),
+      scale var(--gb-press-t, 420ms) var(--gb-press-e, var(--spring-pop, cubic-bezier(0.2, 1.4, 0.35, 1))),
+      translate 300ms var(--ease-out);
+  }
+
+  /* Pointed at, focused or chosen: brighter, glowing a little. A chosen pill, chip or answer also has the ring. */
+  html body :is(.exp-pill, .btn--primary, .bigcard__action, .eclose__action, .ccc__enquire, .js .deck--made .deck__tab--link, .exp-pill--ghost, .btn--secondary, .exp-round, .exp-chip, .chat__answer, .consent__btn, .glass-btn.glass-btn.glass-btn.glass-btn):is(:hover, :focus-visible, [aria-pressed='true']) {
+    --gb-on: 1;
+    color: var(--white);
+  }
+
+  html body :is(.exp-pill, .exp-pill--ghost, .exp-chip, .chat__answer, .glass-btn.glass-btn.glass-btn.glass-btn)[aria-pressed='true'] {
+    --gb-pick: 1;
+  }
+
+  /* The pointer's light (motion.ts adds .has-glint and places it), and the keyboard's, along the top of the rim. */
+  html body :is(.exp-pill, .btn--primary, .bigcard__action, .eclose__action, .ccc__enquire, .js .deck--made .deck__tab--link, .exp-pill--ghost, .btn--secondary, .exp-round, .exp-chip, .chat__answer, .consent__btn, .glass-btn.glass-btn.glass-btn.glass-btn).has-glint {
+    --gb-glint: 1;
+    --gb-glint-t: 240ms;
+  }
+
+  html body :is(.exp-pill, .btn--primary, .bigcard__action, .eclose__action, .ccc__enquire, .js .deck--made .deck__tab--link, .exp-pill--ghost, .btn--secondary, .exp-round, .exp-chip, .chat__answer, .consent__btn, .glass-btn.glass-btn.glass-btn.glass-btn):focus-visible {
+    --gb-gx: 50%;
+    --gb-gy: 0%;
+    --gb-glint: 0.7;
+    --gb-glint-t: 240ms;
+    outline: 2px solid rgb(var(--tone-lit));
+    outline-offset: 3px;
+  }
+
+  /* The arrow at the end of a pill moves on, as core/Button's does (only the site's arrow: a leading icon stays). */
+  html body :is(.exp-pill, .eclose__action, .bigcard__action) > svg:last-child:has(path[d^='M5 12h13.5']) {
+    transition: translate 300ms var(--ease-out);
+  }
+
+  html body :is(.exp-pill, .eclose__action, .bigcard__action):is(:hover, :focus-visible) > svg:last-child:has(path[d^='M5 12h13.5']) {
+    translate: 0.25rem 0;
+  }
+
+  /* On a light page (the few left on paper), the glass turns milky with navy words, as the edge menu's does. */
+  html[data-ink='light'] {
+    --gb-fill: linear-gradient(180deg, rgb(var(--white-rgb) / 0.92), rgb(var(--white-rgb) / 0.62) 55%, rgb(var(--white-rgb) / 0.74));
+    --gb-fill-on: linear-gradient(180deg, rgb(var(--white-rgb) / 1), rgb(var(--white-rgb) / 0.76) 55%, rgb(var(--white-rgb) / 0.86));
+    --gb-edge:
+      inset 0 0 0 1px rgb(var(--navy-900-rgb) / 0.12),
+      inset 0 1px 0.5px rgb(var(--white-rgb) / 1),
+      inset 0 -0.5rem 0.875rem -0.75rem rgb(var(--navy-900-rgb) / 0.14),
+      0 0.875rem 1.75rem -1rem rgb(var(--navy-900-rgb) / 0.4),
+      0 0.125rem 0.375rem -0.125rem rgb(var(--navy-900-rgb) / 0.14);
+    --gb-edge-on: var(--gb-edge);
+  }
+
+  /* Milky: lit, it goes as far as --gb-fill-on above; chosen, it has the ring too. */
+  html[data-ink='light'] body :is(.exp-pill, .btn--primary, .bigcard__action, .eclose__action, .ccc__enquire, .js .deck--made .deck__tab--link, .exp-pill--ghost, .btn--secondary, .exp-round, .exp-chip, .chat__answer, .glass-btn.glass-btn.glass-btn.glass-btn):not(.on-photo *) {
+    background:
+      var(--gb-light),
+      linear-gradient(
+        180deg,
+        rgb(var(--white-rgb) / calc(0.92 + 0.08 * var(--gb-on, 0))),
+        rgb(var(--white-rgb) / calc(0.62 + 0.14 * var(--gb-on, 0))) 55%,
+        rgb(var(--white-rgb) / calc(0.74 + 0.12 * var(--gb-on, 0)))
+      );
+    box-shadow:
+      inset 0 0 0 1px rgb(var(--navy-900-rgb) / 0.12),
+      inset 0 0 0 1.5px rgb(var(--tone-lit) / calc(0.9 * var(--gb-pick, 0))),
+      inset 0 1px 0.5px rgb(var(--white-rgb) / 1),
+      inset 0 -0.5rem 0.875rem -0.75rem rgb(var(--navy-900-rgb) / 0.14),
+      0 0.875rem 1.75rem -1rem rgb(var(--navy-900-rgb) / 0.4),
+      0 0.125rem 0.375rem -0.125rem rgb(var(--navy-900-rgb) / 0.14);
+    color: var(--navy-900);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* A press (never on the words that only wear the glass's place: Insights' topics, Team's departments). */
+  html body :is(.exp-pill, .btn--primary, .bigcard__action, .eclose__action, .ccc__enquire, .js .deck--made .deck__tab--link, .exp-pill--ghost, .btn--secondary, .exp-round, .exp-chip, .chat__answer, .consent__btn, .glass-btn.glass-btn.glass-btn.glass-btn):not(:disabled, [aria-disabled='true'], .heads__chips *, .tfield__chips .exp-chip:not(.tfield__shuffle)):active {
+    --gb-press-t: 110ms;
+    --gb-press-e: var(--ease-out);
+    scale: 0.97;
+  }
+}
+
+.exp-round {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgb(var(--white-rgb) / calc(0.05 * var(--fill-k)));
+  box-shadow: inset 0 0 0 1px rgb(var(--hair) / 0.34);
+  color: rgb(var(--ink));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition:
+    background-color 400ms var(--ease-out),
+    color 400ms var(--ease-out);
+}
+
+.exp-round:hover {
+  background: rgb(var(--press));
+  color: rgb(var(--press-on));
+}
+
+.exp-round svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.exp-pill:focus-visible,
+.exp-round:focus-visible {
+  outline: 2px solid rgb(var(--tone-lit));
+  outline-offset: 3px;
+}
+
+/* The small filter pills. */
+.exp-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 3px 13px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgb(var(--hair) / 0.22);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(var(--ink) / 0.82);
+  transition:
+    background-color 300ms var(--ease-out),
+    color 300ms var(--ease-out);
+}
+
+.exp-chip:hover {
+  color: rgb(var(--ink));
+  background: rgb(var(--white-rgb) / calc(0.08 * var(--fill-k)));
+}
+
+.exp-chip[aria-pressed='true'] {
+  background: rgb(var(--press));
+  color: rgb(var(--press-on));
+}
+
+.exp-chip:focus-visible {
+  outline: 2px solid rgb(var(--tone-lit));
+  outline-offset: 2px;
+}
+
+/* Desktop: the pills, round buttons and chips in rem, so they grow with the screen (the same up to 1920×1080). */
+@media (min-width: 1024px) {
+  .exp-pill {
+    min-height: 2.75rem;
+    padding: 0.5rem var(--space-5);
+  }
+
+  .exp-pill svg {
+    width: 0.9375rem;
+    height: 0.9375rem;
+  }
+
+  .exp-round {
+    width: 2.875rem;
+    height: 2.875rem;
+  }
+
+  .exp-round svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .exp-chip {
+    min-height: 2rem;
+    padding: 0.1875rem 0.8125rem;
+  }
+}
+
+.exp-pill[hidden] {
+  display: none;
+}
+
+/* Long text (core/Prose) on the dark pages. */
+.exp-prose.exp-prose.exp-prose {
+  max-width: 72ch;
+  color: rgb(var(--ink) / 0.88);
+}
+
+.exp-prose h2,
+.exp-prose h3,
+.exp-prose h4,
+.exp-prose strong {
+  color: rgb(var(--ink));
+}
+
+.exp-prose a {
+  color: rgb(var(--ink));
+  text-decoration-color: rgb(var(--tone-lit));
+}
+
+.exp-prose blockquote {
+  border-left-color: rgb(var(--tone-lit));
+}
+
+.exp-prose img {
+  border-radius: 18px;
+}
+
+@media (min-width: 1024px) {
+  .exp-prose img {
+    border-radius: 1.125rem;
+  }
+}
+
+.exp-prose th,
+.exp-prose td {
+  border-color: rgb(var(--hair) / 0.2);
+  background: transparent;
+  color: rgb(var(--ink) / 0.88);
+}
+
+/* On a photo or video: white text and dark-glass tokens, whatever colour the page is at (tokens.css). */
+.on-photo {
+  color: rgb(var(--ink));
+}
+
+/* Interactions built for desktop first: other screens keep the simple version until they're worked on. */
+@media (max-width: 1023px) {
+  .desk-only {
+    display: none !important;
+  }
+}
+
+/* What desktop has replaced: other screens keep it until they're worked on. */
+@media (min-width: 1024px) {
+  .not-desk {
+    display: none !important;
+  }
+}
+
+/* The grain: one noise tile, laid over in overlay blend (Talent's wall, the backgrounds below, the homepage hero and its
+   opening). On desktop it's finer and softer, and it moves like film: the tile jumps to a new place ten times a second
+   (`grain-shift`, stepped), so it reads as texture rather than dust on the screen (the owner, 2026-11-12). Phones keep
+   the coarser, still one until they're worked on; reduced motion keeps it still. */
+:root {
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='2.2 0 0 0 -0.6 2.2 0 0 0 -0.6 2.2 0 0 0 -0.6 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E");
+  --grain-opacity: 0.32;
+  --grain-size: 240px;
+}
+
+/* On desktop the tile is set in rem (180px up to 1920×1080), so on a larger screen the grain grows with the picture
+   rather than turning to dust; its jumps (desktop only) are in rem with it. */
+@media (min-width: 1024px) {
+  :root {
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.15' numOctaves='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1.6 0 0 0 -0.3 1.6 0 0 0 -0.3 1.6 0 0 0 -0.3 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+    --grain-opacity: 0.16;
+    --grain-size: 11.25rem;
+  }
+}
+
+@keyframes grain-shift {
+  0% {
+    background-position: 0 0;
+  }
+  10% {
+    background-position: -2.9375rem 1.9375rem;
+  }
+  20% {
+    background-position: 3.9375rem -1.125rem;
+  }
+  30% {
+    background-position: -1.375rem -4.4375rem;
+  }
+  40% {
+    background-position: 5.5rem 3.25rem;
+  }
+  50% {
+    background-position: -4rem 0.5625rem;
+  }
+  60% {
+    background-position: 0.9375rem 4.8125rem;
+  }
+  70% {
+    background-position: -5.6875rem -2.5rem;
+  }
+  80% {
+    background-position: 2.4375rem -5.375rem;
+  }
+  90% {
+    background-position: -0.5rem 3.625rem;
+  }
+}
+
+/* A video or photograph as a section's background: blurred, under a dark navy overlay and noise. The section's look is a
+   dark one, so its words and buttons turn light. It melts into the page's background (--haze-mask). A very
+   dark video can take less of both (--haze-blur, --haze-shade). deck.ts plays [data-haze-video]. */
+/* The page's scrollbar (desktop browsers that draw one): wide enough to see, a thumb of frosted glass on a dark rail,
+   lit when held (the owner, 2026-11-12). Firefox takes only a colour and "auto". */
+html {
+  scrollbar-color: rgb(var(--ice-rgb) / 0.45) rgb(6 14 30 / 0.9);
+}
+
+html::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+html::-webkit-scrollbar-track {
+  background: linear-gradient(90deg, rgb(4 10 22), rgb(10 20 40));
+  box-shadow: inset 1px 0 0 rgb(var(--white-rgb) / 0.06);
+}
+
+html::-webkit-scrollbar-thumb {
+  min-height: 64px;
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgb(var(--white-rgb) / 0.5), rgb(var(--ice-rgb) / 0.28) 45%, rgb(var(--white-rgb) / 0.4)) padding-box;
+  box-shadow:
+    inset 0 0 0 1px rgb(var(--white-rgb) / 0.45),
+    inset 0 1px 0 rgb(var(--white-rgb) / 0.7);
+}
+
+html::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgb(var(--white-rgb) / 0.66), rgb(var(--ice-rgb) / 0.42) 45%, rgb(var(--white-rgb) / 0.55)) padding-box;
+}
+
+html::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(180deg, rgb(var(--white-rgb) / 0.85), rgb(var(--ice-rgb) / 0.65) 45%, rgb(var(--white-rgb) / 0.8)) padding-box;
+}
+
+html::-webkit-scrollbar-corner {
+  background: rgb(4 10 22);
+}
+
+/* Phones and tablets: no room taken by a scrollbar (theirs float over the page anyway), so what's sized to the screen's
+   width (100vw) fits it exactly, even in a browser that would draw one, such as a desktop window made that narrow. */
+@media (max-width: 1023px) {
+  html {
+    scrollbar-width: none;
+  }
+
+  html::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+}
+
+/* Desktop: as wide against the page on a larger screen as at 1920×1080 (its clear rim, the border, with it). */
+@media (min-width: 1024px) {
+  html::-webkit-scrollbar {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+
+  html::-webkit-scrollbar-thumb {
+    min-height: 4rem;
+    border-width: 0.1875rem;
+  }
+}
+
+.exp-haze {
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
+  overflow: hidden;
+  mask-image: var(--haze-mask, linear-gradient(to bottom, #000 82%, transparent));
+  pointer-events: none;
+}
+
+.exp-haze video,
+.exp-haze img {
+  position: absolute;
+  inset: -60px;
+  width: calc(100% + 120px);
+  height: calc(100% + 120px);
+  max-width: none;
+  object-fit: cover;
+  object-position: 50% 30%;
+  filter: blur(var(--haze-blur, 6px)) saturate(1.15);
+}
+
+/* Desktop: the margin past the edges and the default softness in rem, so they keep pace with the picture. */
+@media (min-width: 1024px) {
+  .exp-haze video,
+  .exp-haze img {
+    inset: -3.75rem;
+    width: calc(100% + 7.5rem);
+    height: calc(100% + 7.5rem);
+    filter: blur(var(--haze-blur, 0.375rem)) saturate(1.15);
+  }
+}
+
+.exp-haze::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: rgb(var(--navy-900-rgb) / var(--haze-shade, 0.72));
+}
+
+.exp-haze::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: var(--grain) 0 0 / var(--grain-size) var(--grain-size);
+  opacity: var(--grain-opacity);
+  mix-blend-mode: overlay;
+}
+
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .exp-haze::after {
+    animation: grain-shift 1s steps(1, end) infinite;
+  }
+}
+
+/* A notification from Stride: dark frosted glass, Stride's mark in a round avatar, "Stride · now" and a line. The
+   same look as the homepage opening's (home/OpeningFilm.astro) and the Social globe's. Shown with .is-on. */
+.exp-note {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: min(440px, 34vw);
+  padding: 13px 18px 13px 13px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgb(24 34 54 / 0.88), rgb(10 16 28 / 0.82));
+  box-shadow:
+    inset 0 0 0 1px rgb(var(--white-rgb) / 0.18),
+    inset 0 1px 0 rgb(var(--white-rgb) / 0.14),
+    0 22px 42px -18px rgb(0 0 0 / 0.85);
+  color: var(--white);
+  backdrop-filter: blur(24px) saturate(1.35);
+  -webkit-backdrop-filter: blur(24px) saturate(1.35);
+  opacity: 0;
+  translate: 0 16px;
+  scale: 0.96;
+  pointer-events: none;
+  transition:
+    opacity 420ms var(--ease-out),
+    scale 560ms cubic-bezier(0.2, 1.3, 0.35, 1),
+    translate 560ms cubic-bezier(0.2, 1.3, 0.35, 1);
+}
+
+.exp-note.is-on {
+  opacity: 1;
+  translate: 0 0;
+  scale: 1;
+}
+
+.exp-note__avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--navy-900);
+  box-shadow: inset 0 0 0 1px rgb(var(--white-rgb) / 0.2);
+}
+
+.exp-note__avatar svg {
+  width: 19px;
+  height: 19px;
+  fill: var(--white);
+}
+
+.exp-note__body {
+  display: grid;
+  gap: 3px;
+}
+
+.exp-note__from {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgb(var(--white-rgb) / 0.9);
+}
+
+.exp-note__from span {
+  margin-left: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(var(--white-rgb) / 0.55);
+}
+
+.exp-note__text {
+  font-size: 1.0625rem;
+  line-height: 1.3;
+}
+
+@media (min-width: 1024px) {
+  .exp-note {
+    gap: 0.875rem;
+    width: min(27.5rem, 34vw);
+    padding: 0.8125rem 1.125rem 0.8125rem 0.8125rem;
+    border-radius: 1.25rem;
+    box-shadow:
+      inset 0 0 0 1px rgb(var(--white-rgb) / 0.18),
+      inset 0 1px 0 rgb(var(--white-rgb) / 0.14),
+      0 1.375rem 2.625rem -1.125rem rgb(0 0 0 / 0.85);
+    backdrop-filter: blur(1.5rem) saturate(1.35);
+    -webkit-backdrop-filter: blur(1.5rem) saturate(1.35);
+    translate: 0 1rem;
+  }
+
+  .exp-note__avatar {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .exp-note__avatar svg {
+    width: 1.1875rem;
+    height: 1.1875rem;
+  }
+
+  .exp-note__body {
+    gap: 0.1875rem;
+  }
+
+  .exp-note__from span {
+    margin-left: 0.375rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exp-note {
+    transition: none;
+  }
+}
+
+/* A keep button says which state it's in. */
+[data-keep] .keep-on,
+[data-keep][aria-pressed='true'] .keep-off {
+  display: none;
+}
+
+[data-keep][aria-pressed='true'] .keep-on {
+  display: inline;
+}
+
+/* A play button: which icon shows. */
+[aria-pressed='false'] > .play-off,
+[aria-pressed='true'] > .play-on {
+  display: none;
+}
+
+.exp-pill--ghost[aria-pressed='true'] {
+  background: rgb(var(--press));
+  color: rgb(var(--press-on));
+}
+
+/* A camera shot (src/scripts/system/shot.ts): the flash, from where the picture was taken, and the press print that
+   flies into the shortlist. Only desktop takes shots, so the print is sized in rem (it grows with the screen). */
+.shot-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 119;
+  background: radial-gradient(60% 70% at var(--fx, 50%) var(--fy, 50%), var(--white), rgb(235 248 255 / 0.8) 40%, rgb(var(--ice-rgb) / 0.45));
+  pointer-events: none;
+}
+
+.shot-print {
+  position: fixed;
+  z-index: 120;
+  display: grid;
+  gap: 0.4375rem;
+  padding: 0.5rem 0.5rem 0.6875rem;
+  border-radius: 0.1875rem;
+  background: linear-gradient(180deg, #f6f8fa, #e7ecf0);
+  box-shadow: 0 2.125rem 3.75rem -1.5rem rgb(0 0 0 / 0.9);
+  pointer-events: none;
+}
+
+.shot-print img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  object-position: 50% 25%;
+}
+
+.shot-print span {
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.12em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgb(16 24 42 / 0.75);
+}

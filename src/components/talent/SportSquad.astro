@@ -1,0 +1,353 @@
+---
+// Stride Sport's squad (every screen; on phones the pitch under the words): the athletes the visitor adds (anywhere: the contact sheet above, a profile, the board)
+// line up on a pitch drawn in lines of light, seen from the stands, eleven places in a 4-3-3 filled from the front: each
+// one added runs on in their photograph, with their name; past eleven, the rest are on the bench. "Get to know them" opens
+// their profiles one after another (the tray's own way, shortlist.ts). It reads the list the tray keeps
+// (`shortlist:render`), so it's always the same creators as "Meet our talents".
+// As on a matchday: the first time the pitch comes into view its markings light up, line by line, and whoever was
+// added before it was in view walks out of the tunnel to their place, one after another (one added while it's in view
+// walks out at once); one taken out walks back. With all eleven on, the markings flare and a ring of light spreads from
+// the centre circle. With the pointer over it, the pitch leans as if seen from a camera crane. A player on the pitch
+// is pressable (the mouse or the keyboard): it opens their profile among the squad. Nothing moves under reduced motion,
+// where the places fill as they're added. Sizes in rem, so it grows with a large screen as the words beside it do.
+// Behaviour: sport-squad.ts.
+import { interfaceCopy } from '@/lib/ui-copy';
+
+export interface Props {
+  /** Where a creator's own page is (routes.creator, without the id): for a screen without the profile over the page. */
+  profile?: string;
+}
+
+const { profile } = Astro.props;
+const t = await interfaceCopy();
+// The places, attack first: across the pitch (%) and up it (%, 0 at the far end).
+const PLACES = [
+  [50, 16], [18, 24], [82, 24],
+  [50, 46], [27, 50], [73, 50],
+  [38, 72], [62, 72], [12, 68], [88, 68],
+  [50, 90],
+];
+---
+
+<section class="squad" aria-labelledby="squad-title" data-tone="talent" data-look="deep" data-sport-squad data-tray-away data-bench={t('spec.sport.bench')} data-profile={profile}>
+  <div class="squad__inner">
+    <div class="squad__side">
+      <h2 class="squad__title exp-title" id="squad-title">{t('spec.sport.squad')}</h2>
+      <p class="squad__hint" data-squad-hint>{t('spec.sport.squadHint')}</p>
+      <p class="squad__count exp-label" aria-live="polite"><b data-squad-count>0</b> / 11</p>
+      <p class="squad__bench exp-label" data-squad-bench></p>
+      <button class="exp-pill" type="button" data-tray-meet disabled data-squad-meet>
+        {t('tray.creators.action')}
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
+      </button>
+    </div>
+
+    <div class="squad__stand">
+      <div class="squad__pitch" data-squad-pitch>
+        <svg class="squad__lines" viewBox="0 0 100 150" preserveAspectRatio="none" aria-hidden="true">
+          <rect x="1" y="1" width="98" height="148" rx="0.5" data-line="0"></rect>
+          <line x1="1" y1="75" x2="99" y2="75" data-line="120"></line>
+          <circle cx="50" cy="75" r="11" data-line="220"></circle>
+          <circle cx="50" cy="75" r="0.8" class="squad__dot"></circle>
+          <rect x="22" y="1" width="56" height="22" data-line="320"></rect>
+          <rect x="37" y="1" width="26" height="8" data-line="320"></rect>
+          <rect x="22" y="127" width="56" height="22" data-line="320"></rect>
+          <rect x="37" y="141" width="26" height="8" data-line="320"></rect>
+          <path d="M40 23a12 12 0 0 0 20 0M40 127a12 12 0 0 1 20 0" data-line="420"></path>
+        </svg>
+        {PLACES.map(([x, y], i) => (
+          <span class="squad__place" style={`--x: ${x}%; --y: ${y}%`} data-squad-place={i} data-at={`${x} ${y}`}>
+            <span class="squad__spot" aria-hidden="true"></span>
+            <span class="squad__player" aria-hidden="true">
+              <img alt="" decoding="async" draggable="false" />
+              <span class="squad__name"></span>
+            </span>
+          </span>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .squad {
+    position: relative;
+    display: grid;
+    align-items: center;
+    min-height: 100svh;
+    padding-block: clamp(2.5rem, 6vh, 5rem);
+    color: rgb(var(--ink));
+  }
+
+  .squad__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+    gap: var(--gutter);
+    align-items: center;
+    margin-inline: var(--margin);
+  }
+
+  .squad__side {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-4);
+  }
+
+  .squad__title {
+    font-size: clamp(2rem, 3.4vw, 3.5rem);
+  }
+
+  .squad__hint {
+    max-width: 30ch;
+    font-size: 1.0625rem;
+    color: rgb(var(--ink) / 0.82);
+  }
+
+  .squad__count b {
+    font-family: var(--font-display);
+    font-size: clamp(2.25rem, 3.4vw, 3.5rem);
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    letter-spacing: -0.02em;
+    color: rgb(var(--ink));
+  }
+
+  .squad__bench:empty {
+    display: none;
+  }
+
+  .squad [data-squad-meet][disabled] {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  /* The pitch, seen from the stands: lines of light on the dark, leaning away. The perspective grows with the pitch,
+     so it leans the same on any screen. */
+  .squad__stand {
+    perspective: 81.25rem;
+    perspective-origin: 50% 0%;
+  }
+
+  .squad__pitch {
+    position: relative;
+    width: min(100%, 30rem);
+    aspect-ratio: 100 / 150;
+    margin-inline: auto;
+    transform: rotateX(58deg);
+    transform-origin: 50% 70%;
+    transform-style: preserve-3d;
+    background: radial-gradient(60% 50% at 50% 50%, rgb(var(--ice-rgb) / 0.07), transparent 70%);
+  }
+
+  .squad__lines {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    fill: none;
+    stroke: rgb(var(--ice-rgb) / 0.55);
+    stroke-width: 0.4;
+    filter: drop-shadow(0 0 0.125rem rgb(var(--ice-rgb) / 0.8));
+  }
+
+  .squad__dot {
+    fill: rgb(var(--ice-rgb) / 0.8);
+  }
+
+  .squad__place {
+    position: absolute;
+    top: var(--y);
+    left: var(--x);
+    width: 0;
+    height: 0;
+    transform-style: preserve-3d;
+  }
+
+  /* An empty place: a ring on the grass. */
+  .squad__spot {
+    position: absolute;
+    width: 2.75rem;
+    height: 2.75rem;
+    margin: -1.375rem 0 0 -1.375rem;
+    border: 1.5px dashed rgb(var(--ice-rgb) / 0.45);
+    border-radius: 50%;
+    transition: opacity 300ms var(--ease-out);
+  }
+
+  /* A player: standing up off the pitch, facing the stands, their photograph and name. */
+  .squad__player {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    display: grid;
+    justify-items: center;
+    gap: 0.375rem;
+    width: 6.875rem;
+    margin-left: -3.4375rem;
+    transform: rotateX(-58deg) scale(0);
+    transform-origin: 50% 100%;
+    opacity: 0;
+    transition:
+      transform 520ms cubic-bezier(0.2, 1.5, 0.35, 1),
+      opacity 240ms var(--ease-out);
+  }
+
+  .squad__player > * {
+    transition: translate 200ms var(--spring-soft, cubic-bezier(0.3, 1.25, 0.45, 1));
+  }
+
+  .squad__player img {
+    width: 4.125rem;
+    height: 4.125rem;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: 50% 25%;
+    background: #10182a;
+    box-shadow:
+      0 0 0 0.1875rem var(--white),
+      0 0 1.375rem rgb(var(--ice-rgb) / 0.6),
+      0 1.125rem 1.625rem -0.625rem rgb(0 0 0 / 0.8);
+  }
+
+  .squad__name {
+    max-width: 100%;
+    padding: 0.1875rem 0.5rem;
+    border-radius: 999px;
+    background: rgb(var(--navy-900-rgb) / 0.78);
+    box-shadow: inset 0 0 0 1px rgb(var(--white-rgb) / 0.22);
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition:
+      translate 200ms var(--spring-soft, cubic-bezier(0.3, 1.25, 0.45, 1)),
+      background-color 200ms var(--ease-out),
+      box-shadow 200ms var(--ease-out);
+  }
+
+  .squad__place.is-filled .squad__player {
+    transform: rotateX(-58deg) scale(1);
+    opacity: 1;
+    cursor: pointer;
+  }
+
+  .squad__place.is-filled .squad__spot {
+    border-style: solid;
+    border-color: rgb(var(--ice-rgb) / 0.9);
+    box-shadow: 0 0 1.125rem rgb(var(--ice-rgb) / 0.6);
+  }
+
+  /* A player pointed at or focused steps up, their name brighter: a press opens their profile. */
+  .squad__place.is-filled .squad__player:is(:hover, :focus-visible) > * {
+    translate: 0 -0.375rem;
+  }
+
+  .squad__place.is-filled .squad__player:is(:hover, :focus-visible) .squad__name {
+    background: rgb(var(--navy-900-rgb) / 0.92);
+    box-shadow: inset 0 0 0 1px rgb(var(--white-rgb) / 0.5);
+  }
+
+  /* Arriving: one ripple from the ring. Full XI: a ring of light across the grass from the centre circle. (Both made
+     by the script, hence global.) */
+  .squad__pitch :global(.squad__ripple),
+  .squad__pitch :global(.squad__flare) {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .squad__pitch :global(.squad__ripple) {
+    width: 2.75rem;
+    height: 2.75rem;
+    margin: -1.375rem 0 0 -1.375rem;
+    border: 1.5px solid rgb(var(--ice-rgb) / 0.9);
+    box-shadow: 0 0 1.125rem rgb(var(--ice-rgb) / 0.6);
+    opacity: 0;
+  }
+
+  .squad__pitch :global(.squad__flare) {
+    top: 50%;
+    left: 50%;
+    width: 22%;
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    box-shadow:
+      0 0 0 1.5px rgb(var(--ice-rgb) / 0.9),
+      0 0 1.5rem rgb(var(--ice-rgb) / 0.7),
+      inset 0 0 1.5rem rgb(var(--ice-rgb) / 0.45);
+    opacity: 0;
+  }
+
+  /* ---------- Phones and tablets: the words, then the pitch ---------- */
+  @media (max-width: 1023px) {
+    .squad {
+      min-height: 0;
+      padding-block: clamp(3.5rem, 9svh, 5rem);
+    }
+
+    .squad__inner {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-5);
+    }
+
+    .squad__stand {
+      perspective: 56rem;
+    }
+
+    .squad__pitch {
+      width: min(100%, 22rem);
+      margin-inline: auto;
+    }
+
+    .squad__spot {
+      width: 2rem;
+      height: 2rem;
+      margin: -1rem 0 0 -1rem;
+    }
+
+    .squad__player {
+      width: 4.75rem;
+    }
+
+    .squad__player img {
+      width: 2.875rem;
+      height: 2.875rem;
+    }
+
+    .squad__name {
+      padding: 0.125rem 0.375rem;
+      font-size: 0.5rem;
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .squad__inner {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    }
+
+    .squad__pitch {
+      width: min(100%, 26rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .squad__player,
+    .squad__player > *,
+    .squad__name {
+      transition: none;
+    }
+
+    .squad__place.is-filled .squad__player:is(:hover, :focus-visible) > * {
+      translate: none;
+    }
+  }
+</style>
+
+<script>
+  import { initSportSquad } from '@/scripts/system/sport-squad';
+  initSportSquad();
+</script>

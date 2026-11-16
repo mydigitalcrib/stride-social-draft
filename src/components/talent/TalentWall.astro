@@ -1,0 +1,324 @@
+---
+// Stride Talent's background on desktop: a photocall, drawn (the owner's picture of it, 2026-11-12). A step-and-repeat
+// of the Stride lockup in white, eight rows on a navy wall, every other row set half a step along and running off the
+// left edge; spotlights from above, their beams fading down the wall; the wall's edge, and a blue carpet in front of it
+// going back to the wall. Drawn, not photographed, so the lockup stays sharp at any size (the site's own vector,
+// /assets/site/stride-social-lockup.svg, the one in the header). Fixed behind everything, on every Talent page that has
+// no footage of its own; the shared .exp-haze recipe adds the grain, and a navy shade over the wall deepens a little
+// once the page scrolls past its first screen, so the words on it stay easy to read (back-video.ts' way; the shade is
+// its own layer here, so only its opacity changes as the page scrolls). Phones and tablets have it too (the owner,
+// 2026-11-13), its lockups larger against a narrow screen. A
+// search on the roster dims it for the words it writes up (.is-quiet, roster-browser.ts).
+// Big screens: the blur and the lights are in rem, so it stays as out of focus as at 1920. On an ultrawide screen
+// (21:9, 32:9) the pattern follows the height (--u), so the wall keeps its rhythm instead of its lockups growing until
+// they touch; the rows carry enough lockups for the widest screens, and the wall clips the rest.
+// A camera flash on the page (`talent:flash` with { x, y, size, power }, in screen pixels: the photocall's flashes and
+// shots, the roster's shots, a division chosen in the picker) catches the lockups around it for an instant, as a flash
+// does a vinyl backdrop (.talent-wall__glint: a small window onto a white copy of the pattern, opened where it fires).
+const ROWS = 8;
+const PER_ROW = 16;
+// Where the lights hang (% across) and how bright each is, as in the owner's picture.
+const LIGHTS = [
+  { x: 3, a: 0.55 },
+  { x: 18, a: 0.95 },
+  { x: 48, a: 1 },
+  { x: 78, a: 0.9 },
+  { x: 93, a: 0.7 },
+];
+---
+
+<div class="exp-haze talent-wall" aria-hidden="true" data-talent-wall>
+  <div class="talent-wall__scene">
+  <div class="talent-wall__wall">
+    <div class="talent-wall__repeat" data-talent-repeat>
+      {Array.from({ length: ROWS }, () => (
+        <div class="talent-wall__row">
+          {Array.from({ length: PER_ROW }, () => <span class="talent-wall__lockup"></span>)}
+        </div>
+      ))}
+    </div>
+    <div class="talent-wall__lights">
+      {LIGHTS.map((l) => <span class="talent-wall__light" style={`--x: ${l.x}%; --a: ${l.a}`}></span>)}
+    </div>
+  </div>
+  <div class="talent-wall__floor"><div class="talent-wall__carpet"></div></div>
+  <div class="talent-wall__edge"></div>
+  </div>
+  <div class="talent-wall__glint" data-talent-glint>
+    <div class="talent-wall__repeat">
+      {Array.from({ length: ROWS }, () => (
+        <div class="talent-wall__row">
+          {Array.from({ length: PER_ROW }, () => <span class="talent-wall__lockup"></span>)}
+        </div>
+      ))}
+    </div>
+  </div>
+  <div class="talent-wall__shade" data-talent-shade></div>
+</div>
+
+<script>
+  import { reduced } from '@/scripts/system/env';
+  const wall = document.querySelector<HTMLElement>('[data-talent-wall]');
+  if (wall) {
+    // The shade deepens as the page scrolls past its first screen (written only when it changes, and only its opacity).
+    const shade = wall.querySelector<HTMLElement>('[data-talent-shade]');
+    let queued = false;
+    let deep = '';
+    const depth = () => {
+      queued = false;
+      const d = Math.min(1, window.scrollY / (window.innerHeight * 0.9));
+      const v = ((0.14 + d * 0.46) / 0.6).toFixed(3);
+      if (v === deep || !shade) return;
+      deep = v;
+      shade.style.opacity = v;
+    };
+    window.addEventListener('scroll', () => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(depth);
+    }, { passive: true });
+    depth();
+
+    // A flash catches the lockups around it: the window opens where it fires, over the same place on the pattern, and
+    // flares for an instant; the newest flash takes over.
+    const glint = wall.querySelector<HTMLElement>('[data-talent-glint]');
+    const repeat = wall.querySelector<HTMLElement>('[data-talent-repeat]');
+    let flare: Animation | null = null;
+    if (glint && repeat && !reduced()) {
+      document.addEventListener('talent:flash', (e) => {
+        const f = (e as CustomEvent<{ x: number; y: number; size: number; power?: number }>).detail;
+        if (!f || document.hidden || document.documentElement.classList.contains('has-sheet') || wall.classList.contains('is-quiet')) return;
+        const r = repeat.getBoundingClientRect();
+        // Lit about as far as the flash's own glow reaches (the window fades out at 70% of this).
+        const reach = Math.max(40, f.size * 1.1);
+        const x0 = f.x - reach;
+        const y0 = f.y - reach;
+        glint.style.cssText = `--gd: ${(reach * 2).toFixed(0)}px; --gx: ${x0.toFixed(0)}px; --gy: ${y0.toFixed(0)}px; --ox: ${(r.left - x0).toFixed(0)}px; --oy: ${(r.top - y0).toFixed(0)}px; --ww: ${r.width.toFixed(0)}px; --wh: ${r.height.toFixed(0)}px`;
+        flare?.cancel();
+        flare = glint.animate([{ opacity: 0 }, { opacity: 0.5 * Math.min(1, f.power ?? 1), offset: 0.1 }, { opacity: 0 }], { duration: 320, easing: 'ease-out' });
+      });
+    }
+  }
+</script>
+
+<style>
+  .talent-wall {
+    --haze-mask: none;
+    --wall-h: 76%;
+    /* The pattern's unit: 1vw, as drawn; on an ultrawide screen (wider than 2.25:1, past any 16:9 or 16:10 window with
+       its browser bars) it follows the height, so the rhythm stays. */
+    --u: min(1vw, 2.25vh);
+    --pitch: calc(14.85 * var(--u));
+    position: fixed;
+    z-index: -1;
+    background: #0a1a38;
+    transition: opacity 500ms var(--ease-out);
+  }
+
+  /* The haze's own shade is this component's layer (.talent-wall__shade), so scrolling only changes its opacity. */
+  .talent-wall::before {
+    content: none;
+  }
+
+  .talent-wall__shade {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: rgb(var(--navy-900-rgb) / 0.6);
+    opacity: 0.233;
+    will-change: opacity;
+  }
+
+  /* The whole room out of focus, as a photographer's backdrop behind the subject (the owner, 2026-11-12: "more
+     desenfocado"); a little larger than the screen so the blur doesn't soften its edges. The grain stays sharp. */
+  .talent-wall__scene {
+    position: absolute;
+    inset: -1.5rem;
+    filter: blur(0.375rem);
+  }
+
+  /* The words of a search are on the wall: the wall steps back for them. */
+  .talent-wall.is-quiet {
+    opacity: 0.4;
+  }
+
+  /* ---------- The wall: navy, lighter where the lights fall, darker towards its sides and foot ---------- */
+  .talent-wall__wall {
+    position: absolute;
+    inset: 0 0 auto;
+    height: var(--wall-h);
+    overflow: hidden;
+    background:
+      radial-gradient(130% 95% at 50% 18%, transparent 52%, rgb(4 10 26 / 0.5)),
+      linear-gradient(180deg, #1a3463 0%, #152c58 38%, #10244a 100%);
+  }
+
+  /* The fabric's weave, faintly. */
+  .talent-wall__wall::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(90deg, rgb(var(--white-rgb) / 0.014) 0 0.0625rem, transparent 0.0625rem 0.25rem),
+      repeating-linear-gradient(0deg, rgb(0 0 0 / 0.04) 0 0.0625rem, transparent 0.0625rem 0.25rem);
+    pointer-events: none;
+  }
+
+  /* The step-and-repeat: eight rows down the wall, each lockup in the middle of its row; every other row half a
+     step along, so its first one runs off the left edge. */
+  .talent-wall__repeat {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-rows: repeat(8, 1fr);
+  }
+
+  .talent-wall__row {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--pitch) - 6.1 * var(--u));
+    margin-left: calc(4.9 * var(--u));
+  }
+
+  .talent-wall__row:nth-child(even) {
+    margin-left: calc(4.9 * var(--u) - var(--pitch) / 2);
+  }
+
+  .talent-wall__lockup {
+    flex: none;
+    width: calc(6.1 * var(--u));
+    aspect-ratio: 380 / 139;
+    background: rgb(var(--white-rgb) / 0.9);
+    -webkit-mask: url('/assets/site/stride-social-lockup.svg') center / contain no-repeat;
+    mask: url('/assets/site/stride-social-lockup.svg') center / contain no-repeat;
+  }
+
+  /* A flash's light on the pattern: a small window, as out of focus as the wall, onto a white copy of it laid exactly
+     over the wall's (the script sets where and how big). Under the shade and the grain, like the wall. */
+  .talent-wall__glint {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: var(--gd, 0px);
+    height: var(--gd, 0px);
+    overflow: hidden;
+    opacity: 0;
+    translate: var(--gx, 0px) var(--gy, 0px);
+    filter: blur(0.375rem);
+    -webkit-mask-image: radial-gradient(closest-side, #000, transparent 70%);
+    mask-image: radial-gradient(closest-side, #000, transparent 70%);
+    contain: strict;
+    pointer-events: none;
+  }
+
+  .talent-wall__glint .talent-wall__repeat {
+    inset: auto;
+    top: 0;
+    left: 0;
+    width: var(--ww, 0px);
+    height: var(--wh, 0px);
+    translate: var(--ox, 0px) var(--oy, 0px);
+  }
+
+  .talent-wall__glint .talent-wall__lockup {
+    background: var(--white);
+  }
+
+  /* The words that stand on the wall: the smaller ones get a navy glow, so the lockups behind don't run through
+     them (not the profile sheet or the tray, which have their own glass). Every screen. */
+  @media all {
+    :global(body:has([data-talent-wall]) main :is(p, li, dd, dt, figcaption, blockquote, label, small, input):not(.csheet *):not(.tray *)) {
+      text-shadow:
+        0 0 0.375rem rgb(6 18 40 / 0.9),
+        0 0 1rem rgb(6 18 40 / 0.85),
+        0 0 2rem rgb(6 18 40 / 0.6);
+    }
+  }
+
+  /* Phones and tablets: the pattern's unit follows the screen's width a little more generously, so a narrow screen
+     still shows the lockups (three or four across a phone), not a fine print of them. */
+  @media (max-width: 1023px) {
+    .talent-wall {
+      --u: min(2.4vw, 1.5vh);
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .talent-wall {
+      --u: min(1.7vw, 1.5vh);
+    }
+  }
+
+  /* ---------- The lights: a hot spot where each hangs, its beam widening and fading down the wall ---------- */
+  .talent-wall__lights {
+    position: absolute;
+    inset: 0;
+    mix-blend-mode: screen;
+    pointer-events: none;
+  }
+
+  .talent-wall__light {
+    position: absolute;
+    top: -6%;
+    left: var(--x);
+    width: calc(16 * var(--u));
+    height: 70%;
+    translate: -50% 0;
+    opacity: var(--a);
+    background:
+      radial-gradient(30% 14% at 50% 6%, rgb(215 232 255 / 0.55), transparent 100%),
+      radial-gradient(34% 62% at 50% 0%, rgb(150 188 245 / 0.3), transparent 100%),
+      radial-gradient(50% 100% at 50% 0%, rgb(110 150 225 / 0.16), transparent 100%);
+    filter: blur(1.125rem);
+  }
+
+  /* ---------- Where the wall meets the floor: a ledge of light, its shadow on the carpet ---------- */
+  .talent-wall__edge {
+    position: absolute;
+    top: var(--wall-h);
+    right: 0;
+    left: 0;
+    height: 0.25rem;
+    translate: 0 -0.125rem;
+    background: linear-gradient(180deg, rgb(110 150 215 / 0.55), #1d3d78 40%, #0c1d40);
+    box-shadow: 0 0.5rem 1.125rem rgb(2 6 18 / 0.55);
+  }
+
+  /* ---------- The carpet: blue, flecked, lighter in the middle, going back to the wall ---------- */
+  .talent-wall__floor {
+    position: absolute;
+    top: var(--wall-h);
+    right: 0;
+    bottom: 0;
+    left: 0;
+    overflow: hidden;
+    perspective: 32.5rem;
+    perspective-origin: 50% 0;
+    background: #0d2154;
+  }
+
+  .talent-wall__carpet {
+    position: absolute;
+    top: 0;
+    left: -40%;
+    width: 180%;
+    height: 260%;
+    transform: rotateX(58deg);
+    transform-origin: 50% 0;
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.62 0 0 0 0 1 1.5 0 0 0 -0.68'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E") 0 0 / 11.25rem 11.25rem,
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='2' stitchTiles='stitch' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0.01 0 0 0 0 0.04 0 0 0 0 0.18 -1.5 0 0 0 1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E") 0 0 / 11.25rem 11.25rem,
+      radial-gradient(40% 26% at 50% 0%, #2c55b0, #1d4396 42%, #133279 72%, #0a1f52);
+  }
+
+  /* The room darkens towards the screen's foot and its corners. */
+  .talent-wall__floor::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgb(2 8 24 / 0.25), transparent 22%, transparent 55%, rgb(2 8 24 / 0.5)),
+      radial-gradient(90% 140% at 50% 0%, transparent 55%, rgb(2 8 24 / 0.55));
+    pointer-events: none;
+  }
+</style>

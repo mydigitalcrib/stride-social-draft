@@ -1,0 +1,69 @@
+---
+// Our Work: an endless canvas of case studies (experience/WorkCanvas), on every screen (the owner, 2026-11-13: phones
+// and tablets rebuilt from the desktop, in place of their wall). A tile opens its whole case study over the page; the
+// list view and a link per case study serve the keyboard and screens without WebGL. Each case study by its own page's
+// rules: results only when verified, the quote only when verified, creators only with consent.
+import { getCollection, getEntries, getEntry } from 'astro:content';
+import SiteLayout from '@/layouts/SiteLayout.astro';
+import WorkCanvas from '@/components/experience/WorkCanvas.astro';
+import EnquiryClose from '@/components/social/EnquiryClose.astro';
+import { routes } from '@/lib/routes';
+import { workPreviews } from '@/lib/previews';
+import { isPreview } from '@/lib/env';
+import { isPublished } from '@/lib/roster';
+import { htmlParagraphs, paragraphs } from '@/lib/experience';
+import { rewriteLegacyLinks } from '@/lib/legacy-links';
+
+const work = (await getCollection('work', (w) => w.data.visible)).sort((a, b) => a.data.order - b.data.order);
+
+const items = await Promise.all(
+  work.map(async (w) => {
+    const name = (await getEntry(w.data.client))?.data.name ?? w.data.title;
+    const tagged = await getEntries(w.data.services);
+    const labels = (await getEntries(w.data.industries)).map((i) => i.data.label);
+    const d = w.data;
+    // The whole case study, for its panel on the desktop canvas, by the case study page's own rules: results only
+    // when verified, the quote only when verified, creators only with consent; the previous site's copy (where the
+    // story isn't rewritten yet) and unverified figures only in preview.
+    const sections = [
+      { label: 'The brief', text: d.brief },
+      { label: 'The strategy', text: d.strategy },
+      { label: 'The execution', text: d.execution },
+    ]
+      .filter((x) => x.text?.trim())
+      .map((x) => ({ label: x.label, parts: paragraphs(x.text) }));
+    const verified = d.results.filter((r) => r.status === 'verified');
+    const story = {
+      summary: d.summary,
+      facts: [...labels, ...d.markets, ...(d.year ? [String(d.year)] : [])],
+      sections,
+      legacy: !sections.length && isPreview ? htmlParagraphs(rewriteLegacyLinks((w.body ?? '').replace(/<!--[\s\S]*?-->/g, ''))) : [],
+      results: verified.map((r) => ({ label: r.label, value: r.value, source: r.source })),
+      resultsSummary: verified.length ? d.resultsSummary : null,
+      unverified: isPreview ? d.results.filter((r) => r.status !== 'verified').map((r) => `${r.label} ${r.value}`) : [],
+      quote: d.quote?.status === 'verified' ? d.quote.text : null,
+      creators: (await getEntries(d.creators)).filter((c) => c && isPublished(c)).map((c) => ({ name: c.data.name, href: routes.creator(c.id) })),
+      clips: d.videos.length ? d.videos.map((v) => ({ src: v.src, caption: v.caption ?? '' })) : workPreviews[w.id] ? [{ src: workPreviews[w.id], caption: '' }] : [],
+    };
+    return {
+      key: w.id,
+      name,
+      meta: tagged.map((s) => s.data.name).join(' · '),
+      image: w.data.card,
+      href: routes.caseStudy(w.id),
+      video: workPreviews[w.id],
+      story,
+    };
+  }),
+);
+
+const copy = (await getEntry('pages', 'work'))?.data.sections.hero;
+const final = (await getEntry('pages', 'social'))?.data.sections.final;
+if (!copy) throw new Error('Missing src/content/pages/work.yaml');
+---
+
+<SiteLayout title="Our Work | Stride Social case studies" description={copy.body} division="social" look="deep" headerOverlay>
+  <WorkCanvas items={items} headline={copy.headline} body={copy.body} next={final?.cta ? { label: final.cta.label, href: '#next' } : undefined} />
+  {/* The page stays on the canvas's navy to its end (the footer takes the colour the page ends on). */}
+  <EnquiryClose headline={final?.headline ?? ''} label={final?.cta?.label ?? ''} tone="social" look="deep" deskLook="deep" glass />
+</SiteLayout>

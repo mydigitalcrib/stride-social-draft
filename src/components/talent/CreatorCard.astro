@@ -1,0 +1,357 @@
+---
+// One creator, everywhere the desktop shows them: photo, name, handle, niche, country, signed or partner,
+// platform links, follower figure (verified only), one or two videos, and the way to enquire. No frame:
+// the photograph is the card, in black and white until the pointer brings it to colour, with the details
+// rising over it. Build the data with `creatorView`
+// (src/lib/creator-view.ts), which applies the rules. Missing things simply don't show; a missing photo is marked,
+// and one that fails to load (many are loaded from other servers) gives way to the same drawn initial
+// (src/scripts/system/creator-card.ts).
+import type { CreatorView } from '@/lib/creator-view';
+import { interfaceCopy } from '@/lib/ui-copy';
+
+export interface Props {
+  creator: CreatorView;
+  /** Filled in by the roster: which filters it answers to. */
+  filterable?: boolean;
+  /** How wide the photo shows, for its `sizes`. */
+  sizes?: string;
+}
+
+const { creator: c, filterable = false, sizes } = Astro.props;
+const t = await interfaceCopy();
+const details = [c.niche, c.country].filter(Boolean).join(' · ');
+// Without a photo: their initial, drawn (no picture is stood in for them).
+const initial = (c.name.match(/[A-Za-z0-9]/) ?? ['S'])[0].toUpperCase();
+const filters = filterable
+  ? {
+      'data-roster-card': '',
+      'data-divisions': c.divisions.join(' '),
+      'data-niches': c.niches.join(' '),
+      'data-relationship': c.relationshipKey,
+      'data-search': [c.name, c.handle, c.niche].filter(Boolean).join(' ').toLowerCase(),
+    }
+  : {};
+---
+
+<article class="ccc" aria-label={c.name} data-line={c.line || undefined} {...filters}>
+  <div class="ccc__photo on-photo">
+    {c.portrait ? (
+      <img src={c.portrait.src} alt={c.portrait.alt} sizes={sizes ?? '(min-width: 1024px) 22vw, 50vw'} loading="lazy" decoding="async" draggable="false" />
+    ) : (
+      <span class="ccc__none" data-placeholder="creator photo">
+        <span class="ccc__initial" aria-hidden="true">{initial}</span>
+        <svg class="ccc__mark" viewBox="0 0 106 106" aria-hidden="true"><path d="M53 53H0L53 0v53Z"></path><path d="M53 106H0l53-53v53Z"></path><path d="M106 53H53l53-53v53Z"></path><path d="M106 106H53l53-53v53Z"></path></svg>
+        <span class="visually-hidden">Photo to come</span>
+      </span>
+    )}
+    {c.videos[0] && (
+      <video class="ccc__video" muted loop playsinline preload="none" poster={c.videos[0].poster ?? c.portrait?.src} aria-label={c.videos[0].caption ?? `${c.name}: video`} data-ccc-video>
+        <source src={c.videos[0].src} type="video/mp4" />
+      </video>
+    )}
+
+    <div class="ccc__over">
+      {c.relationship && <p class="ccc__tag exp-label">{c.relationship}</p>}
+      <h3 class="ccc__name"><a href={c.href}>{c.name}</a></h3>
+      <div class="ccc__more">
+        {c.handle && <p class="ccc__handle">{c.handle}</p>}
+        {details && <p class="ccc__details">{details}</p>}
+        {c.audience && <p class="ccc__figure">{c.audience.figure}{c.audience.platform && ` on ${c.audience.platform}`}</p>}
+        {c.platforms.length > 0 && (
+          <ul class="ccc__platforms" role="list">
+            {c.platforms.map((p) => <li><a href={p.href} target="_blank" rel="noopener">{p.label}</a></li>)}
+          </ul>
+        )}
+        <p class="ccc__actions">
+          <a class="ccc__enquire" href={c.enquire}>{t('card.enquire')}</a>
+          <button class="ccc__keep" type="button" aria-pressed="false" data-keep="creators" data-keep-id={c.id} data-keep-label={c.name} data-keep-image={c.portrait?.src}>
+            <span class="keep-off">+ {t('hand.keep')}</span><span class="keep-on">{t('hand.kept')}</span>
+          </button>
+        </p>
+      </div>
+    </div>
+  </div>
+</article>
+
+<style>
+  .ccc {
+    position: relative;
+    color: rgb(var(--ink));
+  }
+
+  .ccc__photo {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    border-radius: 6px;
+    background: rgb(var(--ink) / 0.06);
+    isolation: isolate;
+    height: 100%;
+    width: 100%;
+  }
+
+  .ccc__photo img,
+  .ccc__video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(1) contrast(1.04);
+    transition:
+      filter 500ms var(--ease-out),
+      scale 900ms var(--ease-out);
+  }
+
+  .ccc__video {
+    filter: none;
+    opacity: 0;
+    transition: opacity 300ms var(--ease-out);
+  }
+
+  .ccc:hover .ccc__photo img,
+  .ccc:focus-within .ccc__photo img {
+    filter: none;
+  }
+
+  .ccc:hover .ccc__photo img {
+    scale: 1.03;
+  }
+
+  .ccc.is-playing .ccc__video {
+    opacity: 1;
+  }
+
+  /* No photo yet: the creator's initial, drawn large in outline, and Stride's mark. Still marked as a
+     placeholder (data-placeholder), so the checks count it. */
+  .ccc__none {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    container-type: inline-size;
+    background:
+      radial-gradient(120% 80% at 18% 0%, rgb(var(--tone-lit) / 0.16), transparent 62%),
+      linear-gradient(165deg, rgb(var(--ink) / 0.1), rgb(var(--ink) / 0.03));
+  }
+
+  .ccc__initial {
+    font-family: var(--font-display);
+    font-size: 78cqi;
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 1.5px rgb(var(--tone-lit) / 0.5);
+    translate: 0 -8%;
+  }
+
+  .ccc__mark {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    width: 16px;
+    height: 16px;
+    fill: rgb(var(--ink) / 0.5);
+  }
+
+  /* A photo that didn't load: out of the way of the drawn initial the script puts in. */
+  .ccc__photo.is-broken img {
+    visibility: hidden;
+  }
+
+  /* ---------- On the photo ---------- */
+  .ccc__over {
+    position: absolute;
+    inset: auto 0 0;
+    z-index: 1;
+    display: grid;
+    gap: 2px;
+    padding: 56px 14px 13px;
+    background: linear-gradient(to top, rgb(var(--navy-900-rgb) / 0.82), rgb(var(--navy-900-rgb) / 0.5) 55%, transparent);
+    color: var(--white);
+  }
+
+  .ccc__tag {
+    color: rgb(var(--white-rgb) / 0.74);
+    font-size: 0.625rem;
+  }
+
+  .ccc__name {
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 1.25vw, 1.25rem);
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+    overflow-wrap: anywhere;
+  }
+
+  /* The whole photo opens the profile. */
+  .ccc__name a::after {
+    content: '';
+    position: absolute;
+    inset: -999px;
+    z-index: 0;
+  }
+
+  .ccc__name a:focus-visible {
+    outline: none;
+    text-decoration: underline;
+  }
+
+  /* The details rise on hover and on keyboard focus, and take no room until then. */
+  .ccc__more {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 3px;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    font-size: 0.8125rem;
+    line-height: 1.3;
+    transition:
+      max-height 360ms var(--ease-out),
+      opacity 240ms var(--ease-out),
+      margin 360ms var(--ease-out);
+  }
+
+  .ccc:hover .ccc__more,
+  .ccc:focus-within .ccc__more {
+    max-height: 170px;
+    margin-top: 6px;
+    opacity: 1;
+  }
+
+  .ccc__handle {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: inherit;
+    opacity: 0.86;
+  }
+
+  .ccc__details,
+  .ccc__figure {
+    opacity: 0.8;
+  }
+
+  .ccc__platforms {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 10px;
+    margin-top: 2px;
+  }
+
+  .ccc__platforms a {
+    position: relative;
+    z-index: 1;
+    text-decoration: underline;
+    text-decoration-color: currentColor;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    color: inherit;
+  }
+
+  .ccc__actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 7px;
+  }
+
+  .ccc__enquire,
+  .ccc__keep {
+    position: relative;
+    z-index: 1;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .ccc__enquire {
+    padding: 7px 11px;
+    border-radius: 999px;
+    background: rgb(var(--press));
+    color: rgb(var(--press-on));
+  }
+
+  .ccc__keep {
+    color: var(--white);
+  }
+
+  .ccc__enquire:focus-visible,
+  .ccc__keep:focus-visible,
+  .ccc__platforms a:focus-visible {
+    outline: 2px solid var(--white);
+    outline-offset: 2px;
+  }
+
+  /* Desktop: the card's own sizes in rem, so it grows with a large screen (the hairlines stay as they are). */
+  @media (min-width: 1024px) {
+    .ccc__photo {
+      border-radius: 0.375rem;
+    }
+
+    .ccc__initial {
+      -webkit-text-stroke-width: 0.09375rem;
+    }
+
+    .ccc__mark {
+      top: 0.875rem;
+      left: 0.875rem;
+      width: 1rem;
+      height: 1rem;
+    }
+
+    .ccc__over {
+      gap: 0.125rem;
+      padding: 3.5rem 0.875rem 0.8125rem;
+    }
+
+    .ccc__more {
+      gap: 0.1875rem;
+    }
+
+    .ccc:hover .ccc__more,
+    .ccc:focus-within .ccc__more {
+      max-height: 10.625rem;
+      margin-top: 0.375rem;
+    }
+
+    .ccc__platforms {
+      gap: 0.125rem 0.625rem;
+      margin-top: 0.125rem;
+    }
+
+    .ccc__platforms a {
+      text-underline-offset: 0.1875rem;
+    }
+
+    .ccc__actions {
+      gap: 0.5rem;
+      margin-top: 0.4375rem;
+    }
+
+    .ccc__enquire {
+      padding: 0.4375rem 0.6875rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ccc__photo img,
+    .ccc__video,
+    .ccc__more {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  import { initCreatorCards } from '@/scripts/system/creator-card';
+  initCreatorCards();
+</script>

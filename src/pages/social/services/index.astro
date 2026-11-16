@@ -1,0 +1,94 @@
+---
+// Stride Social services index (docs/phase-2/03-sitemap.md): the seven services as stories (social/ServiceStories; the
+// owner's choice, 2026-11-12), each leading to its own page, on navy; on desktop in front of Stride Social's night sky
+// (core/BackVideo). Phones and tablets have the same stories (the owner, 2026-11-13).
+import { getEntry } from 'astro:content';
+import SiteLayout from '@/layouts/SiteLayout.astro';
+import Breadcrumbs from '@/components/global/Breadcrumbs.astro';
+import EnquiryClose from '@/components/social/EnquiryClose.astro';
+import Tray from '@/components/experience/Tray.astro';
+import ServiceStories from '@/components/social/ServiceStories.astro';
+import BackVideo from '@/components/core/BackVideo.astro';
+
+const page = await getEntry('pages', 'social');
+if (!page) throw new Error('Missing src/content/pages/social.yaml');
+const s = page.data.sections;
+---
+
+<SiteLayout title="Services | Stride Social" description={s.servicesPage.body} division="social" look="deep" headerOverlay>
+  {/* On navy; on desktop in front of Stride Social's night sky. */}
+  <BackVideo mp4="/assets/video/social-sky.mp4" poster="/assets/site/social-sky-poster.jpg" shade={0.35} />
+  <section class="svx" aria-labelledby="svx-title" data-tone="social" data-look="deep">
+    <div class="svx__inner container-wide">
+      <header class="svx__head">
+        <div class="svx__lead">
+          <Breadcrumbs items={[{ label: 'Stride Social', href: '/social' }, { label: 'Services' }]} tone="dark" />
+          <h1 class="svx__title exp-title" id="svx-title" data-reveal-lines="load">{s.servicesPage.headline}</h1>
+        </div>
+        {s.servicesPage.body && <p class="svx__body">{s.servicesPage.body}</p>}
+      </header>
+      <ServiceStories />
+    </div>
+  </section>
+  <EnquiryClose headline={s.final.headline ?? ''} label={s.final.cta?.label ?? ''} tone="social" look="deep" deskLook="deep" glass />
+  <Tray list="brief" />
+</SiteLayout>
+
+<style>
+  .svx {
+    position: relative;
+    overflow: hidden;
+    color: rgb(var(--ink));
+  }
+
+  .svx__inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: var(--space-5);
+    min-height: 100svh;
+    padding-block: calc(var(--header-h) + var(--space-3)) var(--space-5);
+  }
+
+  .svx__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: var(--space-4) var(--space-7);
+  }
+
+  .svx__lead {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .svx__title {
+    font-size: clamp(2.5rem, min(5.6vw, 11vh), 6rem);
+  }
+
+  .svx__body {
+    max-width: 26rem;
+    font-size: var(--type-lead);
+    line-height: 1.36;
+    color: rgb(var(--ink) / 0.86);
+  }
+
+  /* Desktop (the headline plain white, as every title is: the owner, 2026-11-13). */
+  @media (min-width: 1024px) {
+    .svx__inner {
+      grid-template-rows: auto auto;
+      align-content: start;
+      gap: var(--space-4);
+    }
+
+    .svx__title {
+      font-size: clamp(2.5rem, 4.6vw, 4.75rem);
+    }
+
+    .svx__body {
+      max-width: 26rem;
+    }
+  }
+</style>

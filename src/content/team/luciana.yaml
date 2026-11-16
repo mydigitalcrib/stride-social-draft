@@ -1,0 +1,10 @@
+# Hidden on 2026-11-11: not on slide 15 of Stride's 2026 talent deck, which the team now follows. Set `visible: true`
+# (and give a blue-background photograph) if still at Stride.
+name: Luciana
+role: Talent Manager
+department: talent
+photo:
+  src: /assets/team/blue/2506c53f-screenshot-2025-10-06-at-15.34.46.jpg
+  alt: Luciana, Talent Manager at Stride
+order: 14
+visible: false

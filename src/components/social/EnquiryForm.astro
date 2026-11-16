@@ -1,0 +1,63 @@
+---
+// Stride Social brand enquiry form (docs/phase-2/05-wireframes.md B8, 07-technical-architecture §6).
+// Fields only; the frame (spam fields, states, panels) is core/FormShell. Prefills ?service= and
+// ?creator= (creator profiles link here with the creator preselected and named).
+// Server-side validation: src/lib/forms/brand-enquiry.ts.
+import Field from '../core/Field.astro';
+import FormShell from '../core/FormShell.astro';
+import { brandEnquiryAction, brandEnquiryLimits as max, enquiryEmail, marketOptions, serviceOptions } from '@/config/forms';
+import { getRoster } from '@/lib/roster';
+
+export interface Props {
+  messages: { success: string; error: string; unavailable: string; consent: string };
+  /** Surface the form sits on. */
+  tone?: 'light' | 'dark';
+}
+
+const { messages, tone = 'light' } = Astro.props;
+const names = Object.fromEntries((await getRoster()).map((c) => [c.id, c.data.name]));
+---
+
+<FormShell action={brandEnquiryAction} email={enquiryEmail} subject="Brand enquiry" submitLabel="Send enquiry" messages={messages} names={names} tone={tone}>
+  <p class="enq__about" hidden data-prefill-note>Enquiry about <strong data-prefill-name></strong></p>
+  <div class="enq__grid">
+    <Field name="name" label="Name" required autocomplete="name" maxlength={max.name} messages={{ required: 'Enter your name' }} tone={tone} />
+    <Field name="company" label="Company" required autocomplete="organization" maxlength={max.company} messages={{ required: 'Enter your company name' }} tone={tone} />
+    <Field name="email" label="Work email" type="email" required autocomplete="email" maxlength={max.email} messages={{ required: 'Enter your work email', invalid: 'Enter an email address in the format name@example.com' }} tone={tone} />
+    <Field name="market" label="Market" type="select" required options={marketOptions} messages={{ required: 'Choose the market the campaign is for' }} tone={tone} />
+    <Field name="service" label="Service" type="select" required options={serviceOptions} prefill="service" messages={{ required: 'Choose a service, or "Not sure yet"' }} tone={tone} />
+    <Field name="budget" label="Estimated budget" maxlength={max.budget} tone={tone} />
+    <div class="enq__wide">
+      <Field name="brief" label="Your brief" type="textarea" required rows={6} maxlength={max.brief} hint="What are you launching, who is it for, and when?" messages={{ required: 'Tell us a little about the campaign' }} tone={tone} />
+    </div>
+  </div>
+  <input type="hidden" name="creator" value="" data-prefill="creator" />
+</FormShell>
+
+<style>
+  .enq__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-5) var(--gutter);
+  }
+
+  .enq__wide {
+    grid-column: 1 / -1;
+  }
+
+  .enq__about {
+    padding: var(--space-3) var(--space-4);
+    border-left: 3px solid var(--accent);
+    font-size: var(--type-small);
+  }
+
+  .enq__about[hidden] {
+    display: none;
+  }
+
+  @media (max-width: 767px) {
+    .enq__grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

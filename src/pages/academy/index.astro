@@ -1,0 +1,19 @@
+---
+// Stride Academy: "Coming soon" until it opens (the owner, 2026-11-10), shared with the homepage's Academy card
+// (components/education/ComingSoon.astro). The full page is parked: components/education/EducationPage.astro goes
+// back in here, and on the homepage, when Stride Academy opens.
+import { getEntry } from 'astro:content';
+import SiteLayout from '@/layouts/SiteLayout.astro';
+import ComingSoon from '@/components/education/ComingSoon.astro';
+import BackVideo from '@/components/core/BackVideo.astro';
+
+const soon = (await getEntry('pages', 'education'))?.data.sections.soon;
+if (!soon) throw new Error('Missing `soon` in src/content/pages/education.yaml');
+---
+
+<SiteLayout title="Stride Academy | Coming soon" description={`Stride Academy is coming soon. ${soon.body ?? ''}`.trim()} division="education" look="slate" headerOverlay>
+  {/* Desktop: in front of the homepage's showreel as its opening shows it, blurred, in the division's slate (the owner,
+      2026-11-12). */}
+  <BackVideo look="deep" mp4="/assets/video/stride-showreel-desktop.mp4" webm="/assets/video/stride-showreel-desktop.webm" poster="/assets/site/stride-showreel-desktop-poster.jpg" blur={10} tint="22 40 70" />
+  <ComingSoon />
+</SiteLayout>

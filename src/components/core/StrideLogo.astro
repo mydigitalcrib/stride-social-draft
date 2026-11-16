@@ -1,0 +1,100 @@
+---
+// The Stride Social lockup on desktop, as one shape in the current text colour, so it turns with the ink
+// on any background. The file is traced from the old site's 400px logo (202a2630-stride-social-logo-b.webp);
+// swap in the official vector once supplied (approval checklist C). Phones and tablets keep the interim
+// mark and typeset "STRIDE" until they're worked on.
+export interface Props {
+  division?: string;
+  tone?: 'light' | 'dark';
+  class?: string;
+}
+
+const { division, tone = 'light', class: className } = Astro.props;
+---
+
+<span class:list={['logo', `logo--on-${tone}`, className]}>
+  <span class="logo__lockup" aria-hidden="true"></span>
+  <svg class="logo__mark" viewBox="0 0 106 106" aria-hidden="true">
+    <path d="M53 53H0L53 0v53Z" fill="currentColor"></path>
+    <path d="M53 106H0l53-53v53Z" fill="currentColor"></path>
+    <path d="M106 53H53l53-53v53Z" fill="currentColor"></path>
+    <path d="M106 106H53l53-53v53Z" fill="currentColor"></path>
+  </svg>
+  <span class="logo__word">Stride</span>
+  {division && <span class="logo__division">{division}</span>}
+</span>
+
+<style>
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    line-height: 1;
+  }
+
+  .logo--on-light {
+    color: var(--navy-900);
+  }
+
+  .logo--on-dark {
+    color: var(--white);
+  }
+
+  .logo__lockup {
+    display: none;
+  }
+
+  /* Desktop: the lockup is 7.5rem (120px) wide, so past 1920×1080 it grows with the screen as the header and footer
+     around it do (styles/system/tokens.css). */
+  @media (min-width: 1024px) {
+    .logo {
+      gap: 0.625rem;
+    }
+
+    .logo__lockup {
+      display: block;
+      flex: none;
+      width: 7.5rem;
+      aspect-ratio: 380 / 139;
+      background: currentColor;
+      -webkit-mask: url('/assets/site/stride-social-lockup.svg') center / contain no-repeat;
+      mask: url('/assets/site/stride-social-lockup.svg') center / contain no-repeat;
+    }
+
+    .logo__mark,
+    .logo__word {
+      display: none;
+    }
+  }
+
+  .logo__mark {
+    width: 26px;
+    height: 26px;
+    flex: none;
+  }
+
+  .logo__word {
+    font-family: var(--font-display);
+    font-size: 1.375rem;
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+  }
+
+  .logo__division {
+    padding-left: 10px;
+    border-left: 1px solid currentColor;
+    font-family: var(--font-mono);
+    font-size: var(--type-label);
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  @media (min-width: 1024px) {
+    .logo__division {
+      padding-left: 0.625rem;
+    }
+  }
+</style>

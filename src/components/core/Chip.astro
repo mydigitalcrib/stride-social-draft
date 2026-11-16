@@ -1,0 +1,73 @@
+---
+// Filter pill. Renders a toggle button (aria-pressed) or, with `href`, a link (aria-current when active).
+// `tone` follows the surface: light (paper/white) or dark (navy).
+export interface Props {
+  href?: string;
+  active?: boolean;
+  value?: string;
+  tone?: 'light' | 'dark';
+  class?: string;
+  [key: string]: unknown;
+}
+
+const { href, active = false, value, tone = 'light', class: className, ...rest } = Astro.props;
+---
+
+{href ? (
+  <a class:list={['chip', `chip--on-${tone}`, { 'is-active': active }, className]} href={href} aria-current={active ? 'true' : undefined} {...rest}>
+    <slot />
+  </a>
+) : (
+  <button class:list={['chip', `chip--on-${tone}`, { 'is-active': active }, className]} type="button" aria-pressed={active ? 'true' : 'false'} data-value={value} {...rest}>
+    <slot />
+  </button>
+)}
+
+<style>
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 var(--space-4);
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: var(--type-label);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition:
+      background-color var(--dur-base) var(--ease-out),
+      color var(--dur-base) var(--ease-out);
+  }
+
+  .chip:hover {
+    background: rgb(var(--navy-900-rgb) / 0.06);
+  }
+
+  .chip.is-active,
+  .chip[aria-pressed='true'] {
+    background: var(--navy-900);
+    border-color: var(--navy-900);
+    color: var(--white);
+  }
+
+  .chip--on-dark:hover {
+    background: rgb(var(--hair) / 0.1);
+  }
+
+  .chip--on-dark.is-active,
+  .chip--on-dark[aria-pressed='true'] {
+    background: rgb(var(--press));
+    border-color: rgb(var(--press));
+    color: rgb(var(--press-on));
+  }
+
+  /* Desktop: in rem, so it grows with the screen past 1920×1080 (tokens.css); the same until then. */
+  @media (min-width: 1024px) {
+    .chip {
+      min-height: 2.75rem;
+    }
+  }
+</style>

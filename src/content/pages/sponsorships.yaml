@@ -1,0 +1,15 @@
+# Our Sponsorships copy. The archive is empty until Stride supplies entries (Q12).
+sections:
+  hero:
+    status: draft
+    eyebrow: Beyond business
+    headline: Our sponsorships.
+    body: The creators, sports teams, events and community projects Stride has backed.
+  empty:
+    status: draft
+    body: We're putting this archive together. In the meantime, see what we do for creators and brands.
+  # The page's close (drafted by us, 2026-11-12).
+  join:
+    status: draft
+    headline: Got an event in mind?
+    cta: { label: Get in touch, href: /contact }

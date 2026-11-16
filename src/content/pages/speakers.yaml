@@ -1,0 +1,57 @@
+# Stride Speakers: speaker bookings and speaking engagements (Talent brief, 2026-11-06).
+# All copy here is drafted for approval.
+sections:
+  hero:
+    status: draft
+    eyebrow: Stride Speakers
+    headline: Stride Speakers.
+    # The owner's words (2026-11-13), said better.
+    body: "Creators on stage. We manage leading voices across industries: book one for your conference, panel or company event."
+    cta: { label: Book A Speaker, href: /talent/enquire?interest=speakers }
+    # No counts under the headline on this page (the owner, 2026-11-13).
+    counts: false
+  people:
+    status: draft
+    eyebrow: The speakers
+    headline: Who you can book.
+    # Who comes first in the line-up (roster entries), then the rest in roster order (the owner, 2026-11-13: Oli first).
+    featured: [oli-christie]
+    awaiting: [speakers and their topics, with consent]
+  placements:
+    status: draft
+    eyebrow: Speaking engagements
+    headline: Where they've spoken.
+    awaiting: [past engagements, with approval to show them]
+    # The first four, given by the owner on 2026-11-11 as Instagram posts (`href`; the picture is the one the owner
+    # pointed at in each). `key` is the speaker's roster entry. The words say only what each post does.
+    items:
+      - key: oli-christie
+        label: Global Marketing Summit 2026
+        copy: The welcome speech, October 2026.
+        image: /assets/site/stride-speakers-oli-christie-summit.jpg
+        alt: Oli Christie speaking on stage at Global Marketing Summit 2026
+        position: 36% 30%
+        href: https://www.instagram.com/p/Ded3g-piscl/
+      - key: jackdurkin2
+        label: Call Yourself a Fan?
+        copy: A guest on the football game show, October 2025.
+        image: /assets/site/stride-speakers-jack-durkin-game-show.jpg
+        alt: Jack Durkin and two other guests behind the desk on the set of Call Yourself a Fan?
+        href: https://www.instagram.com/p/DQMmjpiCJfo/
+      - key: jackdurkin2
+        label: 20vs1 with Michael Owen
+        copy: In the debate, October 2026.
+        image: /assets/site/stride-speakers-jack-durkin-20vs1.jpg
+        alt: Jack Durkin at the debate table across from Michael Owen, the other guests seated behind them
+        href: https://www.instagram.com/p/De2GFDAiCB2/
+      - key: tpainterx
+        label: 20vs1 with Michael Owen
+        copy: In the debate, October 2026.
+        image: /assets/site/stride-speakers-tom-painter-20vs1.jpg
+        alt: Tom Painter at a microphone during the 20vs1 debate
+        href: https://www.instagram.com/p/De2DViUjQ8l/
+  close:
+    status: draft
+    headline: Planning an event?
+    body: Send us the date, the audience and the topic.
+    cta: { label: Book A Speaker, href: /talent/enquire?interest=speakers }

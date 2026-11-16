@@ -1,0 +1,47 @@
+---
+// Contact hub (brief §7: separate paths for brands, established creators, emerging creators and general
+// enquiries): a conversation that points you to the right team (group/ContactChat), then the general form.
+// Desktop: in front of the homepage's showreel as its opening shows it, blurred, in Stride's navy (core/BackVideo; the
+// owner, 2026-11-12). The general form isn't shown on desktop (the owner, 2026-11-12: "delete the send us a message
+// section"): the chat asks for the same details itself and sends them through it, so the form stays in the page,
+// hidden, for that; phones and tablets the same (the owner, 2026-11-13). It ends on "Wanna join Stride Talent?", to the
+// creator sign-up (the owner, 2026-11-13; About no longer ends on "Want to work with us?").
+import { getEntry } from 'astro:content';
+import SiteLayout from '@/layouts/SiteLayout.astro';
+import ContactChat from '@/components/group/ContactChat.astro';
+import FormStage from '@/components/experience/FormStage.astro';
+import GeneralForm from '@/components/group/GeneralForm.astro';
+import { careersEmail, enquiryEmail } from '@/config/forms';
+import { site, socials } from '@/config/site';
+import BackVideo from '@/components/core/BackVideo.astro';
+import EnquiryClose from '@/components/social/EnquiryClose.astro';
+
+const s = (await getEntry('pages', 'contact'))?.data.sections;
+if (!s) throw new Error('Missing src/content/pages/contact.yaml');
+const msg = (key: string) => s.general.items?.find((i) => i.key === key)?.label ?? '';
+const details = [
+  { label: 'Email', links: [{ label: enquiryEmail, href: `mailto:${enquiryEmail}` }] },
+  { label: 'Careers', links: [{ label: careersEmail, href: `mailto:${careersEmail}` }] },
+  { label: 'Phone', links: [{ label: site.phone.label.replace(/^Office - /, ''), href: site.phone.href }] },
+  { label: 'Social', links: socials.map((so) => ({ label: so.label, href: so.href, external: true })) },
+];
+---
+
+<SiteLayout title="Contact | Stride" description={s.hero.body} headerOverlay>
+  <BackVideo look="deep" mp4="/assets/video/stride-showreel-desktop.mp4" webm="/assets/video/stride-showreel-desktop.webm" poster="/assets/site/stride-showreel-desktop-poster.jpg" blur={10} />
+  <ContactChat copy={s.hero} routes={s.routes.items ?? []} details={details} crumbs={[{ label: 'Contact' }]} />
+  <div id="general" class="contact-general">
+    <FormStage tone="group" look="frost" steps={false} level="h2" eyebrow={s.general.eyebrow} headline={s.general.headline ?? ''} status={s.general.status}>
+      <GeneralForm tone="dark" messages={{ success: msg('success'), error: msg('error'), unavailable: msg('unavailable'), consent: msg('consent') }} />
+    </FormStage>
+  </div>
+  {/* The closing: for creators who want to join Stride Talent (the owner, 2026-11-13). */}
+  {s.join && <EnquiryClose headline={s.join.headline ?? ''} label={s.join.cta?.label ?? ''} href={s.join.cta?.href} tone="group" look="deep" glass />}
+</SiteLayout>
+
+<style>
+  /* The chat carries the general enquiry through the form, which stays out of sight (every screen). */
+  .contact-general {
+    display: none;
+  }
+</style>

@@ -1,0 +1,676 @@
+---
+// Stride Talent's opening on desktop (the owner's choice, 2026-11-12): a photocall. The headline on the left, developing
+// in a burst of camera flashes; on the right a wall of the roster's creators in black and white, in columns drifting
+// slowly up and down, turned a little away into the room. The pointer is a camera's viewfinder: it locks onto the
+// creator under it, who comes into colour with their name. A click takes the shot: a flash, the shutter, and their
+// press print comes out and flies into the shortlist (the same camera as the roster's, shot.ts; shortlist.ts keeps it).
+// Until the pointer comes onto the wall the viewfinder roams it on its own, so it explains itself. Behaviour:
+// src/scripts/system/photocall.ts; the flashes: flashes.ts. Creators only through the roster's rules (consent, a
+// photo). Phones and tablets have it too (the owner, 2026-11-13): the wall behind the whole screen, the words at its
+// foot where it fades, and a tap on a creator takes the shot.
+// The wall is one stop for the keyboard: the arrow keys move along it (left and right across the columns, up and down
+// a column), the column easing the creator in focus clear of the fades; Enter or Space takes the shot. A press on a
+// creator half-presses the shutter (the viewfinder closes in, their photo hunts for focus) and the release shoots. The
+// viewfinder's caption turns to the other side near the screen's right edge. Sizes in rem, so it all grows with a large
+// screen; on a narrow laptop (under 1280 wide) the wall starts a little further right, clear of the headline.
+import PlaceholderNotice from '../core/PlaceholderNotice.astro';
+import { interfaceCopy } from '@/lib/ui-copy';
+
+export interface Props {
+  title: string;
+  body?: string;
+  cta?: { label: string; href: string };
+  creators: { id: string; name: string; category?: string; portrait: { src: string; alt: string }; confirmed: boolean }[];
+  /** How many creators and divisions the roster has (counted from it, by its rules). */
+  counts?: { creators: number; divisions: number };
+}
+
+const { title, body, cta, creators, counts } = Astro.props;
+const t = await interfaceCopy();
+const stats = counts ? [{ n: counts.creators, label: t('photocall.creators') }, { n: counts.divisions, label: t('photocall.divisions') }].filter((s) => s.n > 0) : [];
+const COLS = 6;
+const PER = Math.max(5, Math.ceil(creators.length / COLS));
+// Six columns, the creators dealt across them in turn; a column short of creators is topped up from the start, so the
+// wall has no gaps (only a creator's first appearance can be reached with the keyboard: photocall.ts moves the one stop
+// between them, and to its twin in the column's second round when that's the one in view).
+const seen = new Set<string>();
+const columns = Array.from({ length: COLS }, (_, c) =>
+  Array.from({ length: PER }, (_, k) => creators.length ? creators[(k * COLS + c) % creators.length] : null).filter((x) => !!x).map((cr) => {
+    const first = !seen.has(cr!.id);
+    seen.add(cr!.id);
+    return { ...cr!, first };
+  }),
+);
+const interim = creators.some((c) => !c.confirmed);
+const words = title.split(' ');
+---
+
+<section class="pc" aria-labelledby="talent-title" data-photocall data-tone="talent" data-look="deep" data-shoot={t('photocall.shoot')} data-kept={t('photocall.kept')}>
+  <canvas class="pc__flashes" aria-hidden="true" data-photocall-flashes></canvas>
+
+  <div class="pc__copy">
+    <h1 class="pc__title exp-title" id="talent-title">
+      {words.map((w, k) => <>{k > 0 && ' '}<span class={`pc__word pc__word--${k + 1}`}>{w}</span></>)}
+    </h1>
+    {body && <p class="pc__body">{body}</p>}
+    {stats.length > 0 && (
+      /* The roster, counted from it (counting up as the headline develops: photocall.ts). */
+      <p class="pc__stats">
+        {stats.map((s) => (
+          <span class="pc__stat"><b data-pc-count={s.n}>{s.n}</b> {s.label}</span>
+        ))}
+      </p>
+    )}
+    {cta && (
+      <a class="exp-pill" href={cta.href}>
+        {cta.label}
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
+      </a>
+    )}
+    {interim && <PlaceholderNotice variant="inline" label="Interim portraits">— roster photos, consent to be re-confirmed</PlaceholderNotice>}
+  </div>
+
+  {creators.length > 0 && (
+    <div class="pc__stage" data-own-cursor data-pc-stage>
+      <div class="pc__wall" data-pc-wall>
+        {columns.map((col, c) => (
+          <div class="pc__col" style={`--c: ${c}`}>
+            <div class="pc__track" data-pc-track>
+              {[0, 1].map((copy) =>
+                col.map((cr) => {
+                  const reachable = copy === 0 && cr.first;
+                  return (
+                    <button
+                      class="pc__tile"
+                      type="button"
+                      data-pc-tile
+                      data-keep="creators"
+                      data-keep-id={cr.id}
+                      data-keep-label={cr.name}
+                      data-keep-image={cr.portrait.src}
+                      data-name={cr.name}
+                      data-category={cr.category}
+                      aria-pressed="false"
+                      aria-label={`${t('hand.keep')}: ${cr.name}`}
+                      tabindex={reachable ? undefined : -1}
+                      aria-hidden={reachable ? undefined : 'true'}
+                    >
+                      <img src={cr.portrait.src} alt="" sizes="(min-width: 1921px) 9.5vw, 170px" decoding="async" draggable="false" />
+                    </button>
+                  );
+                }),
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+
+  {/* The viewfinder, drawn over the wall (photocall.ts moves it). */}
+  <div class="pc__finder" aria-hidden="true" data-pc-finder>
+    <i class="pc__corner pc__corner--tl"></i>
+    <i class="pc__corner pc__corner--tr"></i>
+    <i class="pc__corner pc__corner--bl"></i>
+    <i class="pc__corner pc__corner--br"></i>
+    <span class="pc__cross"></span>
+    <span class="pc__af">AF</span>
+    <span class="pc__label"><b data-pc-name></b><span data-pc-action></span></span>
+  </div>
+</section>
+
+<style>
+  .pc {
+    position: relative;
+    height: 100svh;
+    min-height: 40rem;
+    overflow: hidden;
+    color: rgb(var(--ink));
+  }
+
+  .pc__flashes {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  /* ---------- The words ---------- */
+  .pc__copy {
+    position: absolute;
+    top: 50%;
+    left: var(--margin);
+    z-index: 5;
+    display: grid;
+    justify-items: start;
+    gap: var(--space-4);
+    width: min(36rem, 38vw);
+    translate: 0 -44%;
+  }
+
+  /* Plain white once it has developed: the titles carry no glow (the owner, 2026-11-13). */
+  .pc__title {
+    font-size: clamp(3rem, 7vw, 7.5rem);
+    line-height: 0.9;
+  }
+
+  /* Its two words ("STRIDE", "TALENT"), each on its own line whatever the type. */
+  .pc__word {
+    display: block;
+  }
+
+  .pc__body {
+    max-width: 30rem;
+    font-size: var(--type-lead);
+    line-height: 1.4;
+    color: rgb(var(--ink) / 0.86);
+  }
+
+  /* The roster, counted: big figures, their words in mono beside them. */
+  .pc__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem 1.75rem;
+  }
+
+  .pc__stat {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5625rem;
+    font-family: var(--font-mono);
+    font-size: var(--type-label);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgb(var(--ink) / 0.72);
+  }
+
+  .pc__stat b {
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 2.6vw, 2.5rem);
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    color: rgb(var(--ink));
+    text-shadow: 0 0 1.375rem rgb(var(--ice-rgb) / 0.45);
+  }
+
+  /* ---------- The wall of creators ---------- */
+  .pc__stage {
+    position: absolute;
+    inset: 0 0 0 45%;
+    z-index: 2;
+    cursor: none;
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 16%), linear-gradient(to bottom, transparent, #000 13%, #000 87%, transparent);
+    -webkit-mask-composite: source-in;
+    mask-image: linear-gradient(to right, transparent, #000 16%), linear-gradient(to bottom, transparent, #000 13%, #000 87%, transparent);
+    mask-composite: intersect;
+  }
+
+  /* A narrow laptop (under 1280 wide, where the headline would stand on the wall's full photos): the wall starts further
+     right, so the headline's last letters and the counts stand clear of it (its fade begins where the words end). From
+     1280 the words stand on its fade, as designed. */
+  @media (min-width: 1024px) and (max-width: 1279px) {
+    .pc__stage {
+      inset: 0 0 0 52%;
+    }
+
+    .pc__copy {
+      width: min(36rem, 36vw);
+    }
+  }
+
+  .pc__wall {
+    position: absolute;
+    inset: -8% -6% -8% 2%;
+    display: flex;
+    gap: 0.875rem;
+    transform: perspective(93.75rem) rotateY(16deg);
+    transform-origin: 0 50%;
+  }
+
+  .pc__col {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .pc__track {
+    display: grid;
+    gap: 0.875rem;
+    will-change: transform;
+  }
+
+  .pc__tile {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 0.25rem;
+    background: #10182a;
+    box-shadow:
+      0 0 0 1px rgb(var(--white-rgb) / 0.07),
+      0 1.125rem 1.875rem -1.125rem rgb(0 0 0 / 0.8);
+    cursor: none;
+    transition: box-shadow 300ms var(--ease-out);
+  }
+
+  .pc__tile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 25%;
+    filter: grayscale(1) brightness(0.56) contrast(1.08);
+    transition:
+      filter 420ms var(--ease-out),
+      scale 700ms var(--ease-out);
+  }
+
+  /* In the viewfinder, or in the shortlist: in colour. */
+  .pc__tile.is-aimed img,
+  .pc__tile[aria-pressed='true'] img {
+    filter: none;
+  }
+
+  .pc__tile.is-aimed img {
+    scale: 1.05;
+  }
+
+  .pc__tile.is-aimed {
+    box-shadow:
+      0 0 0 1px rgb(var(--white-rgb) / 0.5),
+      0 0 2.5rem -0.375rem rgb(var(--ice-rgb) / 0.45);
+  }
+
+  .pc__tile:focus-visible {
+    outline: 2px solid rgb(var(--tone-lit));
+    outline-offset: 3px;
+  }
+
+  /* ---------- The viewfinder ---------- */
+  .pc__finder {
+    --w: 10rem;
+    --h: 12.5rem;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 6;
+    width: var(--w);
+    height: var(--h);
+    opacity: 0;
+    transform: translate(var(--x, 0), var(--y, 0));
+    pointer-events: none;
+    transition: opacity 300ms var(--ease-out);
+  }
+
+  .pc__finder.is-on {
+    opacity: 1;
+  }
+
+  .pc__corner {
+    position: absolute;
+    width: 1.375rem;
+    height: 1.375rem;
+    border: 0 solid rgb(var(--white-rgb) / 0.92);
+    filter: drop-shadow(0 0 0.375rem rgb(var(--ice-rgb) / 0.6));
+    transition: translate 260ms cubic-bezier(0.2, 1.5, 0.4, 1);
+  }
+
+  .pc__corner--tl {
+    top: 0;
+    left: 0;
+    border-width: 2px 0 0 2px;
+  }
+
+  .pc__corner--tr {
+    top: 0;
+    right: 0;
+    border-width: 2px 2px 0 0;
+  }
+
+  .pc__corner--bl {
+    bottom: 0;
+    left: 0;
+    border-width: 0 0 2px 2px;
+  }
+
+  .pc__corner--br {
+    right: 0;
+    bottom: 0;
+    border-width: 0 2px 2px 0;
+  }
+
+  /* Locking on: the corners close in once, as autofocus does. */
+  .pc__finder.is-locking .pc__corner--tl {
+    translate: 0.4375rem 0.4375rem;
+  }
+
+  .pc__finder.is-locking .pc__corner--tr {
+    translate: -0.4375rem 0.4375rem;
+  }
+
+  .pc__finder.is-locking .pc__corner--bl {
+    translate: 0.4375rem -0.4375rem;
+  }
+
+  .pc__finder.is-locking .pc__corner--br {
+    translate: -0.4375rem -0.4375rem;
+  }
+
+  /* Half-pressed (a press on a creator, before the release takes the shot): the corners close in further, quickly,
+     and hold. */
+  @media (prefers-reduced-motion: no-preference) {
+    .pc__finder.is-half .pc__corner {
+      transition: translate 120ms var(--ease-out);
+    }
+
+    .pc__finder.is-half .pc__corner--tl {
+      translate: 0.6875rem 0.6875rem;
+    }
+
+    .pc__finder.is-half .pc__corner--tr {
+      translate: -0.6875rem 0.6875rem;
+    }
+
+    .pc__finder.is-half .pc__corner--bl {
+      translate: 0.6875rem -0.6875rem;
+    }
+
+    .pc__finder.is-half .pc__corner--br {
+      translate: -0.6875rem -0.6875rem;
+    }
+  }
+
+  .pc__cross {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1.125rem;
+    height: 1.125rem;
+    translate: -50% -50%;
+    background:
+      linear-gradient(rgb(var(--white-rgb) / 0.8), rgb(var(--white-rgb) / 0.8)) center / 1px 100% no-repeat,
+      linear-gradient(rgb(var(--white-rgb) / 0.8), rgb(var(--white-rgb) / 0.8)) center / 100% 1px no-repeat;
+    opacity: 0.7;
+  }
+
+  .pc__af {
+    position: absolute;
+    top: 0.4375rem;
+    left: 1.875rem;
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
+    letter-spacing: 0.12em;
+    color: rgb(var(--white-rgb) / 0.7);
+    transition:
+      color 200ms var(--ease-out),
+      text-shadow 200ms var(--ease-out);
+  }
+
+  .pc__finder.is-locked .pc__af,
+  .pc__finder.is-half .pc__af {
+    color: rgb(var(--tone-lit));
+  }
+
+  .pc__finder.is-half .pc__af {
+    text-shadow: 0 0 0.5rem rgb(var(--tone-lit));
+  }
+
+  .pc__label {
+    position: absolute;
+    top: calc(100% + 0.625rem);
+    left: 0;
+    display: grid;
+    gap: 0.1875rem;
+    white-space: nowrap;
+  }
+
+  /* Near the screen's right edge the caption hangs from the viewfinder's other side (photocall.ts). */
+  .pc__finder.is-flip .pc__label {
+    right: 0;
+    left: auto;
+    justify-items: end;
+    text-align: right;
+  }
+
+  .pc__label b {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+  }
+
+  .pc__label span {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgb(var(--ink) / 0.72);
+  }
+
+  .pc__label b:empty,
+  .pc__label span:empty {
+    display: none;
+  }
+
+  /* Exactly where the pointer is, while it's on the wall (the viewfinder follows a little behind). */
+  :global(.pc__dot) {
+    position: absolute;
+    top: -0.1875rem;
+    left: -0.1875rem;
+    z-index: 6;
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 50%;
+    background: var(--white);
+    box-shadow: 0 0 0.625rem rgb(var(--ice-rgb) / 0.95);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms var(--ease-out);
+  }
+
+  .pc.is-aiming :global(.pc__dot) {
+    opacity: 1;
+  }
+
+  /* A photo on its way from the wall into a division's name (photocall.ts makes it, on the page, where it travels with
+     the page if the visitor scrolls on). */
+  :global(.pc__fly) {
+    position: absolute;
+    z-index: 60;
+    object-fit: cover;
+    object-position: 50% 25%;
+    border-radius: 0.25rem;
+    box-shadow: 0 1.25rem 2.5rem -1.25rem rgb(0 0 0 / 0.9);
+    pointer-events: none;
+  }
+
+  /* ---------- Arriving ---------- */
+  @media (prefers-reduced-motion: no-preference) {
+    /* The headline develops in a burst of camera flashes (flashes.ts): white and blurred in the light, then sharp;
+       its line and button rise after it. */
+    .pc__title {
+      animation: pc-develop 1600ms cubic-bezier(0.2, 0.7, 0.2, 1) 300ms both;
+    }
+
+    /* And a sheen of light crosses the letters every few seconds, as across a lit sign. */
+    .pc__word {
+      background: var(--title-sheen) 100% 0 / 300% 100% no-repeat;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: pc-sheen 6.5s ease-in-out 2.4s infinite;
+    }
+
+    .pc__word--2 {
+      animation-delay: 2.62s;
+    }
+
+    /* Three times the words' width, so it always covers them: at 100% its light is off to the left, at 0% off to the
+       right. */
+    @keyframes pc-sheen {
+      0%,
+      62% {
+        background-position: 100% 0;
+      }
+      100% {
+        background-position: 0% 0;
+      }
+    }
+
+    .pc__body,
+    .pc__stats,
+    .pc__copy > .exp-pill {
+      animation: pc-rise 700ms var(--ease-out) 1000ms both;
+    }
+
+    .pc__stats {
+      animation-delay: 1080ms;
+    }
+
+    .pc__copy > .exp-pill {
+      animation-delay: 1150ms;
+    }
+
+    /* The wall comes up out of the dark, column by column. */
+    .pc__col {
+      animation: pc-col 1100ms var(--ease-out) calc(500ms + var(--c) * 90ms) both;
+    }
+
+    @keyframes pc-develop {
+      0% {
+        opacity: 0;
+        filter: blur(0.75rem) brightness(3);
+        text-shadow:
+          0 0 3.75rem var(--white),
+          0 0 8.75rem rgb(var(--ice-rgb) / 0.9);
+      }
+      10% {
+        opacity: 1;
+        filter: blur(0.1875rem) brightness(2.6);
+        text-shadow:
+          0 0 3.125rem var(--white),
+          0 0 7.5rem rgb(var(--ice-rgb) / 0.85);
+      }
+      100% {
+        opacity: 1;
+        filter: none;
+        text-shadow:
+          0 0 0 rgb(var(--white-rgb) / 0),
+          0 0 0 rgb(var(--ice-rgb) / 0);
+      }
+    }
+
+    @keyframes pc-rise {
+      from {
+        opacity: 0;
+        translate: 0 1rem;
+      }
+    }
+
+    @keyframes pc-col {
+      from {
+        opacity: 0;
+        translate: 0 3.75rem;
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pc__tile,
+    .pc__tile img,
+    .pc__corner {
+      transition: none;
+    }
+  }
+
+  /* ---------- Phones and tablets (the owner, 2026-11-13: rebuilt from the desktop) ----------
+     The wall fills the screen behind, leaning back a little, four columns across a phone (six on a tablet), and fades
+     out towards the foot, where the headline develops, the counts and the way to the roster. The viewfinder still roams
+     it; a tap on a creator takes the shot. */
+  @media (max-width: 1023px) {
+    .pc {
+      min-height: 36rem;
+    }
+
+    /* The wall above the words (so the viewfinder and its caption never cross them), fading out at its foot. */
+    .pc__stage {
+      inset: 0 0 auto;
+      height: 64%;
+      cursor: auto;
+      -webkit-mask-image: linear-gradient(to bottom, #000, #000 62%, transparent);
+      -webkit-mask-composite: source-over;
+      mask-image: linear-gradient(to bottom, #000, #000 62%, transparent);
+      mask-composite: add;
+    }
+
+    .pc__wall {
+      inset: -4% -9% 0;
+      gap: 0.5rem;
+      transform: perspective(56rem) rotateX(12deg);
+      transform-origin: 50% 0;
+    }
+
+    .pc__track {
+      gap: 0.5rem;
+    }
+
+    .pc__col:nth-child(n + 5) {
+      display: none;
+    }
+
+    .pc__tile {
+      cursor: pointer;
+    }
+
+    .pc__copy {
+      top: auto;
+      right: var(--margin);
+      bottom: max(var(--space-6), env(safe-area-inset-bottom));
+      gap: var(--space-3);
+      width: auto;
+      translate: none;
+    }
+
+    .pc__title {
+      font-size: clamp(3rem, 17vw, 6rem);
+    }
+
+    .pc__body {
+      font-size: 1.0625rem;
+    }
+
+    .pc__stat b {
+      font-size: 2rem;
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .pc__col:nth-child(n + 5) {
+      display: block;
+    }
+
+    .pc__col:nth-child(n + 7) {
+      display: none;
+    }
+
+    .pc__copy {
+      right: auto;
+      width: min(36rem, 72vw);
+    }
+  }
+</style>
+
+<script>
+  import { initPhotocall } from '@/scripts/system/photocall';
+  import { initFlashes } from '@/scripts/system/flashes';
+  import { initShortlists } from '@/scripts/system/shortlist';
+  initShortlists();
+  initPhotocall();
+  initFlashes();
+</script>

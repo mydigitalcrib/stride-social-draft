@@ -1,0 +1,33 @@
+/* Applied to screenshots only (playwright.config.ts, toHaveScreenshot's stylePath): what changes from one frame or one
+   visit to the next is hidden in place, so everything standing on it still shows and still moves with the scroll. */
+
+/* Footage, canvases (WebGL, grain, flashes) and embeds: a different frame every time. */
+video,
+canvas,
+iframe {
+  visibility: hidden !important;
+}
+
+/* Stride's notifications come and go on a timer. */
+.exp-note,
+[data-globe-notice],
+[data-story-note] {
+  visibility: hidden !important;
+}
+
+/* The cursor drawn on the page follows the test's mouse. */
+.cursor-glass,
+[data-cursor-glass] {
+  display: none !important;
+}
+
+*,
+*::before,
+*::after {
+  caret-color: transparent !important;
+}
+
+/* Our Work's canvas, out of the picture altogether (hidden, a large WebGL canvas could still hold up the screenshot). */
+.wcanvas__gl {
+  display: none !important;
+}

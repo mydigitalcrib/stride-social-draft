@@ -1,0 +1,24 @@
+# Our Team copy.
+sections:
+  hero:
+    status: draft
+    eyebrow: Our group
+    headline: The people behind Stride.
+    body: Talent managers, campaign leads and the people who keep it all moving.
+  # The field of faces: interface copy written by us.
+  field:
+    status: draft
+    body: Move across the faces · click one to meet them
+    items:
+      - key: all
+        label: Everyone
+      - key: shuffle
+        label: Shuffle
+      # Desktop, where a face no longer opens a card.
+      - key: hint-desk
+        label: Move across the faces to meet the team
+
+  join:
+    status: draft
+    headline: Want to work with us?
+    cta: { label: See Open Roles, href: /careers }

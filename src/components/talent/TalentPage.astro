@@ -1,0 +1,165 @@
+---
+// The Stride Talent page's content, on every screen (phones and tablets rebuilt from the desktop, the owner,
+// 2026-11-13): the photocall (Photocall), the division picker and, right under it, the roster it narrows, the career
+// plan (CareerBuilder), creator stories, and the way on for creators (TalentClose). Copy lives in
+// src/content/pages/talent.yaml; creators only with consent (src/lib/roster.ts), figures only verified.
+import { getCollection, getEntry } from 'astro:content';
+import Photocall from './Photocall.astro';
+import CreatorSheet from './CreatorSheet.astro';
+import CareerBuilder from './CareerBuilder.astro';
+import BackVideo from '../core/BackVideo.astro';
+import DivisionPicker from './DivisionPicker.astro';
+import RosterBrowser from './RosterBrowser.astro';
+import TalentClose from './TalentClose.astro';
+import Deck from '../experience/Deck.astro';
+import PlaceholderNotice from '../core/PlaceholderNotice.astro';
+import { divisionsOf, getRoster } from '@/lib/roster';
+import { creatorView } from '@/lib/creator-view';
+import { routes } from '@/lib/routes';
+import { isPreview } from '@/lib/env';
+import type { Card } from '@/lib/experience';
+import Tray from '@/components/experience/Tray.astro';
+
+const page = await getEntry('pages', 'talent');
+if (!page) throw new Error('Missing src/content/pages/talent.yaml');
+const s = page.data.sections;
+const word = (section: { items?: { key?: string; label: string }[] }, key: string) => section.items?.find((i) => i.key === key)?.label ?? key;
+
+const roster = await getRoster();
+const byId = new Map(roster.map((c) => [c.id, c]));
+const allCategories = (await getCollection('categories')).sort((a, b) => a.data.order - b.data.order);
+const labels = Object.fromEntries(allCategories.map((c) => [c.id, c.data.label]));
+const categoryOf = (c: (typeof roster)[number]) => (c.data.mainCategory ? labels[c.data.mainCategory.id] : undefined);
+
+// The creators Stride Talent's page features (talent.yaml, hero.featured), with a photo and managed by Stride.
+const withPhoto = roster.filter((c) => c.data.portrait);
+const picked = (s.hero.featured ?? []).map((id) => byId.get(id)).filter((c) => !!c && !!c.data.portrait && c.data.relationship === 'managed') as typeof roster;
+
+const apply = { label: s.hero.items?.[1]?.label ?? 'Apply For Management', href: s.hero.items?.[1]?.href ?? '/talent/apply' };
+const explore = { label: s.hero.items?.[0]?.label ?? 'Explore Our Roster', href: s.hero.items?.[0]?.href ?? '/talent/roster' };
+const ui = (key: string, fallback: string) => s.builder?.items?.find((i) => i.key === key)?.label ?? fallback;
+
+const allDivisions = (await getCollection('talentDivisions')).sort((a, b) => a.data.order - b.data.order);
+const quotes = await getCollection('testimonials', (t) => t.data.type === 'creator' && (t.data.consent.status === 'confirmed' || (isPreview && t.data.consent.status === 'legacy')));
+const stories: Card[] = quotes
+  .sort((a, b) => Number(b.data.featured) - Number(a.data.featured))
+  .map((q) => ({
+    name: q.data.name,
+    text: q.data.role,
+    href: '/talent#stories',
+    image: q.data.image,
+    quote: q.data.quote,
+    attribution: `${q.data.name}, ${q.data.role}`,
+  }));
+
+// The photocall's wall, the creators Stride Talent's page features first, then the rest of the roster with a
+// photo (the roster's rules: consent, a photo).
+const photocall = [...new Set([...picked, ...withPhoto])].slice(0, 36).map((c) => ({
+  id: c.id,
+  name: c.data.name,
+  category: categoryOf(c),
+  portrait: c.data.portrait!,
+  confirmed: c.data.consent.status === 'confirmed',
+}));
+
+// The picker and the roster. Sport and Speakers have pages of their own.
+const pickerDivisions = allDivisions
+  .filter((d) => d.data.picker !== null)
+  .sort((a, b) => (a.data.picker ?? 0) - (b.data.picker ?? 0))
+  .map((d) => {
+    const members = roster.filter((c) => divisionsOf(c).includes(d.id));
+    const own = ['sport', 'speakers'].includes(d.id);
+    return {
+      id: d.id,
+      name: d.data.name,
+      own,
+      href: own ? routes.division(d.id) : `/talent/roster?division=${d.id}`,
+      count: members.length,
+      photo: d.data.hero ?? members.find((c) => c.data.portrait)?.data.portrait ?? null,
+      // A few of its creators' faces, for the picker (published roster only, in roster order).
+      faces: members.flatMap((c) => (c.data.portrait ? [c.data.portrait] : [])).slice(0, 6),
+    };
+  });
+const views = roster.map((c) => creatorView(c, labels));
+// The photocall's creators' profiles, for the profile over the page (they've no card here).
+const sheetData = photocall.flatMap((p) => {
+  const v = views.find((x) => x.id === p.id);
+  if (!v) return [];
+  return [{
+    id: v.id,
+    name: v.name,
+    src: v.portrait?.src ?? null,
+    tag: v.relationship,
+    handle: v.handle,
+    details: [v.niche, v.country].filter(Boolean).join(' · ') || null,
+    line: v.line,
+    figure: v.audience ? `${v.audience.figure}${v.audience.platform ? ` on ${v.audience.platform}` : ''}` : null,
+    platforms: v.platforms,
+    enquire: v.enquire,
+    href: v.href,
+    video: v.videos[0]?.src ?? null,
+  }];
+});
+
+const browserWords = Object.fromEntries((s.browser?.items ?? []).map((i) => [i.key ?? '', i.label]));
+// "Meet our talent" shows seventeen at a time (a contact sheet of three rows of six, the last the whole roster's tile),
+// narrowed only by the division picker: so the page carries just those (the first seventeen, and the first seventeen of
+// each division), not the whole roster, with each division's full count on the tile.
+const glimpseSize = 17;
+// The ones it opens on, as chosen in the page copy (talent.yaml, browser.featured), then the roster's own order.
+const featured = (s.browser?.featured ?? []).flatMap((id) => views.filter((v) => v.id === id));
+// Less the ones it leaves out (talent.yaml, browser.leaveOut: creators the owner swapped out of it).
+const leaveOut = new Set(s.browser?.leaveOut ?? []);
+const shown = views.filter((v) => !leaveOut.has(v.id));
+const glimpseDivisions = pickerDivisions.filter((d) => !d.own && d.count > 0).map((d) => d.id);
+const glimpse = [...new Set([...featured, ...shown.slice(0, glimpseSize), ...glimpseDivisions.flatMap((id) => shown.filter((v) => v.divisions.includes(id)).slice(0, glimpseSize))])];
+const glimpseTotals = Object.fromEntries([['', views.length], ...glimpseDivisions.map((id) => [id, views.filter((v) => v.divisions.includes(id)).length])]);
+---
+
+<Tray list="creators" />
+
+{/* Desktop: the page stands in front of Contact's background, the showreel under Stride's frosted navy (the owner,
+    2026-11-13, in place of the step-and-repeat wall, talent/TalentWall.astro, which other Talent pages keep). */}
+<BackVideo look="deep" mp4="/assets/video/stride-showreel-desktop.mp4" webm="/assets/video/stride-showreel-desktop.webm" poster="/assets/site/stride-showreel-desktop-poster.jpg" blur={10} />
+
+{/* The photocall (the owner's choice, 2026-11-12). */}
+<Photocall title={(s.hero.lines ?? []).join(' ')} body={s.hero.body} cta={explore} creators={photocall} counts={{ creators: views.length, divisions: pickerDivisions.length }} />
+{/* A creator's profile over the page: from a name in "Meet our talent.", and the creators picked ("Get to know them"). */}
+<CreatorSheet data={sheetData} />
+
+<DivisionPicker eyebrow={s.picker?.eyebrow} headline={s.picker?.headline} body={s.picker?.body} divisions={pickerDivisions} emptyLabel={word(s.picker ?? {}, 'empty')} />
+{/* "Meet our talent" straight after the division picker that narrows it, then the plan. */}
+<RosterBrowser
+  eyebrow={s.browser?.eyebrow}
+  headline={s.browser?.headline}
+  creators={glimpse}
+  totals={glimpseTotals}
+  divisions={pickerDivisions.filter((d) => !d.own && d.count > 0).map((d) => ({ id: d.id, label: d.name.replace(/^Stride /, '') }))}
+  niches={allCategories.filter((cat) => views.some((v) => v.niches.includes(cat.id))).map((c) => ({ id: c.id, label: c.data.label }))}
+  copy={browserWords}
+  tools={false}
+  pageSize={glimpseSize}
+  sizes="(min-width: 1024px) 16vw, 50vw"
+  cta={s.roster.cta}
+>
+  {isPreview && <PlaceholderNotice variant="inline" label="Interim roster">— from Stride's sheet, with Foam's descriptions and photos. Awaiting Stride: consent, confirmed follower figures, videos. Division membership is proposed.</PlaceholderNotice>}
+</RosterBrowser>
+
+<CareerBuilder
+  eyebrow={s.builder?.eyebrow}
+  headline={s.services.headline}
+  body={s.builder?.body}
+  items={s.services.items ?? []}
+  planTitle={ui('title', 'Your plan')}
+  planEmpty={ui('empty', 'Nothing yet. Switch on what you need.')}
+  apply={apply}
+/>
+
+{stories.length > 0 && (
+  <Deck variant="lineup" id="talent-stories" label="Creator stories" tone="talent" look="deep" tabs={[{ key: 'stories', label: 'Creator Stories', icon: 'quote', anchor: 'stories', atDesk: 'still', cards: stories }]} link={apply} />
+)}
+
+<TalentClose items={s.close?.items ?? []} />
+
+<style>
+</style>

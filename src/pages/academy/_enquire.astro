@@ -1,0 +1,39 @@
+---
+// PARKED (2026-11-10): Stride Academy says "Coming soon" until it opens (the owner), so /academy/enquire goes to
+// /academy for now (scripts/redirects/map.mjs, parkedRedirects). The underscore keeps this file out of the site's
+// routes. To bring the form back: rename it to enquire.astro and take its line out of parkedRedirects.
+// Stride Academy enquiry route (docs/phase-2/05-wireframes.md §E): the short form. Whether this becomes
+// a waitlist, an enquiry or a link to a course platform is Q11; the copy file and
+// PUBLIC_EDUCATION_ENQUIRY_ACTION change, the page doesn't. FAQs are labelled until Stride supplies them,
+// and left out in production.
+import { getEntry } from 'astro:content';
+import SiteLayout from '@/layouts/SiteLayout.astro';
+import FormStage from '@/components/experience/FormStage.astro';
+import PlaceholderNotice from '@/components/core/PlaceholderNotice.astro';
+import EducationEnquiryForm from '@/components/education/EducationEnquiryForm.astro';
+import { enquiryEmail } from '@/config/forms';
+import { isPreview } from '@/lib/env';
+
+const page = await getEntry('pages', 'education');
+if (!page) throw new Error('Missing src/content/pages/education.yaml');
+const { enquiry, final } = page.data.sections;
+const msg = (key: string) => enquiry.items?.find((i) => i.key === key)?.label ?? '';
+---
+
+<SiteLayout title="Enquire | Stride Academy" description={enquiry.body} division="education" look="slate" headerOverlay>
+  <FormStage tone="education" look="slate" crumbs={[{ label: 'Stride Academy', href: '/academy' }, { label: 'Enquire' }]} eyebrow={enquiry.eyebrow} headline={final.headline ?? ''} body={enquiry.body} status={enquiry.status} email={enquiryEmail}>
+    <EducationEnquiryForm tone="dark" messages={{ success: msg('success'), error: msg('error'), unavailable: msg('unavailable'), consent: msg('consent') }} />
+    {isPreview && (
+      <PlaceholderNotice variant="inline" label="FAQs needed">— format (cohorts, on-demand, calls), cost, who it's for, time commitment and how to join (Q11)</PlaceholderNotice>
+    )}
+  </FormStage>
+</SiteLayout>
+
+<script>
+  // The levels picked on /academy arrive ticked.
+  const topics = new URLSearchParams(location.search).get('topics')?.split(',') ?? [];
+  topics.forEach((id) => {
+    const box = document.querySelector<HTMLInputElement>(`input[name="topics"][value="${CSS.escape(id)}"]`);
+    if (box) box.checked = true;
+  });
+</script>

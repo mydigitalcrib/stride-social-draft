@@ -1,0 +1,1495 @@
+---
+// About Stride (the owner's choices, 2026-11-12; phones and tablets too since 2026-11-13, a phone stacking the spread and
+// a swipe moving a chapter): the story told like a film you can scrub, in front of the
+// homepage's showreel as its opening shows it (core/BackVideo). It opens on the headline; scrolling (or pressing play)
+// runs the chapters: Our story, the milestones, Where we work. Each chapter's year rolls into place huge on the left,
+// digit by digit like a counter (a chapter without a year writes its name instead), leaning towards the pointer with a
+// light across it; its title and words come in on the right, word by word, from the side the story is heading (the
+// words before leave the other way). Along the foot a player's bar: play and pause (a line fills towards the next
+// chapter while it plays), a mark for each chapter (pointed at, it names its chapter above the bar), the part played
+// filling up, and a head that can be dragged, which runs the story and scrubs the footage behind with it; while it's
+// dragged the counter runs through the years in between like a real one. A press on the bar seeks there smoothly. The
+// keyboard: the arrow keys, Home, End and Page Up/Down on the head; Space or K plays and pauses from anywhere in the bar.
+// A chapter shows its photographs or a film only when it has them (`images`, `image`, `video`): the year moves up and
+// they come in under it as prints, fanned out, captioned on their white edge (the owner's dated photographs,
+// 2026-11-13); nothing stands in for them meanwhile.
+// Past 1920×1080 everything grows with the screen (rem); on a very wide screen (32:9) the year and the words keep the
+// 1920 composition in the middle. Behaviour: story-reel.ts.
+import Breadcrumbs from '../global/Breadcrumbs.astro';
+import { pad } from '@/lib/experience';
+import { interfaceCopy } from '@/lib/ui-copy';
+
+export interface Props {
+  copy: { headline?: string; body?: string };
+  stops: {
+    id: string;
+    mark: string;
+    title?: string;
+    body: string[];
+    image?: { src: string; alt: string } | null;
+    video?: string | null;
+    /** Its photographs, each with an optional caption: prints fanned out under the year. One with a `video` plays it. */
+    images?: { src: string; alt: string; caption?: string; video?: string; small?: boolean }[];
+    /** A TikTok account whose profile a button previews over the page (TikTok's own embed, loaded only then). */
+    tiktok?: string;
+    chips?: string[];
+  }[];
+  crumbs: { label: string; href?: string }[];
+}
+
+const { copy, stops, crumbs } = Astro.props;
+const t = await interfaceCopy();
+const hint = t('story.hint');
+const isYear = (m: string) => /^\d{4}$/.test(m);
+// A chapter's prints: its film (with its first frame), or its picture and its photographs.
+const printsOf = (s: Props['stops'][number]) =>
+  s.video
+    ? []
+    : [...(s.image ? [{ ...s.image, caption: undefined as string | undefined, video: undefined as string | undefined, small: false }] : []), ...(s.images ?? [])];
+// Where the little prints tucked behind a photograph sit, as shares of its width (x) and of its height (y, for a
+// square; --mh scales it to the photograph's own shape) and how they turn: peeking out at its corners.
+const TUCKED = [
+  [-0.1, -0.04, -10],
+  [0.84, 0.02, 8],
+  [0.86, 0.74, -6],
+  [-0.12, 0.8, 7],
+  [0.36, -0.12, 5],
+  [0.4, 0.9, -4],
+];
+---
+
+<section class="story" aria-labelledby="story-title" data-tone="group" data-look="deep" data-story-reel style={`--n: ${stops.length}`}>
+  <div class="story__stage" data-story-stage>
+    {/* The opening: the headline, until the story starts. */}
+    <div class="story__lead" data-story-lead>
+      <Breadcrumbs items={crumbs} tone="dark" />
+      <h1 class="story__title exp-title" id="story-title">{copy.headline}</h1>
+      {copy.body && <p class="story__body">{copy.body}</p>}
+      <p class="story__hint exp-label">{hint} <span aria-hidden="true">↓</span></p>
+      <slot />
+    </div>
+
+    {/* The chapter's year (or name), huge: a counter that rolls to it. Each strip ends on a second 0, so a 9 can roll
+        on into the next 0 while the head is dragged. */}
+    <div class="story__big" aria-hidden="true" data-story-big>
+      <span class="story__odo" data-story-odo>
+        {[0, 1, 2, 3].map(() => (
+          <span class="story__col"><span class="story__digits">{[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((d) => <i>{d}</i>)}</span></span>
+        ))}
+      </span>
+      <span class="story__word" data-story-word></span>
+    </div>
+
+    {/* A chapter's film or photographs, when it has them: prints under the year (which moves up to make room),
+        fanned out, each with its caption on the print's white edge, on the stage itself (inside the chapters' column
+        they would be placed against the column, not the screen). Pointed at, a print comes to the front. */}
+    {stops.map((s, i) => {
+      const prints = printsOf(s);
+      const mains = prints.filter((p) => !p.small);
+      const tucked = prints.filter((p) => p.small);
+      return (
+        (s.video || prints.length > 0) && (
+          <div class:list={['story__media', { 'story__media--tucked': tucked.length > 0 }]} data-story-media={i} style={`--n: ${s.video ? 1 : mains.length}`}>
+            {s.video ? (
+              <figure class="story__print" style="--k: 0">
+                <video muted loop playsinline preload="none" poster={s.image?.src} aria-hidden="true" data-story-video><source src={s.video} type="video/mp4" /></video>
+              </figure>
+            ) : (
+              <>
+                {mains.map((p, k) => (
+                  <figure class="story__print" style={`--k: ${k}`}>
+                    {p.video ? (
+                      <video muted loop playsinline preload="none" poster={p.src} aria-label={p.alt} data-story-video><source src={p.video} type="video/mp4" /></video>
+                    ) : (
+                      <img src={p.src} alt={p.alt} sizes={k === 0 ? '25vw' : '13vw'} loading="lazy" decoding="async" draggable="false" />
+                    )}
+                    {p.caption && <figcaption>{p.caption}</figcaption>}
+                  </figure>
+                ))}
+                {tucked.slice(0, TUCKED.length).map((p, j) => (
+                  <figure class="story__print story__print--small" style={`--j: ${j}; --sx: ${TUCKED[j][0]}; --sy: ${TUCKED[j][1]}; --sr: ${TUCKED[j][2]}deg`}>
+                    <img src={p.src} alt={p.alt} sizes="9vw" loading="lazy" decoding="async" draggable="false" />
+                  </figure>
+                ))}
+              </>
+            )}
+          </div>
+        )
+      );
+    })}
+
+    {/* A chapter without photographs: Stride's mark, large and in outline, where they would be, so the spread is never
+        half empty. */}
+    <div class="story__emblem" aria-hidden="true">
+      <svg viewBox="0 0 106 106"><path d="M53 53H0L53 0v53Z"></path><path d="M53 106H0l53-53v53Z"></path><path d="M106 53H53l53-53v53Z"></path><path d="M106 106H53l53-53v53Z"></path></svg>
+    </div>
+
+    {/* The chapters' words, one at a time. */}
+    <ol class="story__chapters" role="list">
+      {stops.map((s, i) => (
+        <li
+          class:list={['story__chapter', { 'story__chapter--long': s.body.join(' ').length > 340, 'story__chapter--bare': !(s.video || printsOf(s).length > 0) }]}
+          id={s.id}
+          data-story-chapter
+          data-mark={s.mark}
+          data-year={isYear(s.mark) ? s.mark : undefined}
+        >
+          <p class="story__mark exp-label"><span>{pad(i + 1)}</span>{s.mark}</p>
+          {s.title && <h2 class="story__name" data-story-words data-story-title>{s.title}</h2>}
+          {s.body.map((p) => <p class="story__text" data-story-words>{p}</p>)}
+          {s.chips && s.chips.length > 0 && <p class="story__places">{s.chips.map((c) => <span>{c}</span>)}</p>}
+          {s.tiktok && (
+            <button class="story__tiktok-open" type="button" data-story-tiktok-open={s.tiktok}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"></path></svg>
+              {t('tiktok.open').replace('{handle}', `@${s.tiktok}`)}
+            </button>
+          )}
+        </li>
+      ))}
+    </ol>
+
+    {/* A creator's TikTok profile, previewed over the page: TikTok's own embed, fetched only when it's opened. */}
+    {stops.some((s) => s.tiktok) && (
+      <dialog class="story__tiktok" aria-label={t('tiktok.title')} data-story-tiktok data-lenis-prevent>
+        <button class="story__tiktok-close" type="button" aria-label={t('tiktok.close')} data-story-tiktok-close>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+        </button>
+        {/* TikTok's preview carries its own way to TikTok; until it has loaded, the handle is a plain link there. */}
+        <div class="story__tiktok-frame" data-story-tiktok-frame></div>
+      </dialog>
+    )}
+
+    {/* A Stride notification on the opening: the story can be skipped to meet the team (story-reel.ts). */}
+    <div class="story__note exp-note" role="status" data-story-note>
+      <span class="exp-note__avatar">
+        <svg viewBox="0 0 106 106" aria-hidden="true">
+          <path d="M53 53H0L53 0v53Z"></path>
+          <path d="M53 106H0l53-53v53Z"></path>
+          <path d="M106 53H53l53-53v53Z"></path>
+          <path d="M106 106H53l53-53v53Z"></path>
+        </svg>
+      </span>
+      <span class="exp-note__body">
+        <span class="exp-note__from">{t('opening.from')} <span>{t('opening.when')}</span></span>
+        <span class="exp-note__text">{t('story.note')}</span>
+      </span>
+    </div>
+
+    {/* The player's bar. */}
+    <div class="story__player" data-story-player>
+      <button class="story__play" type="button" aria-pressed="false" data-story-play data-play={t('play.play')} data-pause={t('play.pause')} aria-label={t('play.play')}>
+        <svg class="story__play-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"></path></svg>
+        <svg class="story__play-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"></path></svg>
+      </button>
+      <div class="story__track" data-story-track>
+        <span class="story__rail" aria-hidden="true"><span class="story__fill" data-story-fill></span><span class="story__timer" data-story-timer></span></span>
+        {stops.map((s, i) => (
+          <a
+            class:list={['story__tick', { 'story__tick--first': i === 0, 'story__tick--again': i > 0 && stops[i - 1].mark === s.mark }]}
+            href={`#${s.id}`}
+            style={`--at: ${((i + 1) / (stops.length + 1)) * 100}%`}
+            data-story-go={i}
+          >
+            <span>{s.mark}</span>
+          </a>
+        ))}
+        <span class="story__ghost" aria-hidden="true" data-story-ghost></span>
+        <span class="story__head" role="slider" tabindex="0" aria-label={copy.headline} aria-valuemin="0" aria-valuemax={stops.length} aria-valuenow="0" data-story-head></span>
+        {/* Pointed at, a mark names its chapter here (its own mark and title: no other words). */}
+        <span class="story__preview" aria-hidden="true" data-story-preview><span class="exp-label" data-story-preview-mark></span><span class="story__preview-name" data-story-preview-name></span></span>
+      </div>
+      <span class="story__time exp-label" aria-hidden="true"><b data-story-at>00</b> / {pad(stops.length)}</span>
+      {/* Skipping: straight past the story to what follows it, from the first screen to the last chapter. */}
+      <button class="story__skip" type="button" data-story-skip>{t('story.skip')}<span aria-hidden="true">↓</span></button>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* How fast the story is being scrolled, eased (story-reel.ts). Set only on the chapter and the photographs on
+     screen, which lean with it, and not inherited: nothing inside them reads it, so a change restyles them alone. */
+  @property --story-vel {
+    syntax: '<number>';
+    inherits: false;
+    initial-value: 0;
+  }
+
+  /* The runway: a screen for the opening and most of one for each chapter; the stage holds still meanwhile. */
+  .story {
+    /* On a very wide screen (32:9) the content box grows past 1560px at 1920; the year and the words keep the 1920
+       composition in its middle, instead of parting to its far edges. 0 on every other screen. */
+    --story-in: calc((var(--content-max) - 97.5rem) / 2);
+    /* The room from where the year starts (1vw left of the margin) to the chapters' column, less the page's scrollbar
+       (0.875rem, glass.css) and a 0.5rem gap: the year and the outlined name never cross it. It only binds below
+       about 1310px wide (a narrow laptop, where they would run into the words); from there up they're as they were. */
+    --story-room: calc(100vw - 0.875rem - 2 * var(--margin) - 2 * var(--story-in) - min(36vw, 35rem) + 1vw - 0.5rem);
+    /* The spread (the owner, 2026-11-13: "redesign the whole about section"): a chapter's photographs large on the left
+       (--plate-w), its year and words in one column on the right (--col-x, --col-w), both from the same top
+       (--spread-top), in the same place for every chapter. --yr: the year's size. */
+    --story-w: calc(100vw - 0.875rem - 2 * var(--margin) - 2 * var(--story-in));
+    --plate-w: calc(var(--story-w) * 0.55);
+    --col-w: min(calc(var(--story-w) * 0.41), 36rem);
+    --col-x: calc(100vw - 0.875rem - var(--margin) - var(--story-in) - var(--col-w));
+    --yr: min(clamp(5rem, 8.4vw, 10.5rem), calc(var(--col-w) / 3.07));
+    --spread-top: 15svh;
+    position: relative;
+    height: calc(100svh + (var(--n) + 1) * 72svh);
+    color: rgb(var(--ink));
+  }
+
+  .story__stage {
+    --dir: 1; /* which way the story is heading (story-reel.ts): the words come in from that side */
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: hidden;
+  }
+
+  .story__stage[data-dir='-1'] {
+    --dir: -1;
+  }
+
+  /* ---------- The scroll's motion (the owner, 2026-11-13: "improve the scrolling animations") ----------
+     Scrolling never leaves the stage still: through each chapter's stretch (--cp, 0 to 1, story-reel.ts) its words and
+     photographs drift up, the little prints faster than the rest, for depth; a quick scroll leans them a little
+     (--story-vel, eased back to rest by the script as it slows); and a chapter's photographs leave the way the story is
+     heading, softening as they go, while the next ones come in from the other side. Both are set on the chapter and
+     the photographs on screen only (the script), never on the whole stage, so a frame restyles just them. Not with
+     reduced motion. */
+  @media (prefers-reduced-motion: no-preference) {
+    .story__chapter {
+      transform: translateY(calc((0.5 - var(--cp, 0.5)) * 1.25rem)) skewY(calc(var(--story-vel) * -1.2deg));
+    }
+
+    .story__media {
+      translate: 0 calc((0.5 - var(--cp, 0.5)) * 2.5rem);
+      transform: skewY(calc(var(--story-vel) * -1.6deg));
+    }
+
+    .story__print--small {
+      transform: translateY(calc((0.5 - var(--cp, 0.5)) * 2.5rem));
+    }
+
+    .story__media.is-leaving {
+      visibility: visible;
+      transition: none;
+    }
+
+    .story__media.is-leaving .story__print {
+      opacity: 0;
+      translate: var(--x) calc(var(--y) - 3.5rem * var(--dir));
+      rotate: calc(var(--turn) * 2);
+      filter: blur(0.3rem);
+      transition:
+        opacity 420ms var(--ease-out),
+        translate 560ms var(--ease-in-out),
+        rotate 560ms var(--ease-in-out),
+        filter 420ms var(--ease-out);
+    }
+
+    .story__media.is-leaving .story__print--small {
+      translate: calc(var(--print-w) * var(--sx)) calc(var(--print-w) * var(--sy) * var(--mh, 1) - 3.5rem * var(--dir));
+      rotate: calc(var(--sr) * 2);
+    }
+  }
+
+  /* ---------- The opening ---------- */
+  .story__lead {
+    position: absolute;
+    top: 50%;
+    left: var(--margin);
+    z-index: 3;
+    display: grid;
+    justify-items: start;
+    gap: var(--space-4);
+    width: min(48vw, 47.5rem);
+    opacity: var(--lead, 1);
+    translate: 0 calc(-54% - (1 - var(--lead, 1)) * 2.5rem);
+    pointer-events: var(--lead-events, auto);
+  }
+
+  /* Plain white: the titles carry no glow (the owner, 2026-11-13). */
+  .story__title {
+    font-size: clamp(3.5rem, 9vw, 9.5rem);
+  }
+
+  .story__body {
+    max-width: 32rem;
+    font-size: var(--type-lead);
+    line-height: 1.4;
+    color: rgb(var(--ink) / 0.88);
+  }
+
+  .story__hint span {
+    display: inline-block;
+  }
+
+  /* ---------- The chapter's year, huge ---------- */
+  .story__big {
+    position: absolute;
+    top: var(--spread-top);
+    left: var(--col-x);
+    z-index: 1;
+    width: var(--col-w);
+    opacity: calc(1 - var(--lead, 1));
+    filter: drop-shadow(0 0 2.5rem rgb(var(--ice-rgb) / 0.35));
+    /* Leaning towards the pointer: story-reel.ts eases it there each frame. */
+    transform: perspective(75rem);
+  }
+
+  .story__odo,
+  .story__word {
+    display: flex;
+    font-family: var(--font-display);
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: var(--white);
+    transition: opacity 360ms var(--ease-out);
+  }
+
+  /* 3.07em from its box's left edge to its last digit's right: never more than the room left of the words. */
+  .story__odo {
+    font-size: var(--yr);
+  }
+
+  .story__col {
+    display: block;
+    height: 1em;
+    overflow: hidden;
+  }
+
+  .story__digits {
+    display: flex;
+    flex-direction: column;
+    translate: 0 calc(var(--d, 0) * -1em);
+    /* No digits rolling past: a new year rises in whole (story-reel.ts). Dragged, the strips follow the hand. */
+  }
+
+  .story__digits i {
+    display: block;
+    height: 1em;
+    font-style: normal;
+  }
+
+  /* Dragged: the strips follow the hand. Running fast (or for the start of a roll), a faint echo above and below. */
+  .story__big.is-scrubbing .story__digits {
+    transition: none;
+  }
+
+  .story__big.is-rolling .story__digits i {
+    text-shadow:
+      0 0.07em 0 rgb(var(--white-rgb) / 0.28),
+      0 -0.07em 0 rgb(var(--white-rgb) / 0.28);
+  }
+
+  /* A chapter without a year writes its name where the year stands, on one line, in outline, sitting on the year's
+     line (the longest, WHERE WE WORK, about 10.2em). */
+  .story__word {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 0.28em;
+    font-size: min(clamp(2.5rem, 4.4vw, 5.5rem), calc(var(--col-w) / 10.2));
+    line-height: 1;
+    letter-spacing: -0.03em;
+    white-space: nowrap;
+    text-transform: uppercase;
+    color: transparent;
+    -webkit-text-stroke: 0.1rem rgb(var(--white-rgb) / 0.85);
+    text-shadow: none;
+    opacity: 0;
+  }
+
+  .story__big.is-word .story__odo {
+    opacity: 0;
+  }
+
+  .story__big.is-word .story__word {
+    opacity: 1;
+  }
+
+
+  /* ---------- A chapter's film or photographs: the left half of the spread ----------
+     The main photograph large, its top level with the year's; the others smaller, scattered down its right side in two
+     columns, over its edge. Each is a print: the photograph on white, its caption on the white edge below it. As large
+     as the left half and the height above the player's bar allow. --span: the group's width in main prints (one alone,
+     1.3 with a second beside it, 1.61 with more). */
+  .story__media {
+    --span: calc(1 + min(1, max(0, var(--n) - 1)) * 0.3 + min(1, max(0, var(--n) - 2)) * 0.31);
+    --print-w: min(30rem, (100svh - var(--spread-top) - 13.5rem) / 1.25, var(--plate-w) / var(--span));
+    position: absolute;
+    top: var(--spread-top);
+    left: calc(var(--margin) + var(--story-in));
+    z-index: 1;
+    display: grid;
+    width: var(--print-w);
+    visibility: hidden;
+    transition: visibility 0s linear 400ms;
+  }
+
+  .story__media.is-on {
+    visibility: visible;
+    transition: none;
+  }
+
+  /* All in one cell. The first (--hero 1) is the main print; each other is half its size, placed by its turn in two
+     columns down its right side (--x, --y), over its edge; turned a little, one way then the other. */
+  .story__print {
+    --hero: calc(1 - min(1, var(--k)));
+    --sat: max(0, var(--k) - 1);
+    --col: mod(var(--sat), 2);
+    --row: round(down, var(--sat) / 2, 1);
+    --own: calc(var(--print-w) * (0.5 + 0.5 * var(--hero)));
+    --x: calc((1 - var(--hero)) * var(--print-w) * (0.8 + var(--col) * 0.31));
+    --y: calc((1 - var(--hero)) * var(--print-w) * (0.1 + var(--row) * 0.46 + var(--col) * 0.2));
+    --turn: calc(var(--hero) * -1.5deg + (1 - var(--hero)) * (-4deg + mod(var(--k), 2) * 8deg));
+    grid-area: 1 / 1;
+    align-self: start;
+    width: var(--own);
+    margin: 0;
+    padding: calc(0.375rem * (0.6 + 0.4 * var(--hero)));
+    border-radius: 0.875rem;
+    background: var(--white);
+    box-shadow: 0 2.5rem 4.375rem -1.875rem rgb(0 0 0 / 0.95);
+    z-index: calc(1 + var(--k));
+    opacity: 0;
+    /* Where it comes from: a little lower, turned further. It leaves where it is, fading. */
+    translate: var(--x) calc(var(--y) + 1.75rem * var(--dir));
+    rotate: calc(var(--turn) * 2.2);
+    transition:
+      opacity 300ms var(--ease-out),
+      translate 0s linear 300ms,
+      rotate 0s linear 300ms,
+      scale 400ms var(--ease-out);
+  }
+
+  .story__media.is-on .story__print {
+    opacity: 1;
+    translate: var(--x) var(--y);
+    rotate: var(--turn);
+    transition:
+      opacity 560ms var(--ease-out) calc(var(--k) * 80ms),
+      rotate 560ms var(--spring-pop, cubic-bezier(0.2, 1.4, 0.35, 1)) calc(var(--k) * 80ms),
+      translate 560ms var(--spring-pop, cubic-bezier(0.2, 1.4, 0.35, 1)) calc(var(--k) * 80ms),
+      scale 400ms var(--ease-out);
+  }
+
+  .story__media.is-on .story__print:hover {
+    z-index: 20;
+    rotate: 0deg;
+    scale: 1.05;
+    transition:
+      rotate 500ms var(--spring-pop, cubic-bezier(0.2, 1.4, 0.35, 1)),
+      scale 500ms var(--spring-pop, cubic-bezier(0.2, 1.4, 0.35, 1));
+  }
+
+  /* Little prints tucked behind a photograph, peeking out at its corners (TUCKED above); the photograph is a little
+     narrower, so they have room beside it. Pointed at, one comes to the front. */
+  .story__media--tucked {
+    --print-w: min(30rem, (100svh - var(--spread-top) - 13.5rem) / 1.25, var(--plate-w) / 1.32);
+  }
+
+  .story__print--small {
+    --k: 0;
+    width: calc(var(--print-w) * 0.42);
+    padding: 0.25rem;
+    border-radius: 0.625rem;
+    z-index: 0;
+    translate: calc(var(--print-w) * var(--sx)) calc(var(--print-w) * var(--sy) * var(--mh, 1) + 1.75rem * var(--dir));
+    rotate: calc(var(--sr) * 2);
+  }
+
+  .story__media.is-on .story__print--small {
+    translate: calc(var(--print-w) * var(--sx)) calc(var(--print-w) * var(--sy) * var(--mh, 1));
+    rotate: var(--sr);
+    transition-delay: calc(240ms + var(--j) * 90ms);
+  }
+
+  .story__print--small img {
+    aspect-ratio: 4 / 5;
+    border-radius: 0.375rem;
+  }
+
+  /* The photograph as it was taken, cut down only when it's taller than 4:5. */
+  .story__print img,
+  .story__print video {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: calc(var(--own) * 1.25 - 0.75rem);
+    border-radius: 0.5rem;
+    object-fit: cover;
+  }
+
+  /* A film is cut to the print's 4:5, held near its top, where an upright clip carries its own title. */
+  .story__print video {
+    aspect-ratio: 4 / 5;
+    object-position: 50% 20%;
+  }
+
+  .story__print figcaption {
+    padding: 0.5rem 0.25rem 0.125rem;
+    font-family: var(--font-mono);
+    font-size: calc(0.6875rem * (0.85 + 0.15 * var(--hero)));
+    line-height: 1.3;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgb(var(--navy-900-rgb) / 0.82);
+  }
+
+  /* Stride's mark, where a chapter without photographs would have them (.is-in: the story has started), in outline,
+     softly lit. */
+  .story__emblem {
+    position: absolute;
+    top: var(--spread-top);
+    left: calc(var(--margin) + var(--story-in));
+    z-index: 0;
+    width: min(var(--plate-w) * 0.6, 100svh - var(--spread-top) - 13.5rem);
+    aspect-ratio: 1;
+    opacity: 0;
+    scale: 0.94;
+    filter: drop-shadow(0 0 2rem rgb(var(--ice-rgb) / 0.25));
+    pointer-events: none;
+    transition:
+      opacity 500ms var(--ease-out),
+      scale 700ms var(--ease-out);
+  }
+
+  .story__emblem svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    fill: none;
+    stroke: rgb(var(--white-rgb) / 0.4);
+    stroke-width: 0.09rem;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .story.is-in:not(.has-media) .story__emblem {
+    opacity: calc(1 - var(--lead, 0));
+    scale: 1;
+  }
+
+  /* ---------- The chapters' words ---------- */
+  .story__chapters {
+    position: absolute;
+    top: calc(var(--spread-top) + var(--yr) + 1.75rem);
+    bottom: 8rem;
+    left: var(--col-x);
+    z-index: 2;
+    width: var(--col-w);
+  }
+
+  .story__chapter {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: grid;
+    /* One track as wide as the column: a long word can never widen it past the screen. */
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+    gap: 0.875rem;
+    width: 100%;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 420ms var(--ease-out),
+      visibility 0s linear 420ms;
+  }
+
+  .story__chapter.is-on {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 420ms var(--ease-out);
+  }
+
+  .story__mark {
+    display: flex;
+    gap: 0.75rem;
+    color: rgb(var(--tone-lit));
+  }
+
+  .story__mark span {
+    color: rgb(var(--ink) / 0.5);
+  }
+
+  .story__name {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 2.2vw, 2.75rem);
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    line-height: 0.98;
+    letter-spacing: -0.015em;
+    text-transform: uppercase;
+  }
+
+  .story__text {
+    font-size: 1rem;
+    line-height: 1.62;
+    color: rgb(var(--ink) / 0.86);
+  }
+
+  /* A chapter with a lot to say (over 340 characters) a little smaller, so it fits above the player's bar. */
+  .story__chapter--long .story__text {
+    font-size: 0.875rem;
+    line-height: 1.55;
+  }
+
+  .story__chapter--long {
+    gap: 0.625rem;
+  }
+
+  /* A shorter screen (a laptop at 800 high or less): the spread starts higher, the year is a little smaller and the
+     words are, so every chapter stays above the player's bar. */
+  @media (max-height: 820px) {
+    .story {
+      --spread-top: 12svh;
+      --yr: min(clamp(5rem, 8.4vw, 10.5rem), calc(var(--col-w) / 3.07), 13svh);
+    }
+
+    .story__text,
+    .story__chapter--long .story__text {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+    }
+  }
+
+  /* The words come in together, rising a little from the side the story is heading: the title, then the rest
+     (no longer word by word, which left lines half faded while they arrived). */
+  .story__chapter :global(.story__w) {
+    display: inline-block;
+    opacity: 0;
+    translate: 0 calc(0.35em * var(--dir));
+  }
+
+  .story__chapter.is-on :global(.story__w) {
+    opacity: 1;
+    translate: 0 0;
+    transition:
+      opacity 380ms var(--ease-out) 60ms,
+      translate 460ms var(--ease-out) 60ms;
+  }
+
+  .story__chapter.is-on .story__text :global(.story__w) {
+    transition-delay: 150ms;
+  }
+
+  /* The chapter before leaves the other way, all at once. */
+  .story__chapter.is-leaving :global(.story__w) {
+    opacity: 0;
+    translate: 0 calc(-0.35em * var(--dir));
+    filter: none;
+    transition:
+      opacity 240ms var(--ease-out),
+      translate 240ms var(--ease-out);
+  }
+
+  /* Where we work: its places, large. */
+  .story__places {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.125rem 1.125rem;
+    margin-top: 0.375rem;
+  }
+
+  .story__places span {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 2.4vw, 2.5rem);
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    line-height: 1.05;
+    text-transform: uppercase;
+    color: transparent;
+    -webkit-text-stroke: 0.0625rem rgb(var(--white-rgb) / 0.65);
+    transition:
+      color 300ms var(--ease-out),
+      text-shadow 300ms var(--ease-out);
+  }
+
+  .story__places span:hover,
+  .story__places span.is-lit {
+    color: var(--white);
+    text-shadow: 0 0 1.625rem rgb(var(--ice-rgb) / 0.5);
+  }
+
+  /* ---------- The player's bar ---------- */
+  .story__player {
+    position: absolute;
+    right: var(--margin);
+    bottom: clamp(1.25rem, 3.4svh, 2.25rem);
+    left: var(--margin);
+    z-index: 4;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 1.375rem;
+    padding: 0.625rem;
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgb(var(--white-rgb) / 0.13), rgb(var(--white-rgb) / 0.04));
+    box-shadow:
+      inset 0 0 0 1px rgb(var(--white-rgb) / 0.22),
+      0 1.5rem 3.125rem -1.5rem rgb(0 0 0 / 0.8);
+    backdrop-filter: blur(1rem);
+    -webkit-backdrop-filter: blur(1rem);
+  }
+
+  .story__play {
+    display: grid;
+    place-items: center;
+    width: 2.875rem;
+    height: 2.875rem;
+    border-radius: 50%;
+    /* Glass, as every button on desktop (the --gb-* recipe, styles/system/glass.css). */
+    background: var(--gb-fill);
+    color: var(--white);
+    box-shadow: var(--gb-edge);
+    backdrop-filter: var(--gb-blur);
+    -webkit-backdrop-filter: var(--gb-blur);
+    transition:
+      scale 300ms var(--spring-pop, cubic-bezier(0.2, 1.4, 0.35, 1)),
+      background 300ms var(--ease-out),
+      box-shadow 300ms var(--ease-out);
+  }
+
+  .story__play:hover {
+    scale: 1.08;
+    background: var(--gb-fill-on);
+    box-shadow: var(--gb-edge-on);
+  }
+
+  .story__play svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    fill: currentColor;
+  }
+
+  .story__play-on {
+    margin-left: 0.1875rem;
+  }
+
+  .story__play-off,
+  .story__play[aria-pressed='true'] .story__play-on {
+    display: none;
+  }
+
+  .story__play[aria-pressed='true'] .story__play-off {
+    display: block;
+  }
+
+  /* A chapter's TikTok: a glass pill under its words, the brighter kind (a way forward). */
+  .story__tiktok-open {
+    display: inline-flex;
+    align-items: center;
+    justify-self: start;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    padding: 0.75rem 1.125rem 0.75rem 0.875rem;
+    border-radius: 999px;
+    background: var(--gb-fill-on);
+    box-shadow: var(--gb-edge-on);
+    backdrop-filter: var(--gb-blur);
+    -webkit-backdrop-filter: var(--gb-blur);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--white);
+    transition: scale 300ms var(--spring-pop, cubic-bezier(0.2, 1.4, 0.35, 1));
+  }
+
+  .story__tiktok-open svg {
+    width: 1rem;
+    height: 1rem;
+    fill: currentColor;
+  }
+
+  .story__tiktok-open:hover {
+    scale: 1.04;
+  }
+
+  .story__tiktok-open:focus-visible,
+  .story__tiktok-close:focus-visible {
+    outline: 2px solid rgb(var(--tone-lit));
+    outline-offset: 3px;
+  }
+
+  /* The preview: dark frosted glass over the page, TikTok's profile inside, the way out at its corner. */
+  .story__tiktok {
+    width: min(42rem, 92vw);
+    max-height: 88svh;
+    padding: 3.5rem 1.25rem 1.25rem;
+    border: 0;
+    border-radius: 1.5rem;
+    overflow: auto;
+    background: linear-gradient(135deg, rgb(24 34 54 / 0.94), rgb(10 16 28 / 0.92));
+    box-shadow:
+      inset 0 0 0 1px rgb(var(--white-rgb) / 0.18),
+      0 2rem 5rem -1.5rem rgb(0 0 0 / 0.9);
+    color: var(--white);
+  }
+
+  .story__tiktok::backdrop {
+    background: rgb(var(--navy-900-rgb) / 0.62);
+    backdrop-filter: blur(0.5rem);
+  }
+
+  .story__tiktok[open] {
+    display: grid;
+    gap: 1rem;
+    animation: story-tiktok-in 480ms var(--spring-pop, cubic-bezier(0.2, 1.4, 0.35, 1));
+  }
+
+  @keyframes story-tiktok-in {
+    from {
+      opacity: 0;
+      translate: 0 1.5rem;
+      scale: 0.96;
+    }
+  }
+
+  .story__tiktok-close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: var(--gb-fill);
+    box-shadow: var(--gb-edge);
+    color: var(--white);
+  }
+
+  .story__tiktok-close svg {
+    width: 1.125rem;
+    height: 1.125rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+
+  .story__tiktok-frame {
+    display: grid;
+    place-items: center;
+    min-height: 22rem;
+  }
+
+  .story__tiktok-frame :global(.tiktok-embed) {
+    width: 100%;
+    margin: 0;
+  }
+
+  .story__tiktok-frame :global(.tiktok-embed a) {
+    color: var(--white);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .story__tiktok[open] {
+      animation: none;
+    }
+  }
+
+  /* The notification at the top of the opening, in the shared style (.exp-note, styles/system/glass.css): it drops in
+     from above, between the logo and the menu. */
+  .story__note {
+    position: absolute;
+    top: 1.625rem;
+    inset-inline: 0;
+    z-index: 6;
+    margin-inline: auto;
+    translate: 0 -1.5rem;
+  }
+
+  .story__note.is-on {
+    translate: 0 0;
+  }
+
+  /* Skip the story: a glass pill at the bar's end, bright (the owner, 2026-11-13: "make the skip the story button
+     bright"): the brighter glass (the --gb-* recipe, styles/system/glass.css) tinted ice, a standing glow round it and a
+     light that crosses it every few seconds. While the notification is up (.is-calling) it shines harder: the light
+     crosses it again and again and the glow breathes. */
+  .story__skip {
+    position: relative;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: 2.875rem;
+    padding: 0 1.125rem;
+    border-radius: 999px;
+    background:
+      linear-gradient(180deg, rgb(var(--ice-rgb) / 0.32), rgb(var(--ice-rgb) / 0.16)),
+      var(--gb-fill-on);
+    box-shadow:
+      var(--gb-edge-on),
+      0 0 1.25rem 0.0625rem rgb(var(--ice-rgb) / 0.38);
+    font-weight: 600;
+    backdrop-filter: var(--gb-blur);
+    -webkit-backdrop-filter: var(--gb-blur);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--white);
+    transition:
+      scale 300ms var(--spring-pop, cubic-bezier(0.2, 1.4, 0.35, 1)),
+      background 300ms var(--ease-out),
+      box-shadow 300ms var(--ease-out);
+  }
+
+  .story__skip span {
+    font-size: 0.875rem;
+    transition: translate 300ms var(--spring-pop, cubic-bezier(0.2, 1.4, 0.35, 1));
+  }
+
+  .story__skip:hover {
+    scale: 1.04;
+    box-shadow:
+      var(--gb-edge-on),
+      0 0 1.75rem 0.25rem rgb(var(--ice-rgb) / 0.55);
+  }
+
+  .story__skip:hover span {
+    translate: 0 0.1875rem;
+  }
+
+  .story__skip::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(100deg, transparent 30%, rgb(var(--white-rgb) / 0.6) 50%, transparent 70%) -150% 0 / 60% 100% no-repeat;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .story__skip.is-calling {
+    box-shadow:
+      var(--gb-edge-on),
+      0 0 1.5rem 0.125rem rgb(var(--ice-rgb) / 0.4);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* The light crosses it every few seconds, as across a lit sign. */
+    .story__skip::after {
+      opacity: 1;
+      animation: story-skip-pass 5s var(--ease-in-out) 2s infinite;
+    }
+
+    .story__skip.is-calling {
+      animation: story-skip-glow 1.8s ease-in-out infinite;
+    }
+
+    .story__skip.is-calling::after {
+      animation: story-skip-sweep 1.8s var(--ease-in-out) infinite;
+    }
+
+    @keyframes story-skip-glow {
+      0%,
+      100% {
+        box-shadow:
+          var(--gb-edge-on),
+          0 0 1.25rem 0.0625rem rgb(var(--ice-rgb) / 0.38);
+      }
+      50% {
+        box-shadow:
+          var(--gb-edge-on),
+          0 0 2.25rem 0.375rem rgb(var(--ice-rgb) / 0.65);
+      }
+    }
+
+    @keyframes story-skip-sweep {
+      from {
+        background-position: -150% 0;
+      }
+      to {
+        background-position: 250% 0;
+      }
+    }
+
+    @keyframes story-skip-pass {
+      0%,
+      70% {
+        background-position: -150% 0;
+      }
+      100% {
+        background-position: 250% 0;
+      }
+    }
+  }
+
+  .story__track {
+    position: relative;
+    height: 2.875rem;
+    cursor: pointer;
+    touch-action: none;
+  }
+
+  .story__rail {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    left: 0;
+    height: 0.1875rem;
+    margin-top: -0.09375rem;
+    border-radius: 0.1875rem;
+    background: rgb(var(--white-rgb) / 0.18);
+  }
+
+  .story__fill {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(90deg, rgb(var(--ice-rgb) / 0.6), var(--white));
+    box-shadow: 0 0 0.875rem rgb(var(--ice-rgb) / 0.8);
+    scale: var(--p, 0) 1;
+    transform-origin: 0 50%;
+  }
+
+  /* While it plays: the way to the next chapter, filling in the time it stays (story-reel.ts). */
+  .story__timer {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--from, 0%);
+    width: var(--len, 0%);
+    border-radius: inherit;
+    background: rgb(var(--white-rgb) / 0.55);
+    transform-origin: 0 50%;
+    opacity: 0;
+    transition: opacity 200ms var(--ease-out);
+  }
+
+  .story__timer.is-on {
+    opacity: 1;
+    transition: none;
+  }
+
+  .story__tick {
+    position: absolute;
+    top: 50%;
+    left: var(--at);
+    width: 2px;
+    height: 0.75rem;
+    margin: -0.375rem 0 0 -1px;
+  }
+
+  .story__tick::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgb(var(--white-rgb) / 0.45);
+    transform-origin: 50% 100%;
+    transition: scale 200ms var(--ease-out);
+  }
+
+  .story__tick span {
+    position: absolute;
+    bottom: calc(100% + 0.375rem);
+    left: 50%;
+    translate: -50% 0;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: rgb(var(--ink) / 0.6);
+    transition:
+      color 220ms var(--ease-out),
+      translate 200ms var(--ease-out);
+  }
+
+  .story__tick:hover span,
+  .story__tick.is-on span {
+    color: var(--white);
+  }
+
+  .story__tick:hover::before,
+  .story__tick:focus-visible::before {
+    scale: 1 1.8;
+  }
+
+  .story__tick:hover span,
+  .story__tick:focus-visible span {
+    translate: -50% -0.125rem;
+  }
+
+  .story__tick.is-past::before {
+    background: var(--white);
+  }
+
+  /* A name that would touch the one before it on a narrower screen steps out of the way (story-reel.ts). */
+  .story__tick.is-hushed span {
+    opacity: 0;
+  }
+
+  /* A year written once, over the first of its chapters: the others of the same year keep their mark unnamed (the
+     preview names them when pointed at), so the names never crowd. The first name sits to the left of its mark, clear
+     of the next. */
+  .story__tick--again span {
+    opacity: 0;
+  }
+
+  .story__tick--first span {
+    translate: calc(-100% + 0.375rem) 0;
+  }
+
+  .story__tick--first:hover span,
+  .story__tick--first:focus-visible span {
+    translate: calc(-100% + 0.375rem) -0.125rem;
+  }
+
+  /* Pointed at, the bar shows where a press lands. */
+  .story__ghost {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 0.5rem;
+    height: 0.5rem;
+    margin: -0.25rem 0 0 -0.25rem;
+    border-radius: 50%;
+    background: rgb(var(--white-rgb) / 0.4);
+    box-shadow: 0 0 0 1px rgb(var(--white-rgb) / 0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms var(--ease-out);
+  }
+
+  .story__track.is-hover:not(.is-dragging) .story__ghost {
+    opacity: 1;
+  }
+
+  .story__head {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 1.125rem;
+    height: 1.125rem;
+    margin: -0.5625rem 0 0 -0.5625rem;
+    border-radius: 50%;
+    background: var(--white);
+    box-shadow:
+      0 0 0 0.3125rem rgb(var(--ice-rgb) / 0.25),
+      0 0 1.375rem rgb(var(--ice-rgb) / 0.9);
+    cursor: grab;
+    transition: scale 260ms var(--spring-pop, cubic-bezier(0.2, 1.4, 0.35, 1));
+  }
+
+  .story__track.is-dragging .story__head {
+    scale: 1.3;
+    cursor: grabbing;
+  }
+
+  /* The chapter a mark stands for, named above the bar while it's pointed at (or focused). */
+  .story__preview {
+    position: absolute;
+    bottom: calc(100% + 1.125rem);
+    left: 0;
+    display: grid;
+    gap: 0.125rem;
+    width: max-content;
+    max-width: 22rem;
+    padding: 0.625rem 0.875rem;
+    border-radius: 0.875rem;
+    background: linear-gradient(135deg, rgb(var(--white-rgb) / 0.13), rgb(var(--white-rgb) / 0.04)), rgb(var(--navy-900-rgb) / 0.55);
+    box-shadow:
+      inset 0 0 0 1px rgb(var(--white-rgb) / 0.22),
+      0 1.5rem 3.125rem -1.5rem rgb(0 0 0 / 0.8);
+    backdrop-filter: blur(1rem);
+    -webkit-backdrop-filter: blur(1rem);
+    opacity: 0;
+    pointer-events: none;
+    translate: var(--px, 0px) 0.375rem;
+    transition:
+      opacity 140ms var(--ease-out),
+      translate 140ms var(--ease-out);
+  }
+
+  .story__track.has-preview .story__preview {
+    opacity: 1;
+    translate: var(--px, 0px) 0;
+    transition:
+      opacity 220ms var(--ease-out),
+      translate 220ms var(--ease-out);
+  }
+
+  .story__preview .exp-label {
+    color: rgb(var(--tone-lit));
+  }
+
+  .story__preview-name {
+    font-family: var(--font-display);
+    font-size: 0.9375rem;
+    font-weight: 850;
+    font-stretch: var(--stretch-wide);
+    line-height: 1.05;
+    text-transform: uppercase;
+    color: var(--white);
+  }
+
+  .story__preview-name:empty {
+    display: none;
+  }
+
+  .story__time b {
+    font-weight: 400;
+    color: var(--white);
+  }
+
+  .story__play:focus-visible,
+  .story__skip:focus-visible,
+  .story__tick:focus-visible,
+  .story__head:focus-visible {
+    outline: 2px solid rgb(var(--tone-lit));
+    outline-offset: 3px;
+  }
+
+  /* A narrow laptop: the marks' names close up a little, so neighbours never touch. */
+  @media (max-width: 1199px) {
+    .story__tick span {
+      font-size: 0.5625rem;
+      letter-spacing: 0.04em;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .story__hint span {
+      animation: story-nudge 1.8s ease-in-out infinite;
+    }
+
+    @keyframes story-nudge {
+      50% {
+        translate: 0 0.3125rem;
+      }
+    }
+
+    .story__title {
+      background: var(--title-sheen) 100% 0 / 300% 100% no-repeat;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: story-sheen 6.5s ease-in-out 1.4s infinite;
+    }
+
+    @keyframes story-sheen {
+      0%,
+      62% {
+        background-position: 100% 0;
+      }
+      100% {
+        background-position: 0% 0;
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .story__digits,
+    .story__chapter,
+    .story__chapter.is-on :global(.story__w),
+    .story__chapter.is-leaving :global(.story__w),
+    .story__tick::before,
+    .story__tick span,
+    .story__head {
+      transition: none;
+    }
+
+    .story__tick:hover::before,
+    .story__tick:focus-visible::before {
+      scale: none;
+    }
+
+    .story__big {
+      transition: none;
+    }
+
+    .story__print,
+    .story__media.is-on .story__print {
+      translate: var(--x) var(--y);
+      rotate: var(--turn);
+      scale: none;
+    }
+
+    .story__media.is-on .story__print {
+      transition: opacity 300ms var(--ease-out);
+    }
+
+    .story__print--small,
+    .story__media.is-on .story__print--small {
+      translate: calc(var(--print-w) * var(--sx)) calc(var(--print-w) * var(--sy) * var(--mh, 1));
+      rotate: var(--sr);
+    }
+
+    .story__preview,
+    .story__track.has-preview .story__preview {
+      translate: var(--px, 0px) 0;
+    }
+
+    .story__ghost,
+    .story__timer {
+      display: none;
+    }
+  }
+
+  /* ---------- Phones and tablets: the same film (the owner, 2026-11-13: phones and tablets as the desktop) ----------
+     A tablet keeps the desktop's spread (photographs on the left, the year and the words on the right) at its own
+     width; a phone stacks it: the photographs across the top, then the year, the mark, the title and the words, the
+     player's bar along the foot. A swipe up or down is the next chapter or the one before, glided to (story-reel.ts);
+     the notification comes in under the header; "Skip the story" stays at the bar's end. No scrollbar takes room here. */
+  @media (max-width: 1023px) {
+    .story {
+      /* (--content-max is desktop's: here the content simply spans the margins.) */
+      --story-in: 0px;
+      --story-room: calc(100vw - 2 * var(--margin) - min(36vw, 35rem) + 1vw - 0.5rem);
+      --story-w: calc(100vw - 2 * var(--margin));
+      --col-x: calc(100vw - var(--margin) - var(--col-w));
+    }
+
+    .story__player {
+      gap: 0.75rem;
+      padding: 0.5rem;
+    }
+
+    .story__tick span {
+      display: none;
+    }
+
+    .story__note {
+      top: calc(var(--header-h) + 0.25rem);
+      width: min(27.5rem, calc(100vw - 2 * var(--margin)));
+    }
+  }
+
+  @media (max-width: 767px) {
+    .story {
+      --spread-top: calc(var(--header-h) + 0.25rem);
+      --plate-h: 32svh;
+      --plate-w: var(--story-w);
+      --col-w: var(--story-w);
+      --col-x: var(--margin);
+      --yr: min(3.5rem, 16vw);
+      --words-top: calc(var(--spread-top) + var(--plate-h) + 2.5rem);
+      height: calc(100svh + (var(--n) + 1) * 60svh);
+    }
+
+    .story__lead {
+      right: var(--margin);
+      width: auto;
+    }
+
+    .story__title {
+      font-size: clamp(3rem, 15vw, 5rem);
+    }
+
+    /* The photographs, across the top: as large as the band and the width allow. */
+    /* (A portrait photograph and its caption stand taller than 1.25 of the print's width: 1.45 leaves them room.) */
+    .story__media {
+      --print-w: min(calc(var(--plate-h) / 1.45), calc(var(--plate-w) / var(--span)));
+      top: var(--spread-top);
+      left: var(--margin);
+    }
+
+    .story__media--tucked {
+      --print-w: min(calc(var(--plate-h) / 1.45), calc(var(--plate-w) / 1.32));
+      left: calc(var(--margin) + var(--print-w) * 0.14);
+    }
+
+    .story__print figcaption {
+      font-size: 0.625rem;
+    }
+
+    .story__emblem {
+      top: var(--spread-top);
+      left: 50%;
+      width: min(var(--plate-h), 60vw);
+      translate: -50% 0;
+    }
+
+    /* Under the headline here, so it waits for the story to start (on desktop it has a column of its own). */
+    .story__big {
+      top: var(--words-top);
+      left: var(--margin);
+      width: var(--col-w);
+      transition: opacity 300ms var(--ease-out);
+    }
+
+    .story:not(.is-in) .story__big {
+      opacity: 0;
+    }
+
+    .story__chapters {
+      top: calc(var(--words-top) + var(--yr) + 0.75rem);
+      bottom: calc(4.5rem + max(0.75rem, env(safe-area-inset-bottom)));
+      left: var(--margin);
+      width: var(--col-w);
+    }
+
+    .story__chapter {
+      gap: 0.5rem;
+    }
+
+    .story__name {
+      font-size: clamp(1.25rem, 6vw, 1.625rem);
+    }
+
+    .story__text {
+      font-size: 0.9375rem;
+      line-height: 1.45;
+    }
+
+    .story__chapter--long .story__text {
+      font-size: 0.8125rem;
+      line-height: 1.4;
+    }
+
+    .story__places span {
+      font-size: 1.375rem;
+    }
+
+    .story__player {
+      bottom: max(0.75rem, env(safe-area-inset-bottom));
+      grid-template-columns: auto minmax(0, 1fr) auto;
+    }
+
+    .story__time {
+      display: none;
+    }
+
+    .story__play {
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+
+    .story__skip {
+      height: 2.5rem;
+      padding: 0 0.875rem;
+      font-size: 0.625rem;
+    }
+  }
+
+  /* A short phone: the photographs' band and the words closer. */
+  @media (max-width: 767px) and (max-height: 720px) {
+    .story {
+      --plate-h: 27svh;
+      --yr: min(3rem, 14vw);
+    }
+
+    .story__text {
+      font-size: 0.875rem;
+    }
+
+    .story__chapter--long .story__text {
+      font-size: 0.75rem;
+    }
+  }
+</style>
+
+<script>
+  import { initStoryReel } from '@/scripts/system/story-reel';
+  initStoryReel();
+</script>

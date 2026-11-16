@@ -1,0 +1,86 @@
+# Stride Academy landing copy (docs/phase-2/05-wireframes.md §D). status: approved = from the
+# client brief or signed off; draft = written by us, shows a "Draft copy" tag in preview and
+# blocks production.
+sections:
+  # Stride Academy isn't open yet (the owner, 2026-11-10): the page says "Coming soon" (the owner's words), with one
+  # way on for creators who want to know more: Stride OS's creator form, through /talent/apply
+  # (components/education/ComingSoon.astro). The line and the button's label are ours, approved by the owner (2026-11-10). Everything
+  # below this section is the full page's copy, parked with it (components/education/EducationPage.astro).
+  soon:
+    status: approved
+    eyebrow: Stride Academy
+    lines: [Coming, soon.]
+    body: "For creators who want to know more: tell us who you are."
+    cta: { label: Register your interest, href: /talent/apply }
+
+  hero:
+    status: approved
+    eyebrow: Stride Academy
+    lines: [Every creator, starts somewhere.]
+    body: Learn the skills, understand the industry, and take the first steps toward building a career as a creator.
+    items:
+      - label: Explore Stride Academy
+        href: "#learn"
+      - label: Enquire
+        href: /academy/enquire
+
+  # Verbatim from the brief (PDF §6, "Our purpose").
+  purpose:
+    status: approved
+    eyebrow: Our purpose
+    body: |-
+      Stride operates directly within the influencer industry, working with brands and established creators.
+
+      Stride Academy exists to make practical knowledge and industry experience more accessible to people at the beginning of their careers.
+
+  learn:
+    status: approved
+    eyebrow: What you'll learn
+    headline: What creators can learn.
+
+  # The level map: interface copy written by us.
+  map:
+    status: draft
+    eyebrow: Your path
+    body: Scroll to climb, tap a level to go there, and add the ones you want. They go with your enquiry.
+    items:
+      - key: empty
+        label: Nothing yet. Add the levels you want.
+      - key: add
+        label: Add to my path
+      - key: added
+        label: On my path
+      - key: cta
+        label: Enquire with my path
+      - key: level
+        label: "Level {n} of {total}"
+
+  experience:
+    status: approved
+    eyebrow: How it works
+    headline: The experience.
+
+  stories:
+    status: approved
+    eyebrow: In their words
+    headline: Creator stories.
+
+  # The action depends on Q11 (waitlist, enquiry or course link); "Enquire" works for all three.
+  final:
+    status: approved
+    headline: Start building your creator career.
+    cta: { label: Enquire, href: /academy/enquire }
+
+  enquiry:
+    status: draft
+    eyebrow: Stride Academy
+    body: Tell us a little about yourself and what you'd like to learn, and we'll let you know how Stride Academy can help.
+    items:
+      - key: success
+        label: "Thanks, {name}. We'll be in touch about Stride Academy."
+      - key: error
+        label: Your enquiry was not sent. Try again, or email us directly.
+      - key: unavailable
+        label: Enquiries are temporarily unavailable here. Email us and we'll pick it up from there.
+      - key: consent
+        label: We use these details to reply to your enquiry. See our privacy policy.

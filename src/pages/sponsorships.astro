@@ -1,0 +1,56 @@
+---
+// Our Sponsorships (brief §7: a visual archive of creators, sports teams, events and community
+// initiatives). Only entries Stride has confirmed render, newest first. Desktop (the owner, 2026-11-12): in front of
+// About's footage (the homepage's showreel, blurred, in Stride's navy: core/BackVideo), an exhibition of the moments:
+// the opening with a pile of their photographs, then a chapter per event with its photographs as a collage that
+// opens large (group/SponsorGallery), then the way to get in touch. Phones and tablets have the same exhibition, laid
+// out for their screens (the owner, 2026-11-13: rebuilt from the desktop). With no entries yet, a frosted door with a
+// short honest note, out of search results.
+import { getCollection, getEntry } from 'astro:content';
+import SiteLayout from '@/layouts/SiteLayout.astro';
+import DivisionDoor from '@/components/talent/DivisionDoor.astro';
+import SponsorGallery from '@/components/group/SponsorGallery.astro';
+import EnquiryClose from '@/components/social/EnquiryClose.astro';
+import BackVideo from '@/components/core/BackVideo.astro';
+import PlaceholderNotice from '@/components/core/PlaceholderNotice.astro';
+import { interfaceCopy } from '@/lib/ui-copy';
+import { isPreview } from '@/lib/env';
+
+const s = (await getEntry('pages', 'sponsorships'))?.data.sections;
+if (!s) throw new Error('Missing src/content/pages/sponsorships.yaml');
+const t = await interfaceCopy();
+const entries = (await getCollection('sponsorships', (e) => e.data.approval.status === 'confirmed')).sort((a, b) => b.data.year - a.data.year || (b.data.month ?? 0) - (a.data.month ?? 0));
+const kinds = { creator: 'Creator', 'sports-team': 'Sports team', event: 'Event', community: 'Community' } as const;
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const when = (e: (typeof entries)[number]) => (e.data.month ? `${MONTHS[e.data.month - 1]} ${e.data.year}` : String(e.data.year));
+const crumbs = [{ label: 'About', href: '/about' }, { label: 'Our Sponsorships' }];
+const events = entries.map((e) => ({ id: e.id, name: e.data.title, when: when(e), year: e.data.year, kind: kinds[e.data.type], place: e.data.location, images: e.data.images, summary: e.data.summary }));
+const ui = { hint: t('sponsor.hint'), open: t('sponsor.open'), prev: t('sponsor.prev'), next: t('sponsor.next'), close: t('sponsor.close'), of: t('sponsor.of'), photos: t('sponsor.photos') };
+---
+
+<SiteLayout title="Our Sponsorships | Stride" description={s.hero.body} noindex={entries.length === 0} headerOverlay>
+  {entries.length > 0 ? (
+    <>
+      {/* Desktop: on navy, in front of About's footage. */}
+      <script is:inline>
+        if (window.matchMedia('(min-width: 1024px)').matches) document.documentElement.dataset.look = 'deep';
+      </script>
+      <BackVideo look="deep" mp4="/assets/video/stride-showreel-desktop.mp4" webm="/assets/video/stride-showreel-desktop.webm" poster="/assets/site/stride-showreel-desktop-poster.jpg" blur={12} />
+      <SponsorGallery copy={s.hero} events={events} crumbs={crumbs} ui={ui} />
+      {s.join && <EnquiryClose headline={s.join.headline ?? ''} label={s.join.cta?.label ?? ''} href={s.join.cta?.href} tone="group" look="navy" deskLook="deep" glass />}
+    </>
+  ) : (
+    <DivisionDoor
+      tone="group"
+      look="deep"
+      name={s.hero.headline ?? 'Our sponsorships.'}
+      brand={s.hero.eyebrow}
+      tagline={s.hero.body}
+      text={[s.empty.body ?? '']}
+      crumbs={crumbs}
+      actions={[{ label: 'Stride Social', href: '/social' }, { label: 'Stride Talent', href: '/talent' }]}
+    >
+      {isPreview && <PlaceholderNotice variant="inline" label="Awaiting sponsorship entries (Q12)">— each needs a title, partner, type, year, a photo with alt text, a summary and Stride's confirmation</PlaceholderNotice>}
+    </DivisionDoor>
+  )}
+</SiteLayout>

@@ -1,0 +1,544 @@
+---
+// The homepage's opening, before the hero (inside home/CoverHero.astro), once per visit, on every screen (phones and
+// tablets too since 2026-11-13, the owner: the same film, its notifications across the top of a phone's screen):
+//   1. The gate: the Stride lockup builds (home/IntroReveal.astro) over the showreel itself, playing in Stride's navy
+//      (a monochrome of it, tinted, darkest at the edges, drifting slowly closer and back), and the button to enter
+//      appears as the line along the foot completes. What waits behind the door, seen through the brand's colour (the
+//      owner, 2026-11-12: the blurred still frame before it read as nothing). The same file as the hero's, so it's
+//      ready when the door opens. Pointing at the button (or the keyboard's focus on it) lifts the veil a little.
+//   2. Entering is one shot: the rest of the lockup wipes away and the gate goes to black around the mark, which
+//      travels to the centre and grows to the size the hero's entrance draws it at; the entrance
+//      (src/scripts/system/hero-entrance.ts) takes it from there, breaking it into the triangles that build the headline.
+//   3. Once it has landed, message notifications from Stride arrive one by one at the top of the hero, stacking up
+//      as they come, each with a chime (entering always turns the sound on) and its mark building itself in time with
+//      it; pointed at, the stack fans out and waits; then they slide away, the oldest first.
+// Escape skips it all. Returning visits and reduced motion go straight to the hero, as before. On a phone or tablet the film
+// is the hero's own upright reel (core/Media's `mobile`), so it's ready when the door opens there too. The
+// words are drafts (src/content/pages/interactions.yaml); the notifications are Stride's own lines, never quotes
+// from clients. Sizes are in rem, so past 1920×1080 it keeps its proportions (tokens.css).
+// Behaviour: src/scripts/system/opening.ts.
+import IntroReveal from './IntroReveal.astro';
+import { interfaceCopy } from '@/lib/ui-copy';
+
+export interface Props {
+  words: { label: string; division?: 'social' | 'talent' | 'education' }[];
+  reel: { poster: string; mp4?: string; webm?: string; mobile?: { poster: string; mp4: string; webm?: string } };
+}
+
+const { words, reel } = Astro.props;
+const t = await interfaceCopy();
+const messages = ['opening.m1', 'opening.m2', 'opening.m3'].map((key) => t(key)).filter((m) => !m.startsWith('opening.'));
+const mark = `<svg viewBox="0 0 106 106" aria-hidden="true"><path class="note__tri note__tri--tl" d="M53 53H0L53 0v53Z"/><path class="note__tri note__tri--bl" d="M53 106H0l53-53v53Z"/><path class="note__tri note__tri--tr" d="M106 53H53l53-53v53Z"/><path class="note__tri note__tri--br" d="M106 106H53l53-53v53Z"/></svg>`;
+---
+
+<div class="opening" role="region" aria-label={t('opening.label')} data-opening>
+  <div class="opening__gate" data-opening-gate>
+    <div class="opening__backdrop" aria-hidden="true">
+      <video muted autoplay loop playsinline preload="auto" poster={reel.poster} tabindex="-1">
+        {/* Phones and tablets: the hero's upright reel (the same file it plays there). */}
+        {reel.mobile?.webm && <source src={reel.mobile.webm} type="video/webm" media="(max-width: 1023px)" />}
+        {reel.mobile && <source src={reel.mobile.mp4} type="video/mp4" media="(max-width: 1023px)" />}
+        {reel.webm && <source src={reel.webm} type="video/webm" />}
+        {reel.mp4 && <source src={reel.mp4} type="video/mp4" />}
+      </video>
+    </div>
+    <div class="opening__lockup">
+      <IntroReveal words={words} />
+    </div>
+    <div class="opening__enter">
+      <button class="opening__button" type="button" data-opening-enter data-magnetic>
+        {t('opening.enter')}
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
+      </button>
+    </div>
+  </div>
+</div>
+{/* Straight to the end of the page, before anything is drawn: in the hero it would sit under the header. */}
+<script is:inline>
+  (() => {
+    const opening = document.querySelector('[data-opening]');
+    if (opening) document.body.append(opening);
+  })();
+</script>
+
+{/* The notifications stay in the hero, at its top, for after the headline lands. */}
+<div class="notes" aria-live="polite" data-opening-notes>
+  {messages.map((m) => (
+    <div class="note" data-opening-note>
+      <span class="note__avatar" set:html={mark} />
+      <span class="note__body">
+        <span class="note__from">{t('opening.from')} <span>{t('opening.when')}</span></span>
+        <span class="note__text">{m}</span>
+      </span>
+    </div>
+  ))}
+</div>
+
+<style>
+  /* Only while the opening plays (the hero's inline script adds html.opening-on, before the first paint). */
+  .opening {
+    display: none;
+  }
+
+  :global(html.opening-on) .opening {
+    position: fixed;
+    inset: 0;
+    z-index: 160; /* over the header, under the consent banner (z 200), like the hero's intro */
+    display: block;
+    overflow: hidden;
+    background: #000;
+    color: var(--white);
+    transition: opacity 500ms var(--ease-out);
+  }
+
+  .opening.is-leaving {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* ---------- The gate ---------- */
+  .opening__gate {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: var(--navy-900);
+    transition:
+      opacity 600ms var(--ease-out),
+      background-color 600ms var(--ease-out);
+  }
+
+  .opening.is-black .opening__gate {
+    opacity: 0;
+  }
+
+  /* The showreel in Stride's navy: in monochrome, tinted navy (`color` keeps its light and shade, takes the hue),
+     darkest at the edges so the lockup stands in a pool of it, and drifting slowly closer and back, so however long
+     the gate waits it never comes to a stop. */
+  .opening__backdrop {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    isolation: isolate;
+    background: var(--navy-900);
+  }
+
+  .opening__backdrop video {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(1) contrast(1.1) brightness(0.52) blur(0.1875rem);
+    scale: 1.04;
+    animation: opening-drift 40s var(--ease-in-out) infinite alternate both;
+    transition: filter 900ms var(--ease-out);
+  }
+
+  .opening__backdrop::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: rgb(22 66 128);
+    mix-blend-mode: color;
+  }
+
+  .opening__backdrop::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background:
+      radial-gradient(62% 58% at 50% 48%, rgb(var(--navy-900-rgb) / 0.42), rgb(var(--navy-900-rgb) / 0.76) 68%, rgb(var(--navy-900-rgb) / 0.96) 100%),
+      linear-gradient(rgb(var(--navy-900-rgb) / 0.22), rgb(var(--navy-900-rgb) / 0.22));
+    transition: scale 900ms var(--ease-out);
+  }
+
+  @keyframes opening-drift {
+    from {
+      scale: 1.04;
+    }
+    to {
+      scale: 1.14;
+    }
+  }
+
+  /* Pointed at (or the keyboard's focus on it, opening.ts's .is-keyed), the button lifts the veil a little: the
+     footage brightens and sharpens and the pool of light widens, as if the door were opening. */
+  .opening:has(.opening__button:hover) .opening__backdrop video,
+  .opening.is-keyed:has(.opening__button:focus-visible) .opening__backdrop video {
+    filter: grayscale(1) contrast(1.1) brightness(0.6) blur(0.09375rem);
+  }
+
+  .opening:has(.opening__button:hover) .opening__backdrop::after,
+  .opening.is-keyed:has(.opening__button:focus-visible) .opening__backdrop::after {
+    scale: 1.08;
+  }
+
+  /* The hero's grain over the gate too, so the two match. */
+  .opening__gate::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--grain) 0 0 / var(--grain-size) var(--grain-size);
+    opacity: var(--grain-opacity);
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    animation: grain-shift 1s steps(1, end) infinite;
+  }
+
+  /* The lockup centres itself in the whole screen, as it does in the hero's intro; past 1920×1080 it keeps its share
+     of the screen (in rem: the same up to it). Its line along the foot completes as the button appears (BUTTON_AT,
+     opening.ts), so it never reads as still loading. */
+  .opening__lockup {
+    position: absolute;
+    inset: 0;
+  }
+
+  @media (min-width: 1024px) {
+    .opening :global(.reveal__lockup) {
+      font-size: clamp(22px, min(8vw, 12vh, 4vw + 1.875rem), 6.875rem);
+    }
+  }
+
+  .opening :global(.is-intro-run .reveal__progress-bar) {
+    animation-duration: 2.2s;
+  }
+
+  .opening__enter {
+    position: absolute;
+    bottom: 16vh;
+    left: 50%;
+    opacity: 0;
+    translate: -50% 0.875rem;
+    transition:
+      opacity 600ms var(--ease-out),
+      translate 700ms var(--ease-out);
+    pointer-events: none;
+  }
+
+  .opening.is-ready .opening__enter {
+    opacity: 1;
+    translate: -50% 0;
+    pointer-events: auto;
+  }
+
+  /* The desktop's glass (styles/system/glass.css, the edge menu's capsule), brighter while pointed at or focused from
+     the keyboard, its arrow nudging on; it leans towards the pointer (data-magnetic, src/scripts/system/motion.ts).
+     Its focus is a ring, and from the keyboard a ring of light around the glass. */
+  .opening__button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 3.375rem;
+    padding: 0.625rem 1.875rem;
+    border-radius: 999px;
+    background: var(--gb-fill);
+    box-shadow: var(--gb-edge);
+    font-family: var(--font-mono);
+    font-size: var(--type-label);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--white);
+    backdrop-filter: var(--gb-blur);
+    -webkit-backdrop-filter: var(--gb-blur);
+    /* (No transition on `translate`: the magnet writes it every frame on its own spring.) */
+    transition:
+      background 300ms var(--ease-out),
+      box-shadow 300ms var(--ease-out);
+  }
+
+  /* Lit while pointed at, or focused from the keyboard (.is-keyed): the focus it's given as it appears keeps only the
+     ring, so the button doesn't sit lit before anyone has reached for it. */
+  .opening__button:hover,
+  .opening.is-keyed .opening__button:focus-visible {
+    background: var(--gb-fill-on);
+    box-shadow: var(--gb-edge-on);
+  }
+
+  .opening__button:focus-visible {
+    outline: 2px solid rgb(var(--tone-lit) / 0.8);
+    outline-offset: 0.25rem;
+  }
+
+  .opening.is-keyed .opening__button:focus-visible {
+    box-shadow:
+      var(--gb-edge-on),
+      0 0 1.5rem rgb(var(--tone-lit) / 0.35);
+  }
+
+  .opening__button svg {
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: translate 300ms var(--ease-out);
+  }
+
+  .opening__button:hover svg,
+  .opening.is-keyed .opening__button:focus-visible svg {
+    translate: 0.1875rem 0;
+  }
+
+  /* ---------- Entering (opening.ts, .is-handing) ----------
+     The rest of the lockup wipes away to the right, the button fades, the gate goes to black around the mark, and the
+     mark travels to where the hero's entrance draws its own, at its size there (--hand-x, --hand-y, --hand-s, measured
+     on the click): the entrance takes it from there. */
+  .opening.is-handing .opening__gate {
+    background-color: transparent;
+  }
+
+  .opening.is-handing .opening__backdrop,
+  .opening.is-handing .opening__gate::after {
+    opacity: 0;
+    transition: opacity 600ms var(--ease-out);
+  }
+
+  .opening.is-handing .opening__enter {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms var(--ease-out);
+  }
+
+  .opening.is-handing :global(.reveal__word) {
+    animation: opening-wipe 360ms cubic-bezier(0.55, 0, 1, 0.45) both;
+  }
+
+  .opening.is-handing :global(.reveal__divider) {
+    transform: none;
+    animation: opening-wipe 360ms cubic-bezier(0.55, 0, 1, 0.45) 40ms both;
+  }
+
+  .opening.is-handing :global(.reveal__slot) {
+    animation: opening-wipe 360ms cubic-bezier(0.55, 0, 1, 0.45) 80ms both;
+  }
+
+  .opening.is-handing :global(.reveal__progress) {
+    opacity: 0;
+    transition: opacity 200ms var(--ease-out);
+  }
+
+  .opening.is-handing :global(.reveal__mark) {
+    translate: var(--hand-x) var(--hand-y);
+    scale: var(--hand-s);
+    transition:
+      translate 560ms var(--ease-in-out),
+      scale 560ms var(--ease-in-out);
+  }
+
+  @keyframes opening-wipe {
+    from {
+      clip-path: inset(0 0 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 100%);
+    }
+  }
+
+  /* ---------- The notifications: at the top of the hero, the newest in front, the older ones stacked behind ---------- */
+  .notes {
+    position: absolute;
+    top: 1.625rem;
+    left: 50%;
+    z-index: 101; /* over the header's bar */
+    width: min(27.5rem, 34vw);
+    translate: -50% 0;
+    pointer-events: none;
+  }
+
+  .note {
+    --slot: 0;
+    position: absolute;
+    inset: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 0.8125rem 1.125rem 0.8125rem 0.8125rem;
+    border-radius: 1.25rem;
+    background: rgb(10 16 28 / 0.55);
+    box-shadow:
+      inset 0 0 0 1px rgb(var(--white-rgb) / 0.16),
+      0 1.25rem 2.5rem -1.125rem rgb(0 0 0 / 0.8);
+    color: var(--white);
+    backdrop-filter: blur(1.25rem) saturate(1.3);
+    -webkit-backdrop-filter: blur(1.25rem) saturate(1.3);
+    opacity: 0;
+    transform-origin: 50% 0;
+    translate: 0 -1.5rem;
+    scale: 0.96;
+    transition:
+      opacity 420ms var(--ease-out),
+      scale 560ms cubic-bezier(0.2, 1.3, 0.35, 1),
+      translate 560ms cubic-bezier(0.2, 1.3, 0.35, 1);
+  }
+
+  /* Each newer one pushes the older ones a little further back and down. */
+  .note.is-on {
+    opacity: calc(1 - var(--slot) * 0.32);
+    translate: 0 calc(var(--slot) * 0.875rem);
+    scale: calc(1 - var(--slot) * 0.05);
+  }
+
+  /* Pointed at, the stack fans out, each to its own row, and waits (opening.ts, .is-open). The gaps between them
+     belong to them too (::before), so passing from one to the next doesn't fold it back. */
+  :global(html.has-notes) .note.is-on {
+    pointer-events: auto;
+  }
+
+  .note::before {
+    content: '';
+    position: absolute;
+    inset: -0.25rem 0;
+  }
+
+  .notes.is-open .note.is-on {
+    opacity: 1;
+    translate: 0 calc(var(--slot) * (100% + 0.5rem));
+    scale: 1;
+  }
+
+  /* Leaving: the oldest first. */
+  .notes.is-gone .note {
+    opacity: 0;
+    translate: 0 -1.875rem;
+    transition-duration: 500ms;
+    transition-delay: calc(var(--slot) * -70ms + 140ms);
+  }
+
+  .note__avatar {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    background: var(--navy-900);
+    box-shadow: inset 0 0 0 1px rgb(var(--white-rgb) / 0.2);
+  }
+
+  .note__avatar :global(svg) {
+    width: 1.1875rem;
+    height: 1.1875rem;
+    overflow: visible;
+    fill: var(--white);
+  }
+
+  /* As each arrives, its mark builds itself in time with the chime's two notes (src/scripts/system/chime.ts): the
+     left two triangles fly in, then the right two, as the lockup's do. */
+  .note__avatar :global(.note__tri) {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .note__avatar :global(.note__tri--tl) {
+    --from: -140% -140%;
+  }
+
+  .note__avatar :global(.note__tri--bl) {
+    --from: -140% 140%;
+  }
+
+  .note__avatar :global(.note__tri--tr) {
+    --from: 140% -140%;
+  }
+
+  .note__avatar :global(.note__tri--br) {
+    --from: 140% 140%;
+  }
+
+  .note.is-on .note__avatar :global(.note__tri) {
+    animation: note-tri 380ms cubic-bezier(0.2, 1.3, 0.35, 1) both;
+  }
+
+  .note.is-on .note__avatar :global(:is(.note__tri--tr, .note__tri--br)) {
+    animation-delay: 90ms;
+  }
+
+  @keyframes note-tri {
+    from {
+      opacity: 0;
+      translate: var(--from);
+    }
+  }
+
+  .note__body {
+    display: grid;
+    gap: 0.1875rem;
+  }
+
+  .note__from {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgb(var(--white-rgb) / 0.9);
+  }
+
+  .note__from span {
+    margin-left: 0.375rem;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgb(var(--white-rgb) / 0.55);
+  }
+
+  .note__text {
+    font-size: 1.125rem;
+    line-height: 1.3;
+  }
+
+  /* Phones and tablets: the button to enter on one line, in the desktop's glass (glass.css keeps its recipe for desktop,
+     so it's given here); the notifications across the top of the screen, inside its margins (clear of a notch). */
+  @media (max-width: 1023px) {
+    .opening {
+      --gb-fill: linear-gradient(180deg, rgb(var(--white-rgb) / 0.26) 0%, rgb(var(--white-rgb) / 0.1) 48%, rgb(var(--white-rgb) / 0.05) 52%, rgb(var(--white-rgb) / 0.14) 100%);
+      --gb-edge:
+        inset 0 0 0 1px rgb(var(--white-rgb) / 0.3),
+        inset 0 1px 0.5px rgb(var(--white-rgb) / 0.7),
+        inset 0 -1px 0.5px rgb(var(--white-rgb) / 0.18),
+        inset 0 -0.625rem 1rem -0.75rem rgb(var(--white-rgb) / 0.32),
+        0 0 0 1px rgb(2 8 22 / 0.34),
+        0 0.875rem 1.875rem -1rem rgb(0 0 0 / 0.6);
+      --gb-fill-on: linear-gradient(180deg, rgb(var(--white-rgb) / 0.36) 0%, rgb(var(--white-rgb) / 0.16) 48%, rgb(var(--white-rgb) / 0.09) 52%, rgb(var(--white-rgb) / 0.2) 100%);
+      --gb-blur: blur(1.25rem) saturate(135%);
+    }
+
+    .opening__button {
+      white-space: nowrap;
+    }
+
+    .notes {
+      top: max(0.875rem, env(safe-area-inset-top));
+      left: var(--margin);
+      right: var(--margin);
+      width: auto;
+      max-width: 27.5rem;
+      margin-inline: auto;
+      translate: none;
+    }
+
+    .note {
+      gap: 0.75rem;
+      padding: 0.6875rem 0.875rem 0.6875rem 0.6875rem;
+    }
+
+    .note__avatar {
+      width: 2.375rem;
+      height: 2.375rem;
+    }
+
+    .note__text {
+      font-size: 0.9375rem;
+    }
+  }
+</style>
+
+<script>
+  import { initOpening } from '@/scripts/system/opening';
+  initOpening();
+</script>
