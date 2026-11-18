@@ -1700,6 +1700,27 @@ const icon = {
   }
 
   /* ---------- Tablets: a narrower sidebar ---------- */
+  /* Desktop (the owner, 2026-11-18: on a laptop the post's big words broke mid-word and its text ran out): the post is
+     drawn at its full desktop size (52rem tall) and scaled as one picture to the room the screen has for it (--fy-z,
+     set by the script below), the actions beside it with it, so a laptop shows exactly the 1080 desktop's post,
+     smaller, every word in its place; a bigger screen shows it whole (never larger than drawn, as before). */
+  @media (min-width: 1024px) {
+    .fy__card {
+      height: 52rem;
+      max-height: none;
+    }
+
+    .fy__card,
+    .fy__rail {
+      zoom: var(--fy-z, 1);
+    }
+
+    .fy__item {
+      grid-template-columns: auto calc(4.5rem * var(--fy-z, 1));
+      gap: calc(1.25rem * var(--fy-z, 1));
+    }
+  }
+
   @media (min-width: 768px) and (max-width: 1023px) {
     .fy__label {
       font-size: 0.6875rem;
@@ -1910,6 +1931,8 @@ const icon = {
 
     const video = (i: number) => items[i]?.querySelector<HTMLVideoElement>('.fy__video') ?? null;
     const slidesOf = (i: number) => items[i]?.querySelector<HTMLElement>('[data-fy-slides]') ?? null;
+    // How far the post is scaled down on desktop (--fy-z, set below): a pointer's travel over it, in its own measure.
+    const zoomOf = () => parseFloat(root.style.getPropertyValue('--fy-z')) || 1;
     const slideVideo = (i: number) => items[i]?.querySelector<HTMLVideoElement>('.fy__slide-vid') ?? null;
     const load = (i: number) => {
       const v = video(i);
@@ -1998,7 +2021,7 @@ const icon = {
       });
       el.addEventListener('pointermove', (e) => {
         if (!drag) return;
-        const dx = e.clientX - drag.x;
+        const dx = (e.clientX - drag.x) / zoomOf(); // the post may be scaled down (desktop, --fy-z)
         if (!drag.moved && Math.abs(dx) > 5) {
           drag.moved = true;
           el.setPointerCapture(e.pointerId);
@@ -2014,7 +2037,7 @@ const icon = {
         dragged = true;
         el.classList.remove('is-dragging');
         const from = Math.round(left / Math.max(1, el.clientWidth));
-        const dx = e.clientX - x;
+        const dx = (e.clientX - x) / zoomOf();
         goSlide(i, Math.abs(dx) > el.clientWidth / 6 ? from + (dx < 0 ? 1 : -1) : from);
       };
       el.addEventListener('pointerup', drop);
@@ -2090,6 +2113,18 @@ const icon = {
       const k = list.indexOf(items[active]);
       scrollToEl(dir > 0 ? (list[k + 1] ?? end) : list[Math.max(0, k - 1)]);
     };
+
+    // The post's scale on desktop: the room the screen has for it (the feed's height less its margins) over the height
+    // it's drawn at (52rem); never larger than drawn (CSS reads --fy-z).
+    const desk = window.matchMedia('(min-width: 1024px)');
+    const fit = () => {
+      if (!desk.matches) return root.style.removeProperty('--fy-z');
+      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      const room = feed.clientHeight - 3 * rem;
+      root.style.setProperty('--fy-z', Math.min(1, Math.max(0.4, room / (52 * rem))).toFixed(4));
+    };
+    fit();
+    window.addEventListener('resize', fit, { passive: true });
 
     // The whole feed scrolls as TikTok does, a post at a time (the owner, 2026-11-18: on a laptop the page could come to
     // rest part way, the post cut off at the bottom): a turn of the wheel anywhere over the feed's screen steps the feed
