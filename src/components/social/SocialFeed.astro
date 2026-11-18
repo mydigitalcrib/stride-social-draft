@@ -127,7 +127,7 @@ const icon = {
 };
 ---
 
-<section class="fy" aria-labelledby="fy-title" data-tone="social" data-look="deep" data-fy data-copied={w('copied', 'Link copied')} data-sound-on={w('soundOn', 'Sound on')} data-sound-off={w('soundOff', 'Sound off')}>
+<section class="fy" aria-labelledby="fy-title" data-tone="social" data-look="deep" data-fy data-lenis-prevent data-copied={w('copied', 'Link copied')} data-sound-on={w('soundOn', 'Sound on')} data-sound-off={w('soundOff', 'Sound off')}>
   <h1 class="visually-hidden" id="fy-title">{s.feed?.headline ?? 'Stride Social'}</h1>
   <div class="fy__shell">
     <aside class="fy__side" aria-label="Stride Social">
@@ -2090,6 +2090,73 @@ const icon = {
       const k = list.indexOf(items[active]);
       scrollToEl(dir > 0 ? (list[k + 1] ?? end) : list[Math.max(0, k - 1)]);
     };
+
+    // The whole feed scrolls as TikTok does, a post at a time (the owner, 2026-11-18: on a laptop the page could come to
+    // rest part way, the post cut off at the bottom): a turn of the wheel anywhere over the feed's screen steps the feed
+    // and never the page; past the last post (its "caught up") the page glides on, whole, to the close below, and coming
+    // back up it glides back, whole, to the feed. What scrolls on its own inside keeps the wheel while it can (the
+    // strategies' list, a slide's long words, the Details drawer). And if the page is left part way some other way (the
+    // scrollbar, the keyboard), it settles onto the feed or the close, whichever it was heading for.
+    const GESTURE = 220; // ms without the wheel that ends a gesture (a trackpad's swipe and its glide are one)
+    let wheelAt = 0;
+    let wheelDir = 0;
+    const scrollsItself = (el: Element | null, dy: number) => {
+      for (let n = el; n && n !== root; n = n.parentElement) {
+        if (n === feed) return false;
+        if (n === drawer) return true;
+        const oy = getComputedStyle(n).overflowY;
+        if ((oy === 'auto' || oy === 'scroll') && n.scrollHeight > n.clientHeight + 1 && (dy > 0 ? n.scrollTop + n.clientHeight < n.scrollHeight - 1 : n.scrollTop > 0)) return true;
+      }
+      return false;
+    };
+    const top = () => root.getBoundingClientRect().top + window.scrollY;
+    const pageTo = (y: number) => {
+      const l = (window as unknown as { lenis?: { scrollTo(y: number, o: object): void } }).lenis;
+      if (l) l.scrollTo(y, { duration: reduced() ? 0 : 0.8, force: true });
+      else window.scrollTo({ top: y, behavior: reduced() ? 'auto' : 'smooth' });
+    };
+    root.addEventListener(
+      'wheel',
+      (e) => {
+        if (e.ctrlKey || !e.deltaY || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+        if (scrollsItself(e.target as Element, e.deltaY)) return;
+        e.preventDefault();
+        const dir = Math.sign(e.deltaY);
+        const now = performance.now();
+        const fresh = now - wheelAt > GESTURE || dir !== wheelDir;
+        wheelAt = now;
+        wheelDir = dir;
+        if (!fresh) return;
+        const y = top();
+        // The page part way off the feed: onto the feed, or the close below, whole.
+        if (Math.abs(window.scrollY - y) > 2) return pageTo(dir > 0 ? y + root.offsetHeight : y);
+        const atEnd = feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 2;
+        if (dir > 0 && atEnd) return pageTo(y + root.offsetHeight);
+        if (dir < 0 && feed.scrollTop <= 1) return;
+        go(dir);
+      },
+      { passive: false },
+    );
+    let lastY = window.scrollY;
+    let heading = 0;
+    let settle = 0;
+    window.addEventListener(
+      'scroll',
+      () => {
+        const sy = window.scrollY;
+        if (sy !== lastY) heading = Math.sign(sy - lastY);
+        lastY = sy;
+        window.clearTimeout(settle);
+        settle = window.setTimeout(() => {
+          const y = top();
+          const h = root.offsetHeight;
+          const off = window.scrollY - y;
+          if (off <= 2 || off >= h - 2) return;
+          pageTo(heading > 0 ? (off > h * 0.25 ? y + h : y) : off < h * 0.75 ? y : y + h);
+        }, 180);
+      },
+      { passive: true },
+    );
 
     const say = (text: string) => {
       if (!toast) return;

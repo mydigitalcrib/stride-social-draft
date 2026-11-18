@@ -7,9 +7,14 @@
 // - Videos with their own sound button (Stride Social's feed, Talent's stories, a service's phone) follow the wish
 //   themselves and are marked [data-sound="own"]; every other video is looked after here, one voice at a time: of the
 //   videos playing on the screen that have a sound track, the largest is heard and the others stay muted, so two never
-//   talk over each other. Silent footage (the backgrounds) is simply left as it is.
+//   talk over each other.
+// - Footage behind a page is never heard (the owner, 2026-11-18: "the background SHOULDN'T have sound"): the page
+//   backgrounds, the specialist pages' reels, the homepage's hero and opening film always stay muted (BACKGROUND).
 
 const KEY = 'stride:sound';
+// Footage behind a page, always muted: core/BackVideo, the specialist pages' reels, the homepage's hero and opening film,
+// and anything marked so.
+const BACKGROUND = '[data-sound="none"], [data-backvid-video], [data-spec-reel], [data-opening] video, .cover video';
 type Activation = { hasBeenActive: boolean };
 const activation = () => (navigator as Navigator & { userActivation?: Activation }).userActivation;
 
@@ -72,7 +77,10 @@ export function initSound() {
     const vh = window.innerHeight;
     let best: HTMLVideoElement | null = null;
     let bestArea = 0;
-    const managed = [...document.querySelectorAll<HTMLVideoElement>('video:not([data-sound="own"])')];
+    const all = [...document.querySelectorAll<HTMLVideoElement>('video:not([data-sound="own"])')];
+    // Backgrounds are muted whatever happens; the rest share the one voice.
+    all.forEach((v) => v.matches(BACKGROUND) && !v.muted && (v.muted = true));
+    const managed = all.filter((v) => !v.matches(BACKGROUND));
     for (const v of managed) {
       if (v.paused || v.ended || !hasSound(v)) continue;
       const r = v.getBoundingClientRect();
