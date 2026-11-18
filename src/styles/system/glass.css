@@ -246,8 +246,8 @@
     --gb-sa: 0.5;
   }
 
-  /* The chat's answers also lift a little when pointed at (group/ContactChat), so their translate keeps its easing;
-     the other glass buttons leave translate to the magnets, which write it every frame. */
+  /* No button moves with the pointer any more (the owner, 2026-11-18): the magnets' lean is off (`LEAN` in motion.ts)
+     and the chat's answers no longer lift; translate keeps its easing in case a lean comes back. */
   html body :is(.chat__answer, .glass-btn.glass-btn.glass-btn.glass-btn) {
     transition:
       --gb-on 320ms var(--ease-out),
@@ -810,16 +810,8 @@ html::-webkit-scrollbar-corner {
   color: rgb(var(--press-on));
 }
 
-/* A camera shot (src/scripts/system/shot.ts): the flash, from where the picture was taken, and the press print that
-   flies into the shortlist. Only desktop takes shots, so the print is sized in rem (it grows with the screen). */
-.shot-flash {
-  position: fixed;
-  inset: 0;
-  z-index: 119;
-  background: radial-gradient(60% 70% at var(--fx, 50%) var(--fy, 50%), var(--white), rgb(235 248 255 / 0.8) 40%, rgb(var(--ice-rgb) / 0.45));
-  pointer-events: none;
-}
-
+/* A camera shot (src/scripts/system/shot.ts): the press print that flies into the shortlist (no flash since
+   2026-11-18). Only desktop takes shots, so the print is sized in rem (it grows with the screen). */
 .shot-print {
   position: fixed;
   z-index: 120;

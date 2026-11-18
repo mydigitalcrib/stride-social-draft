@@ -1,7 +1,7 @@
 {
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist", "node_modules", "public", "duplicade-stride", "website - here"],
+  "exclude": ["dist", "dist-next", "node_modules", "public", "duplicade-stride", "website - here"],
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {

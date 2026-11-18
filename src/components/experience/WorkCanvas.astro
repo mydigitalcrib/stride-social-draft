@@ -10,9 +10,8 @@
 // leaving the page (work-preview.ts): the tile grows into its picture on the left (its footage playing, its clips a
 // press away) and the case rises in on the right, to read down: the campaign, the brief, the strategy and the
 // execution, verified results, a verified quote, its creators; the previous and next projects a step away. A list
-// view is there for reading. A notification from Stride says how it works, once, with the chime. Turn the camera on and the canvas
-// follows your hand, a fist over a project opens it and a fist again closes it (hand-motion.ts: a hand-tracking
-// model that runs on the visitor's device, fetched when the camera is turned on; nothing recorded or sent).
+// view is there for reading. No notification and no hand camera since 2026-11-18 (the owner: "we're not gonna use it
+// anymore").
 // The canvas is drawn with WebGL (work-canvas.ts) from the pictures below, each fetched at the size a tile needs; the
 // keyboard gets a link per case study, which brings its tile to the middle (the arrow keys walk from tile to tile).
 // Without WebGL it opens as the list. Only visible case studies, as before. Phones and tablets have the same
@@ -76,7 +75,6 @@ const chaptersOf = (s: Story) => [
   ...(s.quote ? [t('work.words')] : []),
   ...(s.creators.length ? [t('work.creators')] : []),
 ];
-const mark = `<svg viewBox="0 0 106 106" aria-hidden="true"><path d="M53 53H0L53 0v53Z"/><path d="M53 106H0l53-53v53Z"/><path d="M106 53H53l53-53v53Z"/><path d="M106 106H53l53-53v53Z"/></svg>`;
 ---
 
 <section class="wcanvas" aria-label={headline} data-tone="social" data-look="deep" data-work-canvas>
@@ -229,11 +227,6 @@ const mark = `<svg viewBox="0 0 106 106" aria-hidden="true"><path d="M53 53H0L53
         <button type="button" aria-pressed="true" data-canvas-view="grid">{t('work.grid')}</button>
         <button type="button" aria-pressed="false" data-canvas-view="list">{t('work.list')}</button>
       </div>
-      {/* The camera: off until pressed. */}
-      <button class="wcanvas__hand-toggle" type="button" aria-pressed="false" data-label-on={t('work.hand')} data-label-off={t('work.handOff')} data-label-wait={t('work.handStart')} data-canvas-hand>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h3l1.6-2.2h7.8l1.6 2.2h3v11h-17z"></path><circle cx="12" cy="12.8" r="3.4"></circle></svg>
-        <span data-canvas-hand-label>{t('work.hand')}</span>
-      </button>
     </div>
     {next && (
       <a class="exp-pill exp-pill--glass wcanvas__next" href={next.href} data-magnetic>
@@ -243,25 +236,6 @@ const mark = `<svg viewBox="0 0 106 106" aria-hidden="true"><path d="M53 53H0L53
     )}
   </div>
 
-  {/* The camera's picture, mirrored, with where it sees your hand; and that same place on the canvas. */}
-  <div class="wcanvas__cam" hidden data-canvas-cam>
-    <div class="wcanvas__cam-frame">
-      <video muted playsinline aria-hidden="true" data-canvas-cam-video></video>
-      <i class="wcanvas__cam-dot" aria-hidden="true" data-canvas-cam-dot></i>
-    </div>
-    <span>{t('work.handPrivate')}</span>
-  </div>
-  <span class="wcanvas__hand" aria-hidden="true" data-canvas-hand-dot><i></i></span>
-  <span hidden data-canvas-hand-note={t('work.handNote')} data-canvas-hand-no={t('work.handNo')}></span>
-
-  {/* How it works: a notification from Stride, once (work-canvas.ts). */}
-  <div class="wcanvas__note exp-note" role="status" data-canvas-note>
-    <span class="exp-note__avatar" set:html={mark} />
-    <span class="exp-note__body">
-      <span class="exp-note__from">{t('opening.from')} <span>{t('opening.when')}</span></span>
-      <span class="exp-note__text">{t('work.hint')}</span>
-    </span>
-  </div>
 </section>
 
 <style>
@@ -593,233 +567,6 @@ const mark = `<svg viewBox="0 0 106 106" aria-hidden="true"><path d="M53 53H0L53
     gap: 0.5rem;
   }
 
-  .wcanvas__hand-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    min-height: 2.75rem;
-    padding: 0 1rem;
-    border-radius: 999px;
-    background: var(--glass);
-    box-shadow: var(--glass-edge);
-    font-family: var(--font-mono);
-    font-size: var(--type-label);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: rgb(var(--ink) / 0.86);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    transition:
-      background 240ms var(--ease-out),
-      color 240ms var(--ease-out),
-      scale 380ms var(--spring-pop, cubic-bezier(0.2, 1.4, 0.35, 1));
-  }
-
-  .wcanvas__hand-toggle:hover,
-  .wcanvas__hand-toggle[aria-pressed='true'] {
-    background: var(--glass-lit);
-    color: rgb(var(--ink));
-  }
-
-  /* Starting (the camera, then the model: a few seconds the first time), a light sweeps across it meanwhile. */
-  .wcanvas__hand-toggle[aria-busy='true'] {
-    background-image: linear-gradient(100deg, transparent 30%, rgb(var(--hair) / 0.18) 50%, transparent 70%), var(--glass);
-    background-size: 200% 100%, auto;
-    animation: whand-wait 1.6s linear infinite;
-  }
-
-  @keyframes whand-wait {
-    from {
-      background-position: 150% 0, 0 0;
-    }
-
-    to {
-      background-position: -50% 0, 0 0;
-    }
-  }
-
-  .wcanvas__hand-toggle:focus-visible {
-    outline: 2px solid rgb(var(--tone-lit));
-    outline-offset: 2px;
-  }
-
-  .wcanvas__hand-toggle svg {
-    width: 1rem;
-    height: 1rem;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.6;
-    stroke-linejoin: round;
-  }
-
-  .wcanvas__hand-toggle[hidden] {
-    display: none;
-  }
-
-  /* The camera's picture: small, mirrored, above the way on, with a dot where it sees your hand. */
-  .wcanvas__cam {
-    position: absolute;
-    right: var(--margin);
-    bottom: 6rem;
-    z-index: 5;
-    display: grid;
-    gap: 0.375rem;
-    width: 11.75rem;
-  }
-
-  .wcanvas__cam[hidden] {
-    display: none;
-  }
-
-  .wcanvas__cam-frame {
-    position: relative;
-    overflow: hidden;
-    border-radius: 0.875rem;
-    box-shadow:
-      inset 0 0 0 1px rgb(var(--hair) / 0.3),
-      0 1rem 1.875rem -1rem rgb(0 0 0 / 0.9);
-  }
-
-  .wcanvas__cam video {
-    display: block;
-    width: 100%;
-    aspect-ratio: 4 / 3;
-    object-fit: cover;
-    transform: scaleX(-1);
-  }
-
-  .wcanvas__cam-dot {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0.875rem;
-    height: 0.875rem;
-    margin: -0.4375rem 0 0 -0.4375rem;
-    border-radius: 50%;
-    box-shadow:
-      inset 0 0 0 2px var(--white),
-      0 0 0.625rem 0.125rem rgb(var(--tone-glow) / 0.8);
-    opacity: 0;
-    transition:
-      opacity 200ms var(--ease-out),
-      left 90ms linear,
-      top 90ms linear;
-  }
-
-  .wcanvas__cam.is-seen .wcanvas__cam-dot {
-    opacity: 1;
-  }
-
-  .wcanvas__cam span {
-    font-family: var(--font-mono);
-    font-size: 0.5625rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: rgb(var(--ink) / 0.6);
-  }
-
-  /* Where the camera sees your hand: a ring of light on the canvas (placed every frame by the script), faint until
-     it sees one, brighter and larger while it's moving the canvas, with a tick pointing the way it's going; small
-     and full when the hand is a fist. As the camera starts, it pulses out once from the middle. */
-  .wcanvas__hand {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 5;
-    width: 3.625rem;
-    height: 3.625rem;
-    margin: -1.8125rem 0 0 -1.8125rem;
-    border-radius: 50%;
-    box-shadow:
-      inset 0 0 0 2px rgb(var(--hair) / 0.75),
-      0 0 1.875rem 0.25rem rgb(var(--tone-glow) / 0.5);
-    opacity: 0;
-    transform: translate(var(--hx, 50vw), var(--hy, 50vh)) scale(var(--hs, 0.8));
-    transition:
-      opacity 300ms var(--ease-out),
-      box-shadow 200ms var(--ease-out);
-    pointer-events: none;
-  }
-
-  .wcanvas__hand::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    box-shadow:
-      inset 0 0 0 2px rgb(var(--hair) / 0.9),
-      0 0 1.875rem 0.25rem rgb(var(--tone-glow) / 0.6);
-    opacity: 0;
-  }
-
-  .wcanvas__hand i {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    transform: rotate(var(--ha, 0deg));
-    transition: opacity 200ms var(--ease-out);
-  }
-
-  .wcanvas__hand i::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    right: -0.75rem;
-    width: 0.5625rem;
-    height: 0.5625rem;
-    margin-top: -0.28125rem;
-    border-top: 2px solid rgb(var(--hair) / 0.9);
-    border-right: 2px solid rgb(var(--hair) / 0.9);
-    transform: rotate(45deg);
-  }
-
-  .wcanvas.is-hand .wcanvas__hand {
-    opacity: 0.18;
-  }
-
-  .wcanvas.is-hand .wcanvas__hand.is-seen {
-    opacity: 0.7;
-  }
-
-  .wcanvas.is-hand .wcanvas__hand.is-moving,
-  .wcanvas.is-hand .wcanvas__hand.is-fist,
-  .wcanvas.is-hand .wcanvas__hand.is-start {
-    opacity: 1;
-  }
-
-  .wcanvas__hand.is-start::before {
-    animation: whand-start 700ms var(--ease-out);
-  }
-
-  @keyframes whand-start {
-    from {
-      opacity: 0.6;
-      scale: 0.6;
-    }
-
-    to {
-      opacity: 0;
-      scale: 1.5;
-    }
-  }
-
-  .wcanvas__hand.is-fist {
-    box-shadow:
-      inset 0 0 0 2px rgb(var(--hair) / 0.95),
-      inset 0 0 0 2.5rem rgb(var(--hair) / 0.22),
-      0 0 2.125rem 0.5rem rgb(var(--tone-glow) / 0.7);
-  }
-
-  .wcanvas__cam.is-fist .wcanvas__cam-dot {
-    box-shadow:
-      inset 0 0 0 0.4375rem var(--white),
-      0 0 0.625rem 0.125rem rgb(var(--tone-glow) / 0.8);
-  }
-
-  .wcanvas__hand.is-moving i {
-    opacity: 1;
-  }
-
   .wcanvas__views {
     display: flex;
     gap: 0.25rem;
@@ -867,7 +614,6 @@ const mark = `<svg viewBox="0 0 106 106" aria-hidden="true"><path d="M53 53H0L53
   }
 
   /* Pressed, they give a little, and spring back. */
-  .wcanvas__hand-toggle:active,
   .wcanvas__views button:not(:disabled):active {
     scale: 0.97;
   }
@@ -900,31 +646,7 @@ const mark = `<svg viewBox="0 0 106 106" aria-hidden="true"><path d="M53 53H0L53
     }
   }
 
-  /* The notification, at the top of the screen, as elsewhere: solid, not blurred, over the moving canvas (centred on
-     its own width, styles/system/glass.css). */
-  .wcanvas__note {
-    position: absolute;
-    top: 1.625rem;
-    left: 50%;
-    z-index: 101;
-    margin-left: calc(min(27.5rem, 34vw) / -2);
-    background: rgb(14 24 42 / 0.94);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    translate: 0 -1.125rem;
-  }
-
-  .wcanvas__note.is-on {
-    translate: 0 0;
-  }
-
   @media (prefers-reduced-motion: reduce) {
-    .wcanvas__hand-toggle[aria-busy='true'],
-    .wcanvas__hand.is-start::before {
-      animation: none;
-    }
-
-    .wcanvas__hand-toggle:active,
     .wcanvas__views button:not(:disabled):active {
       scale: none;
     }
@@ -1867,18 +1589,6 @@ const mark = `<svg viewBox="0 0 106 106" aria-hidden="true"><path d="M53 53H0L53
 
     .wcanvas__body {
       max-width: 34ch;
-    }
-
-    .wcanvas__hand-toggle {
-      display: none;
-    }
-
-    .wcanvas__note {
-      top: max(0.75rem, env(safe-area-inset-top));
-      right: var(--margin);
-      left: var(--margin);
-      width: auto;
-      margin-left: 0;
     }
 
     .wcanvas__list a {

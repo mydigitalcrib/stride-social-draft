@@ -18,13 +18,57 @@ const corner = (px: number) => `${(px * (desktop() ? uiScale() : 1)).toFixed(2)}
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), video[controls], [tabindex]:not([tabindex="-1"])';
 const SETTLE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
+/** A spread (experience/BigCard.astro, `bigcard--spread`) never scrolls: if what it holds is taller than its room, its
+ *  sizes come down (--fit) until it all fits, never below 0.7. A phone reads it as a page, so there it stays as drawn. */
+function fit(detail: HTMLElement) {
+  const box = detail.querySelector<HTMLElement>('[data-fit]');
+  if (!box) return;
+  box.style.removeProperty('--fit');
+  if (getComputedStyle(box).overflowY !== 'hidden') return;
+  let k = 1;
+  for (let i = 0; i < 6 && k > 0.7 && box.scrollHeight > box.clientHeight + 1; i++) {
+    k = Math.max(0.7, k * Math.min(0.96, Math.sqrt(box.clientHeight / box.scrollHeight)));
+    box.style.setProperty('--fit', k.toFixed(3));
+  }
+}
+
 /** The big card's contents come in with its clip, as if a camera had just focused (desktop, motion allowed). */
 function focusIn(detail: HTMLElement) {
   const run = (el: Element | null, keyframes: Keyframe[], options: KeyframeAnimationOptions) => {
     if (!el) return;
-    const a = el.animate(keyframes, { fill: 'backwards', ...options });
-    a.finished.then(() => a.cancel(), () => {});
+    try {
+      const a = el.animate(keyframes, { fill: 'backwards', ...options });
+      a.finished.then(() => a.cancel(), () => {});
+    } catch {
+      /* a browser that can't animate this (a pseudo-element) shows it as it stands */
+    }
   };
+  // A spread opens as one: the photo settles out of a dim close-up, the name and words rise, then the columns come
+  // in from the right one after another, each hairline drawing down after it and its lines following in turn.
+  if (detail.classList.contains('bigcard--spread')) {
+    run(detail.querySelector('.bigcard__image'), [{ transform: 'scale(1.12)', filter: 'brightness(0.7)' }, { transform: 'none', filter: 'none' }], { duration: 1000, easing: SETTLE });
+    [...detail.querySelectorAll('.bigcard__eyebrow, .bigcard__name, .bigcard__copy, .bigcard__chips')].forEach((el, i) =>
+      run(el, [{ opacity: 0, transform: 'translateY(1rem)' }, { opacity: 1, transform: 'none' }], { duration: 560, delay: 140 + i * 60, easing: SETTLE }),
+    );
+    const slots = [...detail.querySelectorAll('.bigcard__slot')].slice(0, 6);
+    slots.forEach((slot, i) => {
+      const at = 220 + i * 90;
+      run(slot, [{ opacity: 0, transform: 'translateX(1.75rem)' }, { opacity: 1, transform: 'none' }], { duration: 640, delay: at, easing: SETTLE });
+      run(slot, [{ transform: 'scaleY(0)' }, { transform: 'none' }], { duration: 760, delay: at + 60, easing: SETTLE, pseudoElement: '::after' });
+      [...slot.querySelectorAll('.bigcard__block-list li')].slice(0, 10).forEach((li, j) =>
+        run(li, [{ opacity: 0, transform: 'translateY(0.375rem)' }, { opacity: 1, transform: 'none' }], { duration: 440, delay: at + 160 + j * 35, easing: SETTLE }),
+      );
+    });
+    [...detail.querySelectorAll('.bigcard__rest > :not(.bigcard__blocks)')].forEach((el, i) =>
+      run(el, [{ opacity: 0, transform: 'translateY(0.75rem)' }, { opacity: 1, transform: 'none' }], { duration: 520, delay: 300 + slots.length * 90 + i * 60, easing: SETTLE }),
+    );
+    run(detail.querySelector('.bigcard__close'), [{ opacity: 0, rotate: '-90deg' }, { opacity: 1, rotate: '0deg' }], {
+      duration: 480,
+      delay: 160,
+      easing: 'cubic-bezier(0.3, 1.25, 0.45, 1)',
+    });
+    return;
+  }
   run(detail.querySelector('.bigcard__image'), [{ transform: 'scale(1.08)' }, { transform: 'none' }], { duration: 900, easing: SETTLE });
   const rise = (els: Element[], start: number, step: number) =>
     els.forEach((el, i) =>
@@ -155,6 +199,7 @@ export function initGrow(root: HTMLElement, opts: { canOpen?: (card: HTMLElement
     openCard = card;
     detail.hidden = false;
     detail.scrollTop = 0;
+    fit(detail);
     card.closest('[data-grow-row]')?.setAttribute('inert', '');
     root.classList.add('has-big-card');
     if (opts.hold) hold();
@@ -176,6 +221,12 @@ export function initGrow(root: HTMLElement, opts: { canOpen?: (card: HTMLElement
     }),
   );
   root.querySelectorAll('[data-grow-close]').forEach((b) => b.addEventListener('click', () => close()));
+  // A spread open while the window changes size fits itself again.
+  let refit = 0;
+  window.addEventListener('resize', () => {
+    cancelAnimationFrame(refit);
+    refit = requestAnimationFrame(() => openDetail && fit(openDetail));
+  });
   root.addEventListener('keydown', (e) => {
     if ((e as KeyboardEvent).key === 'Escape' && openDetail) close();
   });

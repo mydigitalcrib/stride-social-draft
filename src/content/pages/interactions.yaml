@@ -4,14 +4,12 @@ sections:
   ui:
     status: draft
     items:
-      # The homepage opening (desktop): Stride's own lines, never quotes from clients
+      # The homepage opening ("Enter", one big word: the owner's choice, 2026-11-17; its notifications are gone).
+      # `from` and `when` head Stride's notifications elsewhere (Our Work, About).
       - { key: opening.label, label: Stride opening }
-      - { key: opening.enter, label: Enter Stride }
+      - { key: opening.enter, label: Enter }
       - { key: opening.from, label: Stride }
       - { key: opening.when, label: now }
-      - { key: opening.m1, label: We find the creators. }
-      - { key: opening.m2, label: We make the content. }
-      - { key: opening.m3, label: We report what worked. }
       # The shortlist tray
       - { key: tray.brief.title, label: Your brief }
       - { key: tray.brief.action, label: Start a campaign }
@@ -28,23 +26,20 @@ sections:
       - { key: stories.prev, label: The service before }
       - { key: stories.next, label: The service after }
       - { key: service.includes, label: What's included }
-      - { key: service.add, label: add it to your brief }
-      - { key: service.hint, label: Press a line to add it to your brief }
       - { key: service.more, label: Read more }
       - { key: service.less, label: Read less }
+      # A service's phone (social/ServiceHero.astro)
+      - { key: phone.reels, label: Reels }
+      - { key: phone.prev, label: Previous video }
+      - { key: phone.next, label: Next video }
+      - { key: phone.soundOn, label: Turn the sound on }
+      - { key: phone.soundOff, label: Turn the sound off }
       # Talent
       - { key: picker.hint, label: Point at a division to meet its creators }
       - { key: picker.creators, label: creators }
       - { key: picker.see, label: Click to see them below }
       - { key: picker.page, label: Click for its own page }
-      - { key: work.hint, label: Drag to explore our work · click a project to open it }
       - { key: work.views, label: View }
-      - { key: work.hand, label: Move with your hand }
-      - { key: work.handOff, label: Camera off }
-      - { key: work.handPrivate, label: Only on this device · nothing is recorded }
-      - { key: work.handStart, label: Starting the camera… }
-      - { key: work.handNote, label: Move your hand to move our work · make a fist over a project to open it }
-      - { key: work.handNo, label: The camera isn't available here }
       - { key: work.grid, label: Grid }
       - { key: work.list, label: List }
       - { key: work.case, label: Case study }
@@ -149,9 +144,6 @@ sections:
       # Stride Sport, Stride Podcasts, Stride Speakers (desktop)
       - { key: spec.sport.count, label: athletes and sport creators }
       - { key: spec.sport.all, label: See all athletes }
-      - { key: spec.sport.squad, label: Your squad. }
-      - { key: spec.sport.squadHint, label: Click an athlete above to put them in your squad. Eleven on the pitch. }
-      - { key: spec.sport.bench, label: '+{n} on the bench' }
       - { key: spec.podcasts.count, label: shows }
       - { key: spec.podcasts.onair, label: On air }
       - { key: spec.speakers.count, label: speakers }

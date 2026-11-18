@@ -341,6 +341,21 @@ const sectionCopy = z.object({
   featured: z.array(z.string()).optional(),
   /** Collection entry ids this section leaves out (e.g. creators the owner swapped out of "Meet our talent."). */
   leaveOut: z.array(z.string()).optional(),
+  /** Niches, each a roster category (`key`), its name (`label`) and its creators in order (roster ids; Stride Talent 2.0's rings). */
+  niches: z
+    .array(
+      z.object({
+        key: z.string(),
+        label: z.string(),
+        creators: z.array(z.string()).default([]),
+        // Clips of the niche itself, played in place of its creators' stories: under their creator's name when `creator`
+        // (a roster id) says who made it, else under Stride Talent's.
+        clips: z.array(z.object({ src: z.string(), poster: z.string(), alt: z.string(), creator: z.string().optional() })).default([]),
+        // Its stories end on a card offering the niche's full roster, which opens as a post on /talent's profile.
+        rosterPost: z.boolean().default(false),
+      }),
+    )
+    .optional(),
 });
 const pages = defineCollection({
   loader: glob({ pattern: '*.yaml', base: './src/content/pages' }),

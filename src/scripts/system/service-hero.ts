@@ -1,14 +1,13 @@
-// A Stride Social service's page on desktop (social/ServiceHero.astro): what it includes goes into the visitor's brief
-// a line at a time (shortlist.ts, the same entries the stack of cards made: `<service>:<n>`), each landing with a small
-// burst at its tick and a light along its rule; its pictures follow one another every few seconds (or a dot chooses
+// A Stride Social service's page (social/ServiceHero.astro): its phone plays its clips one after another, as reels do;
+// without any, its pictures follow one another every few seconds (or a dot chooses
 // one), waiting while the pointer or the keyboard is on the frame, while it's out of view or the tab is hidden; the
 // frame leans towards the pointer under a glare, its badge and dots floating a little above the picture; its words open
 // to the rest with "Read more", in place, what's below gliding down to make room (and back up again).
 // Under reduced motion nothing moves by itself or leans, but the dots still choose a picture.
-import { addTo, listOf, removeFrom } from './shortlist';
 import { reduced } from './env';
 
 const NEXT = 4200; // ms a picture stays on
+const MAX_CLIP = 15; // s a clip on the phone plays at most before the next
 const EASE_OUT = 'cubic-bezier(0.22, 1, 0.36, 1)';
 const clampHalf = (v: number) => Math.min(0.5, Math.max(-0.5, v));
 
@@ -16,50 +15,6 @@ export function initServiceHero() {
   const root = document.querySelector<HTMLElement>('[data-service-hero]');
   if (!root || root.dataset.ready) return;
   root.dataset.ready = 'true';
-  const service = root.dataset.service ?? '';
-
-  /* ---------- What it includes, into the brief ---------- */
-  const items = [...root.querySelectorAll<HTMLButtonElement>('[data-shero-item]')];
-  const sync = () => {
-    const ids = new Set(listOf('brief').map((x) => x.id));
-    items.forEach((b) => b.setAttribute('aria-pressed', String(ids.has(`${service}:${b.dataset.sheroItem}`))));
-  };
-  const glow = getComputedStyle(root).getPropertyValue('--tone-glow').trim() || '207 237 248';
-  // It lands like a meteor: two rings and six sparks at its tick, a light along its rule, its number glowing.
-  const land = (b: HTMLButtonElement) => {
-    if (reduced()) return;
-    const burst = document.createElement('span');
-    burst.className = 'shero__burst';
-    burst.setAttribute('aria-hidden', 'true');
-    burst.innerHTML = `<i></i><i></i>${Array.from({ length: 6 }, (_, k) => `<b style="--a: ${k * 60 + 15}deg"></b>`).join('')}`;
-    b.querySelector('.shero__tick')?.append(burst);
-    const sweep = document.createElement('span');
-    sweep.className = 'shero__sweep';
-    sweep.setAttribute('aria-hidden', 'true');
-    sweep.innerHTML = '<i></i>';
-    b.append(sweep);
-    window.setTimeout(() => {
-      burst.remove();
-      sweep.remove();
-    }, 900);
-    b.querySelector('.shero__no')?.animate(
-      [{ textShadow: `0 0 0 rgb(${glow} / 0)` }, { textShadow: `0 0 0.875rem rgb(${glow} / 0.9)`, offset: 0.35 }, { textShadow: `0 0 0 rgb(${glow} / 0)` }],
-      { duration: 600, easing: 'ease-out' },
-    );
-  };
-  items.forEach((b) =>
-    b.addEventListener('click', () => {
-      const id = `${service}:${b.dataset.sheroItem}`;
-      if (b.getAttribute('aria-pressed') === 'true') removeFrom('brief', id);
-      else {
-        addTo('brief', { id, label: b.dataset.label ?? '', group: service });
-        land(b);
-      }
-      sync();
-    }),
-  );
-  document.addEventListener('shortlist:render', sync);
-  sync();
 
   /* ---------- Read more: opened in place ---------- */
   // What moves when the words open (everything around them, as the column re-centres, and the frame beside it) glides
@@ -122,6 +77,88 @@ export function initServiceHero() {
         },
       );
     });
+  }
+
+  /* ---------- Its phone: videos one after another, as reels play ---------- */
+  // Each clip plays (muted until the sound is turned on) for its length, or MAX_CLIP at most, then the next slides up;
+  // after the last, the first again. A press on the right goes on, on the left back. It rests while it's out of view or
+  // the tab is hidden; with reduced motion nothing plays by itself (the presses still change the clip, its first frame).
+  const phone = root.querySelector<HTMLElement>('[data-shero-phone]');
+  if (phone) {
+    const clips = [...phone.querySelectorAll<HTMLElement>('[data-shero-clip]')];
+    const videos = clips.map((c) => c.querySelector<HTMLVideoElement>('video')!);
+    const bars = [...phone.querySelectorAll<HTMLElement>('[data-shero-bar]')];
+    const sound = phone.querySelector<HTMLButtonElement>('[data-shero-sound]');
+    const auto = !reduced();
+    let at = 0;
+    let muted = true;
+    let seen = false;
+    let raf = 0;
+    const limit = (v: HTMLVideoElement) => Math.min(Number.isFinite(v.duration) && v.duration > 0 ? v.duration : MAX_CLIP, MAX_CLIP);
+    const paint = () => {
+      bars.forEach((b, k) => b.style.setProperty('--p', k < at ? '1' : k > at ? '0' : String(Math.min(1, videos[at].currentTime / limit(videos[at])))));
+    };
+    const tick = () => {
+      raf = 0;
+      const v = videos[at];
+      paint();
+      if (v.currentTime >= limit(v) - 0.05) return show(at + 1);
+      if (!v.paused) raf = requestAnimationFrame(tick);
+    };
+    const play = () => {
+      if (!auto || !seen || document.hidden) return;
+      const v = videos[at];
+      v.muted = muted;
+      v.play().then(() => {
+        if (!raf) raf = requestAnimationFrame(tick);
+      }, () => {});
+    };
+    const show = (i: number) => {
+      const was = at;
+      at = (i + clips.length) % clips.length;
+      clips.forEach((c, k) => {
+        c.classList.toggle('is-on', k === at);
+        c.classList.toggle('is-before', k === was && k !== at);
+        if (k === at) c.removeAttribute('aria-hidden');
+        else c.setAttribute('aria-hidden', 'true');
+        c.querySelector('a')?.setAttribute('tabindex', k === at ? '0' : '-1');
+      });
+      videos.forEach((v, k) => {
+        if (k === at) return;
+        v.pause();
+        if (k === was) window.setTimeout(() => (v.currentTime = 0), 650);
+      });
+      // The next one starts loading while this one plays.
+      const next = videos[(at + 1) % videos.length];
+      if (next.preload === 'none') next.preload = 'auto';
+      videos[at].currentTime = 0;
+      cancelAnimationFrame(raf);
+      raf = 0;
+      paint();
+      play();
+    };
+    videos.forEach((v) => v.addEventListener('ended', () => v === videos[at] && show(at + 1)));
+    phone.querySelector('[data-shero-next]')?.addEventListener('click', () => show(at + 1));
+    phone.querySelector('[data-shero-prev]')?.addEventListener('click', () => show(at - 1));
+    sound?.addEventListener('click', () => {
+      muted = !muted;
+      videos[at].muted = muted;
+      sound.setAttribute('aria-pressed', String(!muted));
+      sound.setAttribute('aria-label', (muted ? sound.dataset.off : sound.dataset.on) ?? '');
+      if (!muted && videos[at].paused) play();
+    });
+    const rest = () => {
+      videos[at].pause();
+      cancelAnimationFrame(raf);
+      raf = 0;
+    };
+    new IntersectionObserver((entries) => {
+      seen = entries[entries.length - 1].isIntersecting;
+      if (seen) play();
+      else rest();
+    }, { threshold: 0.35 }).observe(phone);
+    document.addEventListener('visibilitychange', () => (document.hidden ? rest() : play()));
+    paint();
   }
 
   /* ---------- Its pictures, one after another ---------- */

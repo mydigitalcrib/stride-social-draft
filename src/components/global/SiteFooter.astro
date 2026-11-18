@@ -3,7 +3,7 @@
 // colour of its own: the background stays as the page ended (src/scripts/system/backdrop.ts) and its text,
 // lines and logo use the live ink. Phones and tablets go to dark navy here (data-look).
 // Every screen (phones and tablets since 2026-11-13): it arrives once, like a film's closing credits, as it comes into
-// view (the lockup rises, the line is written in, the columns follow one after another, the rule above the base draws
+// view (the lockup rises, the columns follow one after another, the rule above the base draws
 // itself across), and its links underline as the pointer, a finger or the keyboard reaches them. Without the script, or
 // with reduced motion, it's simply there.
 import StrideLogo from '../core/StrideLogo.astro';
@@ -32,7 +32,6 @@ const lastCol = footerColumns.length;
   <div class="footer__inner">
     <div class="footer__brand">
       <a href="/" aria-label="Stride home"><StrideLogo tone="dark" /></a>
-      <p class="footer__line">Built around creators.</p>
     </div>
 
     <nav class="footer__cols" aria-label="Footer">
@@ -96,15 +95,6 @@ const lastCol = footerColumns.length;
     display: grid;
     gap: var(--space-4);
     align-content: start;
-  }
-
-  .footer__line {
-    max-width: 26ch;
-    font-family: var(--font-serif);
-    font-size: 1.5rem;
-    font-style: italic;
-    line-height: 1.25;
-    color: rgb(var(--ink) / 0.85);
   }
 
   .footer__cols {
@@ -172,7 +162,7 @@ const lastCol = footerColumns.length;
   }
 
   /* Narrow desktops: the five columns need the whole width (eight of twelve columns can't hold their longest words,
-     so Contact would run past the margin): the lockup and its line go above them. */
+     so Contact would run past the margin): the lockup goes above them. */
   @media (min-width: 1024px) and (max-width: 1279px) {
     .footer__brand,
     .footer__cols {
@@ -231,10 +221,6 @@ const lastCol = footerColumns.length;
         translate 600ms var(--ease-out);
     }
 
-    .footer.is-armed .footer__line {
-      transition: clip-path 1100ms var(--ease-in-out) 150ms;
-    }
-
     .footer.is-armed .footer__title {
       transition: opacity 600ms var(--ease-out) calc(var(--c) * 70ms);
     }
@@ -267,10 +253,6 @@ const lastCol = footerColumns.length;
 
     .footer.is-armed:not(.is-in) .footer__col li {
       translate: 0 0.875rem;
-    }
-
-    .footer.is-armed:not(.is-in) .footer__line {
-      clip-path: inset(0 100% 0 0);
     }
 
     .footer.is-armed:not(.is-in) .footer__base::before {

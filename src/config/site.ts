@@ -19,7 +19,13 @@ export const site = {
   showReviewTags: false,
 } as const;
 
+/** Where a role is read (the owner, 2026-11-18: "if someone clicks on read the role redirect them" here): Stride's
+ *  jobs on LinkedIn, in place of the site's own role pages. */
+export const jobsUrl = 'https://www.linkedin.com/company/stridesocialagency/jobs/';
+
 export const socials = [
   { label: 'Instagram', href: 'https://www.instagram.com/stridetalent/' },
   { label: 'LinkedIn', href: 'https://www.linkedin.com/company/stridesocialagency/' },
+  // Stride Social's TikTok (the owner, 2026-11-18): Contact's Social row and the footer.
+  { label: 'TikTok', href: 'https://www.tiktok.com/@stridesocial' },
 ] as const;

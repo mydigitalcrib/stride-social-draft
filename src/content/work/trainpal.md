@@ -16,7 +16,9 @@ card:
   src: /assets/cms/ecff7266-trainpal-cover.webp
   alt: TrainPal campaign
 homeTile: null
-videos: []
+videos:
+  # The Fellas' sponsored read for TrainPal (FULL POD EP.194 on YouTube, 0:12–0:52), from the document (2026-11-17).
+  - src: /assets/video/case-trainpal-1.mp4
 brief: null
 strategy: null
 execution: null
@@ -48,4 +50,4 @@ seo:
 ---
 <!-- Original case study copy from the previous site, kept for the editorial rewrite. -->
 <p>&nbsp;TrainPal is a leading travel app helping users across the UK and Europe find affordable train tickets with a seamless booking experience.</p><p>&nbsp;Stride Social partnered TrainPal with <strong>The Fellas Studio</strong>, a well-known UK podcast with a loyal following. By integrating TrainPal into the podcast content, we were able to align the brand with relevant conversations, build credibility, and tap into an engaged community of listeners who matched TrainPal’s customer base.</p><p><strong>The Results</strong></p><ul><li>Over <strong>1.2 million impressions</strong> generated<br><br></li><li><strong>2,400+ likes</strong> across campaign content<br><br></li><li>Increased brand visibility and positioning as a go-to app for rail travel<br><br></li><li>Ongoing app download tracking in progress, with early indicators showing positive growth<br><br></li></ul><p>This campaign showcased the power of <strong>podcast influencer marketing</strong> in building awareness, trust, and measurable results for app-based brands.</p><p>&nbsp;</p>
-<p><em>At Stride Social we strive to bring the very best results to the brands we work with. Whether it's through our unique </em><a href="/our-services"><em>services</em></a><em> or our hand-picked </em><a href="/creators"><em>creator roster</em></a><em>. Our expertise comes from our unique </em><a href="/about"><em>story</em></a><em> and life experience in this space. If you would like to work with us on your campaign, then </em><a href="/contact"><em>get in touch.</em></a></p>
+<p><em>At Stride Social we strive to bring the very best results to the brands we work with. Whether it's through our unique </em><a href="/our-services"><em>services</em></a><em> or our hand-picked </em><a href="/talent"><em>creator roster</em></a><em>. Our expertise comes from our unique </em><a href="/about"><em>story</em></a><em> and life experience in this space. If you would like to work with us on your campaign, then </em><a href="/contact"><em>get in touch.</em></a></p>

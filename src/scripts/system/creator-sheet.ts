@@ -117,7 +117,7 @@ export function initCreatorSheet() {
   const entryOf = (item: { id: string; label: string; image?: string }): SheetEntry => {
     const card = cardOf(item.id);
     if (card) return fromCard(card);
-    return carried.get(item.id) ?? { id: item.id, name: item.label, src: item.image, href: `/talent/roster/${item.id}` };
+    return carried.get(item.id) ?? { id: item.id, name: item.label, src: item.image, href: `/talent?creator=${encodeURIComponent(item.id)}` };
   };
 
   const fill = (e: SheetEntry) => {
@@ -157,7 +157,7 @@ export function initCreatorSheet() {
     );
     enquire.href = e.enquire ?? `/talent/enquire?creator=${encodeURIComponent(e.id)}`;
     enquireLabel.textContent = `${enquireWords} ${e.name}`;
-    profile.href = e.href ?? `/talent/roster/${e.id}`;
+    profile.href = e.href ?? `/talent?creator=${encodeURIComponent(e.id)}`;
     keep.dataset.keepId = e.id;
     keep.dataset.keepLabel = e.name;
     if (e.src) keep.dataset.keepImage = e.src;
@@ -327,7 +327,7 @@ export function initCreatorSheet() {
   };
 
   // To the creator before or after: the print slides out one way (on from where a flick left it) and the next comes in
-  // from the other, its photo developing. Presses while it's on its way only change where it's going: the slide out
+  // from the other. Presses while it's on its way only change where it's going: the slide out
   // under way brings in the latest.
   const arrive = () => {
     moving = false;
@@ -340,15 +340,7 @@ export function initCreatorSheet() {
     print.style.removeProperty('rotate');
     print.animate([{ opacity: 0, translate: `${by * 60 * k}px 0` }, { opacity: 1, translate: '0 0' }], { duration: 380, easing: 'cubic-bezier(0.2, 0.9, 0.3, 1)' });
     text.animate([{ opacity: 0, translate: `${by * 24 * k}px 0` }, { opacity: 1, translate: '0 0' }], { duration: 420, easing: 'cubic-bezier(0.2, 0.9, 0.3, 1)' });
-    // Developing, as the photocall's prints do.
-    photo.animate(
-      [
-        { filter: `brightness(2.6) contrast(0.7) blur(${2 * k}px)` },
-        { filter: `brightness(1.3) blur(${0.5 * k}px)`, offset: 0.35 },
-        { filter: 'none' },
-      ],
-      { duration: 700, easing: 'ease-out' },
-    );
+    // No overexposed "developing" any more: it read as a camera flash (the owner, 2026-11-18).
   };
   const go = (by: number, from = 0) => {
     const to = at + by;

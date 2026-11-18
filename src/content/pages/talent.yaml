@@ -11,8 +11,10 @@ sections:
     lines: [Stride, Talent.]
     body: We give our talent 360° management, supporting every side of their career.
     items:
-      - label: Explore Our Roster
-        href: /talent/roster
+      # The hero's button: to the creator sign-up (/talent/apply, Stride OS's form; the owner, 2026-11-17: it was
+      # "Explore Our Roster").
+      - label: Apply to Stride
+        href: /talent/apply
       - label: Apply For Management
         href: /talent/apply
     # Roster ids for the portrait wall (proposed; each needs confirmed consent before launch).
@@ -144,10 +146,9 @@ sections:
   close:
     status: draft
     items:
+      # Just the row: its line and its button were taken off (the owner, 2026-11-18); the row still leads to the sign-up.
       - key: creators
         label: Join the roster.
-        copy: For creators. Tell us where you want to go next.
-        cta: Apply For Management
         href: /talent/apply
 
   enquiry:

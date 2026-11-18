@@ -1,0 +1,2193 @@
+---
+// Stride Talent's Instagram profile, recreated as the opening of /talent (the owner, 2026-11-17: "for the beginning of
+// Stride Talent I want this exactly first ... recreate this", instagram.com/stridetalent): its picture, handle and blue
+// badge, name, posts / followers / following, category and bio, its link, Follow / Message / Apply, its highlights in a
+// row (Talent 2.0's: Join Stride and the niches, each playing its stories), the grid / reels / tagged tabs and its latest posts, three to a row as Instagram lays them out, each opening the
+// post on Instagram. Laid out as Instagram's profile is, on the page's own navy (the site's background, not
+// Instagram's black), in the system's own type as Instagram's is. Reels is Stride Talent's case studies, each played
+// here with its sound (the owner, 2026-11-18); the third tab is the roster.
+// Phones: Instagram's phone profile (the picture beside the figures, the bio under them, the buttons full width, the
+// highlights a row that scrolls). Data: src/config/stride-instagram.ts (read off the profile on 2026-11-17).
+import StoryPlayer from './StoryPlayer.astro';
+import { strideInstagram as ig } from '@/config/stride-instagram';
+import { talentStories } from '@/lib/talent-stories';
+import { routes } from '@/lib/routes';
+
+// Its highlights are Stride Talent 2.0's rings (the owner, 2026-11-17): "Join Stride", then a highlight per niche that
+// plays that niche's stories in Talent 2.0's player (lib/talent-stories.ts, scripts/system/talent-stories.ts), drawn
+// as Stride's highlight covers: navy, the name in white type.
+const { niches, stories, groups, words, join, rosterPosts } = await talentStories();
+// The third tab is the roster (the owner, 2026-11-18): a post per niche that has one (`rosterPost` in talent2.yaml), its
+// whole roster to swipe through, opened from the tab or from the card after the niche's stories.
+const say = (key: string, fallback: string, r?: { label: string; count: number }) =>
+  (words[key] ?? fallback).replace('{n}', String(r?.count ?? '')).replace('{niche}', r?.label ?? '');
+const long = (text: string) => text.split(' ').some((w) => w.length > 9);
+// The Reels tab shows this many case studies before "Show more".
+const reelsFirst = 12;
+// Its own stories (the owner, 2026-11-18): played from its profile picture, in the same player as the highlights, as a
+// group of their own that ends where it ends (`own`) instead of running on into the niches.
+const ownStories = ig.stories.map((s, i) => ({
+  id: `stride-${i + 1}`,
+  n: ig.handle,
+  p: '/assets/site/stride-talent-avatar.svg',
+  v: 'video' in s ? s.video : null,
+  vp: 'video' in s ? s.poster : null,
+  pic: 'img' in s ? s.img : s.poster,
+  alt: s.alt,
+  u: ig.href,
+}));
+const ownGroup = { k: 'stride', l: ig.handle, ids: ownStories.map((s) => s.id), own: true };
+
+const mark = '<svg viewBox="0 0 106 106" aria-hidden="true"><path d="M53 53H0L53 0v53Z"/><path d="M53 106H0l53-53v53Z"/><path d="M106 53H53l53-53v53Z"/><path d="M106 106H53l53-53v53Z"/></svg>';
+---
+
+<section class="igp" aria-labelledby="igp-handle" data-tone="talent" data-look="deep" data-insta-profile data-stories>
+  {/* "Stridegram", in the middle of the top, level with the header's logo and menu: this section's own (the owner,
+      2026-11-17: "the only section that will have this logo in the middle"). */}
+  <img class="igp__brand" src="/assets/site/stridegram-logo-white.png" alt="Stridegram" width="1040" height="224" sizes="(min-width: 1921px) 12vw, 240px" decoding="async" />
+  <div class="igp__inner">
+    <header class="igp__head">
+      {/* Its picture wears Instagram's green ring and plays its own stories; grey once they've all been watched. */}
+      {ownStories.length ? (
+        <button class="igp__avatar igp__avatar--stories ring" type="button" data-niche="stride" data-plays aria-label={`@${ig.handle}: play its stories`} set:html={mark} />
+      ) : (
+        <a class="igp__avatar" href={ig.href} target="_blank" rel="noopener" aria-label={`@${ig.handle} on Instagram`} set:html={mark} />
+      )}
+      <div class="igp__info">
+        <div class="igp__row">
+          <h2 class="igp__handle" id="igp-handle">{ig.handle}</h2>
+          {ig.verified && (
+            <svg class="igp__badge" viewBox="0 0 40 40" role="img" aria-label="Verified">
+              <path d="M19.998 3.094 14.638 0l-2.972 5.15H5.432v6.354L0 14.64 3.094 20 0 25.359l5.432 3.137v5.905h5.975L14.638 40l5.36-3.094L25.358 40l3.232-5.6h6.162v-6.01L40 25.359 36.905 20 40 14.641l-5.248-3.03v-6.46h-6.419L25.358 0l-5.36 3.094Zm7.415 11.225 2.254 2.287-11.43 11.5-6.835-6.93 2.244-2.258 4.587 4.581 9.18-9.18Z"></path>
+            </svg>
+          )}
+          <a class="igp__more" href={ig.href} target="_blank" rel="noopener" aria-label="More on Instagram">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="18" cy="12" r="1.5"></circle></svg>
+          </a>
+        </div>
+        <p class="igp__name">{ig.name}</p>
+        <ul class="igp__stats" role="list" title={`Source: ${ig.statsSource}`}>
+          {ig.stats.map((s) => <li><b>{s.value}</b> {s.label}</li>)}
+        </ul>
+        <div class="igp__bio">
+          <p class="igp__category">{ig.category}</p>
+          {ig.bio.map((line) => <p>{line}</p>)}
+          <a class="igp__link" href={ig.link.href} target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 13.5a4 4 0 0 0 5.66 0l3.18-3.18a4 4 0 0 0-5.66-5.66l-1.06 1.06M13.5 10.5a4 4 0 0 0-5.66 0l-3.18 3.18a4 4 0 0 0 5.66 5.66l1.06-1.06"></path></svg>
+            {ig.link.label}
+          </a>
+        </div>
+      </div>
+      {/* Under the picture and the words together, across the head, as Instagram's profile has them (the owner,
+          2026-11-18). */}
+      <p class="igp__buttons">
+        <a class="igp__btn igp__btn--follow" href={ig.href} target="_blank" rel="noopener">Follow</a>
+        {/* Message goes to the site's Contact page (the owner, 2026-11-18), not Instagram's direct messages. */}
+        <a class="igp__btn" href="/contact">Message</a>
+        <a class="igp__btn igp__btn--icon" href="/talent/apply" aria-label="Apply to Stride">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="8" r="3.6"></circle><path d="M3.5 20a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6"></path></svg>
+        </a>
+      </p>
+    </header>
+
+    <div class="igp__rail" data-rail>
+      <ol class="igp__highlights" role="list" aria-label="Highlights" data-rail-track>
+        {join && (
+          <li>
+            <a class="igp__highlight" href={join.href ?? '/talent/apply'}>
+              <span class="igp__ring">
+                <span class="igp__cover">{join.label}</span>
+                <span class="igp__plus" aria-hidden="true">+</span>
+              </span>
+              <span class="igp__label">{join.label}</span>
+            </a>
+          </li>
+        )}
+        {niches.map((n) => (
+          <li>
+            <button class="igp__highlight ring" type="button" data-niche={n.key} data-plays aria-label={`${n.label}: play its stories`}>
+              <span class="igp__ring">
+                <span class:list={['igp__cover', { 'igp__cover--long': long(n.label) }]}>{n.label}</span>
+              </span>
+              <span class="igp__label">{n.label}</span>
+            </button>
+          </li>
+        ))}
+      </ol>
+      <button class="igp__step igp__step--prev" type="button" aria-label="Earlier highlights" data-rail-step="-1" tabindex="-1">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>
+      </button>
+      <button class="igp__step igp__step--next" type="button" aria-label="More highlights" data-rail-step="1" tabindex="-1">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg>
+      </button>
+    </div>
+
+    <div class="igp__tabs" role="toolbar" aria-label="Posts">
+      <button class="igp__tab" type="button" aria-pressed="true" aria-label="Posts" data-igp-tab="all">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="1.5"></rect><path d="M9 3v18M15 3v18M3 9h18M3 15h18"></path></svg>
+      </button>
+      {/* Reels: Stride Talent's case-study reels, played here; without any, Stride Talent's reels on Instagram. */}
+      {ig.reels.length ? (
+        <button class="igp__tab" type="button" aria-pressed="false" aria-label="Reels" data-igp-tab="reel">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4.5"></rect><path d="M3 8.5h18M8.5 3l3 5.5M14 3l3 5.5"></path><path d="M10 12v5l4.5-2.5Z" fill="currentColor"></path></svg>
+        </button>
+      ) : (
+        <a class="igp__tab" href={`${ig.href}reels/`} target="_blank" rel="noopener" aria-label="Reels, on Instagram">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4.5"></rect><path d="M3 8.5h18M8.5 3l3 5.5M14 3l3 5.5"></path><path d="M10 12v5l4.5-2.5Z" fill="currentColor"></path></svg>
+        </a>
+      )}
+      {rosterPosts.length ? (
+        <button class="igp__tab" type="button" aria-pressed="false" aria-label={say('rosterTab', 'Roster')} data-igp-tab="roster">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2.5"></rect><circle cx="12" cy="10" r="3"></circle><path d="M6.5 21a5.5 5.5 0 0 1 11 0"></path></svg>
+        </button>
+      ) : (
+        <a class="igp__tab" href={`${ig.href}tagged/`} target="_blank" rel="noopener" aria-label="Tagged, on Instagram">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2.5"></rect><circle cx="12" cy="10" r="3"></circle><path d="M6.5 21a5.5 5.5 0 0 1 11 0"></path></svg>
+        </a>
+      )}
+    </div>
+
+    <ul class="igp__grid" role="list">
+      {ig.posts.map((p) => (
+        <li data-kind={p.kind} data-tab="all">
+          <a class="igp__post" href={p.href ?? `https://www.instagram.com/p/${p.code}/${p.slide ? `?img_index=${p.slide}` : ''}`} target="_blank" rel="noopener" data-igp-open={p.code}>
+            <img src={`/assets/site/ig-stridetalent-${p.code}.jpg`} alt={p.alt} width="720" height="900" sizes="(min-width: 1921px) 16.7vw, (min-width: 1024px) 20rem, 33vw" loading="lazy" decoding="async" />
+            {p.kind === 'carousel' && (
+              <svg class="igp__kind" viewBox="0 0 24 24" role="img" aria-label="Carousel"><path d="M8 3h11a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" fill="currentColor"></path><path d="M3.5 7v12a1.5 1.5 0 0 0 1.5 1.5h12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+            )}
+            {p.kind === 'reel' && (
+              <svg class="igp__kind" viewBox="0 0 24 24" role="img" aria-label="Reel"><rect x="2.5" y="2.5" width="19" height="19" rx="5" fill="none" stroke="currentColor" stroke-width="1.8"></rect><path d="M2.5 8h19M8 2.5l3 5.5M13.5 2.5l3 5.5" fill="none" stroke="currentColor" stroke-width="1.8"></path><path d="M10 11.5v6l5-3Z" fill="currentColor"></path></svg>
+            )}
+          </a>
+        </li>
+      ))}
+      {/* The Reels tab's case studies, tall as Instagram's reels, each showing its cover; twelve, then twelve more at a
+          time. One opens the player below (a modified click, or no JavaScript, opens it on Instagram). */}
+      {ig.reels.map((r, i) => (
+        <li data-kind="reel" data-tab="reel" data-later={i >= reelsFirst ? '' : undefined} hidden>
+          <a
+            class="igp__post igp__post--reel"
+            href={`https://www.instagram.com/reel/${r.code}/`}
+            target="_blank"
+            rel="noopener"
+            data-igp-reel={i}
+            data-src={`/assets/video/ig-stridetalent-reel-${r.code}.mp4`}
+            data-poster={`/assets/site/ig-stridetalent-reel-${r.code}.jpg`}
+            data-title={r.title}
+            data-text={r.text}
+          >
+            <img src={`/assets/site/ig-stridetalent-reel-${r.code}.jpg`} alt={`Case study: ${r.client}, with ${r.creator}`} width="720" height="1280" sizes="(min-width: 1921px) 16.7vw, (min-width: 1024px) 20rem, 33vw" loading="lazy" decoding="async" />
+            <svg class="igp__kind" viewBox="0 0 24 24" role="img" aria-label="Reel"><rect x="2.5" y="2.5" width="19" height="19" rx="5" fill="none" stroke="currentColor" stroke-width="1.8"></rect><path d="M2.5 8h19M8 2.5l3 5.5M13.5 2.5l3 5.5" fill="none" stroke="currentColor" stroke-width="1.8"></path><path d="M10 11.5v6l5-3Z" fill="currentColor"></path></svg>
+          </a>
+        </li>
+      ))}
+      {rosterPosts.map((r) => (
+        <li data-kind="roster" data-tab="roster" hidden>
+          <button class="igp__post igp__post--roster" type="button" data-igp-open={`roster-${r.key}`} data-igp-roster={r.key}>
+            <span class="igp__collage" aria-hidden="true">
+              {r.creators.slice(0, 4).map((c) => (
+                <img src={c.p} alt="" loading="lazy" decoding="async" />
+              ))}
+            </span>
+            <span class="igp__roster-label">
+              <b>{r.label}</b>
+              <span>
+                {say('rosterTab', 'Roster')} · {r.count}
+              </span>
+            </span>
+            <svg class="igp__kind" viewBox="0 0 24 24" role="img" aria-label="Carousel"><path d="M8 3h11a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" fill="currentColor"></path><path d="M3.5 7v12a1.5 1.5 0 0 0 1.5 1.5h12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+          </button>
+        </li>
+      ))}
+    </ul>
+    {ig.reels.length > reelsFirst && (
+      <p class="igp__whos-more" data-igp-reels-more hidden>
+        <button class="exp-pill exp-pill--ghost" type="button">
+          {say('rosterMore', 'Show more')}
+        </button>
+      </p>
+    )}
+    {/* A roster's tile opens its whole roster here, as a grid of its creators (the owner, 2026-11-18: "show the full
+        roster here as well as a grid"), 24 at a time; a creator's square opens the roster post on them. */}
+    {
+      rosterPosts.map((r) => (
+        <div class="igp__whos-wrap" data-igp-whos={r.key} hidden>
+          <div class="igp__whos-head">
+            <button class="igp__whos-back" type="button" data-igp-whos-back>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+              {say('rosterTab', 'Roster')}
+            </button>
+            <b>{r.label}</b>
+            <span>{say('rosterCount', '{n} creators', r)}</span>
+          </div>
+          <ul class="igp__whos" role="list">
+            {r.creators.map((c, i) => (
+              <li hidden={i >= 24}>
+                <button class="igp__post igp__post--who" type="button" data-igp-who={i} data-igp-who-of={r.key}>
+                  <img src={c.p} alt={c.n} loading="lazy" decoding="async" />
+                  <span class="igp__who-name">{c.n}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          {r.count > 24 && (
+            <p class="igp__whos-more">
+              <button class="exp-pill exp-pill--ghost" type="button" data-igp-whos-more>
+                {say('rosterMore', 'Show more')}
+              </button>
+            </p>
+          )}
+        </div>
+      ))
+    }
+    <p class="igp__all"><a href={ig.href} target="_blank" rel="noopener">See all {ig.stats[0].value} posts on Instagram</a></p>
+  </div>
+  {/* A post opens here, over the page, as Instagram opens one (the owner, 2026-11-17: all its pictures, swiped in the
+      page, without going to Instagram): its pictures on the left (swipe, drag, the arrows or the arrow keys; in the post's
+      order, from its cover, the picture the grid shows), the account and its words on the right. Without JavaScript the grid's links go
+      to Instagram. */}
+  {
+    ig.posts.map((p) => (
+      <dialog class="igv" data-igp-viewer={p.code} aria-label={p.alt}>
+        <div class="igv__box">
+          <div class="igv__media">
+            <ol class="igv__track" data-igv-track>
+              {Array.from({ length: p.slides }, (_, i) => i + 1).map((n, i) => (
+                <li class="igv__slide">
+                  <img
+                    src={`/assets/site/ig-stridetalent-${p.code}-${n}.jpg`}
+                    alt={p.alts?.[i] ?? (p.slides > 1 ? `${p.alt} (picture ${i + 1} of ${p.slides})` : p.alt)}
+                    sizes="(min-width: 1921px) 28.4vw, (min-width: 1024px) 34rem, 100vw"
+                    loading="lazy"
+                    decoding="async"
+                    draggable="false"
+                  />
+                </li>
+              ))}
+            </ol>
+            {p.slides > 1 && (
+              <>
+                <button class="igv__step igv__step--prev exp-round" type="button" aria-label="Previous picture" data-igv-step="-1">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+                </button>
+                <button class="igv__step igv__step--next exp-round" type="button" aria-label="Next picture" data-igv-step="1">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+                </button>
+                <span class="igv__dots" aria-hidden="true">
+                  {Array.from({ length: p.slides }, () => (
+                    <i />
+                  ))}
+                </span>
+              </>
+            )}
+          </div>
+          <div class="igv__side">
+            <header class="igv__head">
+              <span class="igv__avatar" set:html={mark} />
+              <b>{ig.handle}</b>
+              {ig.verified && (
+                <svg class="igv__badge" viewBox="0 0 40 40" role="img" aria-label="Verified">
+                  <path d="M19.998 3.094 14.638 0l-2.972 5.15H5.432v6.354L0 14.64 3.094 20 0 25.359l5.432 3.137v5.905h5.975L14.638 40l5.36-3.094L25.358 40l3.232-5.6h6.162v-6.01L40 25.359 36.905 20 40 14.641l-5.248-3.03v-6.46h-6.419L25.358 0l-5.36 3.094Zm7.415 11.225 2.254 2.287-11.43 11.5-6.835-6.93 2.244-2.258 4.587 4.581 9.18-9.18Z" fill="currentColor" fill-rule="evenodd" />
+                </svg>
+              )}
+            </header>
+            <p class="igv__caption">
+              <b>{ig.handle}</b> {p.alt}
+            </p>
+            {p.slides > 1 && (
+              <p class="igv__count" data-igv-count aria-live="polite">
+                1 / {p.slides}
+              </p>
+            )}
+            <a class="igv__ig" href={p.href ?? `https://www.instagram.com/p/${p.code}/`} target="_blank" rel="noopener">
+              View on Instagram
+            </a>
+          </div>
+          <button class="igv__close exp-round" type="button" aria-label="Close" data-igv-close>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+          </button>
+        </div>
+      </dialog>
+    ))
+  }
+  {
+    rosterPosts.map((r) => (
+      <dialog class="igv igv--roster" data-igp-viewer={`roster-${r.key}`} aria-label={say('rosterCaption', 'The {niche} roster', r)}>
+        <div class="igv__box">
+          <div class="igv__media">
+            <ol class="igv__track" data-igv-track>
+              {r.creators.map((c) => (
+                <li class="igv__slide igv__slide--who" data-id={c.id} data-name={c.n}>
+                  <img src={c.p} alt={c.n} loading="lazy" decoding="async" draggable="false" />
+                  <span class="igv__who">{c.n}</span>
+                </li>
+              ))}
+            </ol>
+            {r.count > 1 && (
+              <>
+                <button class="igv__step igv__step--prev exp-round" type="button" aria-label="Previous creator" data-igv-step="-1">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+                </button>
+                <button class="igv__step igv__step--next exp-round" type="button" aria-label="Next creator" data-igv-step="1">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+                </button>
+              </>
+            )}
+          </div>
+          <div class="igv__side">
+            <header class="igv__head">
+              <span class="igv__avatar" set:html={mark} />
+              <b>{ig.handle}</b>
+            </header>
+            <p class="igv__caption">
+              <b>{ig.handle}</b> {say('rosterCaption', 'The {niche} roster: all {n} creators.', r)}
+            </p>
+            <p class="igv__count" data-igv-count aria-live="polite">
+              1 / {r.count}
+            </p>
+            {/* The creator shown, as their own page has them (the owner, 2026-11-18: here, not a link away): their
+                category and country, name, biography, platforms and the way to enquire. The details come from
+                /talent/creators.json as the roster opens. */}
+            {r.creators[0] && (
+              <div class="igv__card" data-igv-card data-enquire={routes.creatorEnquiry('')}>
+                <p class="igv__card-label" data-igv-label />
+                <h3 class="igv__card-name" data-igv-name>{r.creators[0].n}</h3>
+                <div class="igv__card-bio" data-igv-bio />
+                <p class="igv__card-links" data-igv-links />
+                <a class="igv__card-enquire exp-pill exp-pill--glass" href={routes.creatorEnquiry(r.creators[0].id)} data-igv-enquire>
+                  <span data-igv-enquire-label>Enquire about {r.creators[0].n}</span> →
+                </a>
+              </div>
+            )}
+          </div>
+          <button class="igv__close exp-round" type="button" aria-label="Close" data-igv-close>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+          </button>
+        </div>
+      </dialog>
+    ))
+  }
+  {/* A case study plays here, over the page, as Instagram opens a reel: the video whole, with its sound (a press pauses
+      it, the speaker mutes it), its caption beside it, the arrows, the arrow keys or a swipe up and down for the next
+      or the one before; it goes round until it's closed. One player for every reel, given the reel's file as it opens,
+      so nothing loads before a reel is chosen. */}
+  {
+    ig.reels.length > 0 && (
+      <dialog class="igv igv--reel" data-igp-reels aria-label={`@${ig.handle}: case studies`}>
+        <div class="igv__box">
+          <div class="igv__media">
+            <video class="igv__video" playsinline loop preload="none" data-igr-video />
+            <button class="igv__play" type="button" aria-label="Pause" data-igr-play>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5Z" /></svg>
+            </button>
+            <button class="igv__sound exp-round" type="button" aria-label="Mute" aria-pressed="false" data-igr-sound>
+              <svg class="igv__sound-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4Z" /><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" /></svg>
+              <svg class="igv__sound-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4Z" /><path d="M16 9.5l5 5M21 9.5l-5 5" /></svg>
+            </button>
+            <span class="igv__bar" aria-hidden="true"><i data-igr-bar /></span>
+            <button class="igv__step igv__step--prev exp-round" type="button" aria-label="Previous case study" data-igr-step="-1">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+            </button>
+            <button class="igv__step igv__step--next exp-round" type="button" aria-label="Next case study" data-igr-step="1">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+            </button>
+          </div>
+          <div class="igv__side">
+            <header class="igv__head">
+              <span class="igv__avatar" set:html={mark} />
+              <b>{ig.handle}</b>
+              {ig.verified && (
+                <svg class="igv__badge" viewBox="0 0 40 40" role="img" aria-label="Verified">
+                  <path d="M19.998 3.094 14.638 0l-2.972 5.15H5.432v6.354L0 14.64 3.094 20 0 25.359l5.432 3.137v5.905h5.975L14.638 40l5.36-3.094L25.358 40l3.232-5.6h6.162v-6.01L40 25.359 36.905 20 40 14.641l-5.248-3.03v-6.46h-6.419L25.358 0l-5.36 3.094Zm7.415 11.225 2.254 2.287-11.43 11.5-6.835-6.93 2.244-2.258 4.587 4.581 9.18-9.18Z" fill="currentColor" fill-rule="evenodd" />
+                </svg>
+              )}
+            </header>
+            <p class="igv__caption">
+              <b>{ig.handle}</b> <span data-igr-title />
+            </p>
+            <p class="igv__text" data-igr-text />
+            <p class="igv__count" data-igr-count aria-live="polite" />
+            <a class="igv__ig" href={`${ig.href}reels/`} target="_blank" rel="noopener" data-igr-ig>
+              View on Instagram
+            </a>
+          </div>
+          <button class="igv__close exp-round" type="button" aria-label="Close" data-igv-close>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+          </button>
+        </div>
+      </dialog>
+    )
+  }
+</section>
+<StoryPlayer creators={[...stories, ...ownStories]} niches={ownStories.length ? [...groups, ownGroup] : groups} words={words} />
+
+<style>
+  /* Instagram's profile, in its own proportions, in rem (it keeps them past 1920×1080). Instagram's blue for the badge
+     and Follow, as the profile reads, and its green for the ring of the picture's stories (sampled from the owner's
+     example); everything else the page's own white on its navy. */
+  .igp {
+    --igp-blue: #0095f6;
+    --igp-green: #1cd04e;
+    --igp-mute: rgb(var(--white-rgb) / 0.62);
+    --igp-fill: rgb(var(--white-rgb) / 0.12);
+    --igp-line: rgb(var(--white-rgb) / 0.16);
+    position: relative;
+    padding: calc(var(--header-h) + 2.5rem) var(--margin) 4rem;
+    color: var(--white);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  /* While the header sits over this section, its own logo steps aside, so Stridegram is the one logo there (the owner,
+     2026-11-17: "hide the logo, only in this section"); html.on-stridegram, the script below. */
+  :global(html.on-stridegram .header__logo) {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity 250ms var(--ease-out),
+      visibility 0s 250ms;
+  }
+
+  :global(html:not(.on-stridegram) .header__logo) {
+    transition: opacity 250ms var(--ease-out);
+  }
+
+  /* Centred in the header's band (the header's own logo and menu either side), scrolling away with the section. */
+  .igp__brand {
+    position: absolute;
+    top: calc(var(--header-h) / 2);
+    left: 50%;
+    width: auto;
+    height: 2.5rem;
+    translate: -50% -50%;
+    pointer-events: none;
+  }
+
+  /* One column, as wide as the profile and no wider: the highlights' row scrolls inside it rather than widening it (and
+     the grid with it). */
+  .igp__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2.75rem;
+    max-width: 58.75rem;
+    margin-inline: auto;
+  }
+
+  /* ---------- The head: the picture, then the handle, figures and bio, the buttons across under both ----------
+     In a narrower column in the middle, as Instagram's profile sets its head and highlights (measured on
+     instagram.com/stridetalent, 2026-11-18: 659px wide, the words 28px from the picture, the picture level with their
+     middle); the tabs and the posts below keep the full width. */
+  .igp__head {
+    display: grid;
+    grid-template-columns: 9.375rem minmax(0, 1fr);
+    gap: 1.75rem;
+    align-items: center;
+    width: 100%;
+    max-width: 41.1875rem;
+    margin-inline: auto;
+  }
+
+  .igp__avatar {
+    display: grid;
+    place-items: center;
+    width: 9.375rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--navy-500);
+  }
+
+  .igp__avatar :global(svg) {
+    width: 45%;
+    fill: var(--ice);
+  }
+
+  /* With stories: Instagram's green ring round the picture, a gap of the page between them (the owner's example,
+     2026-11-18); grey once they've all been watched, as Instagram's turns. */
+  .igp__avatar--stories {
+    padding: 0.3125rem;
+    border: 0.25rem solid var(--igp-green);
+    background: var(--navy-500) content-box;
+    cursor: pointer;
+    transition:
+      border-color 250ms var(--ease-out),
+      scale 250ms var(--spring-pop, ease);
+  }
+
+  .igp__avatar--stories:hover {
+    scale: 1.03;
+  }
+
+  .igp__avatar--stories:active {
+    scale: 0.97;
+  }
+
+  .igp__avatar--stories:global(.is-seen) {
+    border-color: rgb(var(--white-rgb) / 0.35);
+  }
+
+  .igp__avatar--stories :global(svg) {
+    width: 42%;
+  }
+
+  .igp__avatar:focus-visible,
+  .igp a:focus-visible,
+  .igp button:focus-visible {
+    outline: 2px solid var(--ice);
+    outline-offset: 3px;
+  }
+
+  .igp__info {
+    display: grid;
+    gap: 0.875rem;
+    min-width: 0;
+  }
+
+  .igp__row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .igp__handle {
+    font-family: inherit;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    line-height: 1.2;
+    text-transform: none;
+  }
+
+  .igp__badge {
+    width: 1.125rem;
+    height: 1.125rem;
+    fill: var(--igp-blue);
+  }
+
+  .igp__more {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    margin-left: 0.25rem;
+    color: inherit;
+  }
+
+  .igp__more svg {
+    width: 1.5rem;
+    fill: currentColor;
+  }
+
+  .igp__name {
+    font-size: 0.875rem;
+  }
+
+  .igp__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2.25rem;
+    font-size: 1rem;
+  }
+
+  .igp__stats b {
+    font-weight: 700;
+  }
+
+  .igp__bio {
+    display: grid;
+    gap: 0.0625rem;
+    font-size: 0.875rem;
+    line-height: 1.45;
+  }
+
+  .igp__category {
+    margin-bottom: 0.125rem;
+    color: var(--igp-mute);
+  }
+
+  .igp__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-top: 0.375rem;
+    width: fit-content;
+    font-weight: 600;
+    color: var(--white);
+  }
+
+  .igp__link:hover {
+    text-decoration: underline;
+  }
+
+  .igp__link svg {
+    width: 0.875rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+
+  /* Follow, Message and Apply, Instagram's rounded buttons. */
+  .igp__buttons {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .igp__btn {
+    display: grid;
+    flex: 1;
+    place-items: center;
+    min-height: 2.75rem;
+    padding: 0 1rem;
+    border-radius: 0.5rem;
+    background: var(--igp-fill);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--white);
+    transition: background-color 200ms var(--ease-out);
+  }
+
+  .igp__btn:hover {
+    background: rgb(var(--white-rgb) / 0.2);
+  }
+
+  .igp__btn--follow {
+    background: var(--igp-blue);
+  }
+
+  .igp__btn--follow:hover {
+    background: #1877f2;
+  }
+
+  .igp__btn--icon {
+    flex: none;
+    width: 2.75rem;
+    padding: 0;
+  }
+
+  .igp__btn--icon svg {
+    width: 1.125rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+
+  /* ---------- Highlights: a ring each, its name under it, in a row that scrolls sideways (a mouse drags it; the
+     round arrows at its ends step it, as Instagram's) ---------- */
+  .igp__rail {
+    position: relative;
+    width: 100%;
+    max-width: 41.1875rem;
+    min-width: 0;
+    margin-inline: auto;
+  }
+
+  /* A mouse drags it sideways (scripts/system/talent-stories.ts, the rail): a hand to grab, a closed one while it's
+     dragged, and a drag never also opens the highlight it started on. */
+  .igp__highlights {
+    display: flex;
+    gap: 2.25rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    padding: 0.25rem 1rem 0.5rem;
+    scrollbar-width: none;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .igp__rail.is-dragging .igp__highlights,
+  .igp__rail.is-dragging .igp__highlight {
+    cursor: grabbing;
+  }
+
+  .igp__highlights img {
+    -webkit-user-drag: none;
+  }
+
+  .igp__highlights::-webkit-scrollbar {
+    display: none;
+  }
+
+  .igp__highlights > li {
+    flex: none;
+  }
+
+  .igp__highlight {
+    display: grid;
+    justify-items: center;
+    gap: 0.75rem;
+    width: 5.5rem;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .igp__step {
+    position: absolute;
+    top: 2.75rem;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: rgb(var(--white-rgb) / 0.92);
+    color: var(--navy-900);
+    box-shadow: 0 0.25rem 1rem rgb(0 0 0 / 0.35);
+    translate: 0 -50%;
+    transition: opacity 200ms var(--ease-out);
+  }
+
+  .igp__step:disabled {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .igp__step--prev {
+    left: -0.5rem;
+  }
+
+  .igp__step--next {
+    right: -0.5rem;
+  }
+
+  .igp__step svg {
+    width: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Join Stride's little plus, as on Talent 2.0's ring. */
+  .igp__ring {
+    position: relative;
+  }
+
+  .igp__plus {
+    position: absolute;
+    right: 0.125rem;
+    bottom: 0.125rem;
+    display: grid;
+    place-items: center;
+    width: 1.375rem;
+    height: 1.375rem;
+    border-radius: 50%;
+    background: var(--ice);
+    box-shadow: 0 0 0 0.1875rem var(--navy-900);
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--navy-900);
+  }
+
+  .igp__ring {
+    display: grid;
+    place-items: center;
+    width: 5.375rem;
+    aspect-ratio: 1;
+    padding: 0.1875rem;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px var(--igp-line);
+    transition: box-shadow 250ms var(--ease-out);
+  }
+
+  .igp__highlight:hover .igp__ring {
+    box-shadow: 0 0 0 1.5px rgb(var(--white-rgb) / 0.55);
+  }
+
+  .igp__ring img,
+  .igp__cover {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  /* A cover is Stride's navy with its name in white, as Stride draws them. */
+  .igp__cover {
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    padding: 0.5rem;
+    background: radial-gradient(circle at 50% 35%, var(--navy-500), var(--navy-700));
+    font-family: var(--font-display);
+    font-size: 0.625rem;
+    font-weight: 800;
+    font-stretch: var(--stretch-wide);
+    line-height: 1.05;
+    text-align: center;
+    text-transform: uppercase;
+    color: var(--ice);
+  }
+
+  /* A long word (ACHIEVEMENTS) a size smaller, so it stays inside its circle. */
+  .igp__cover--long {
+    padding: 0.375rem;
+    font-size: 0.5rem;
+  }
+
+  .igp__label {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* ---------- The tabs, then the grid ---------- */
+  .igp__tabs {
+    display: flex;
+    justify-content: center;
+    gap: 7.5rem;
+    border-top: 1px solid var(--igp-line);
+  }
+
+  .igp__tab {
+    display: grid;
+    place-items: center;
+    width: 3.5rem;
+    height: 3.25rem;
+    margin-top: -1px;
+    border-top: 1px solid transparent;
+    color: var(--igp-mute);
+    transition: color 200ms var(--ease-out);
+  }
+
+  .igp__tab:hover,
+  .igp__tab[aria-pressed='true'] {
+    color: var(--white);
+  }
+
+  .igp__tab[aria-pressed='true'] {
+    border-top-color: var(--white);
+  }
+
+  .igp__tab svg {
+    width: 1.5rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linejoin: round;
+  }
+
+  .igp__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.25rem;
+    margin-top: -1.5rem;
+  }
+
+  .igp__grid > li[hidden],
+  .igp__whos > li[hidden],
+  .igp__grid[hidden],
+  .igp__whos-wrap[hidden] {
+    display: none;
+  }
+
+  /* A roster as a grid of its creators: three to a row as the posts, the name over each square's foot. */
+  .igp__whos {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.25rem;
+  }
+
+  .igp__whos-head {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin: -1rem 0 1rem;
+  }
+
+  .igp__whos-head b {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 850;
+    text-transform: uppercase;
+  }
+
+  .igp__whos-head span {
+    color: rgb(var(--white-rgb) / 0.65);
+    font-size: 0.875rem;
+  }
+
+  .igp__whos-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    align-self: center;
+    color: rgb(var(--white-rgb) / 0.75);
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .igp__whos-back:hover {
+    color: var(--white);
+  }
+
+  .igp__whos-back svg {
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .igp__post--who::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: 40%;
+    background: linear-gradient(to top, rgb(0 0 0 / 0.6), transparent);
+    pointer-events: none;
+  }
+
+  .igp__who-name {
+    position: absolute;
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: 0.625rem;
+    z-index: 1;
+    overflow: hidden;
+    color: var(--white);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .igp__whos-more {
+    margin-top: 1.5rem;
+    text-align: center;
+  }
+
+  .igp__post {
+    position: relative;
+    display: block;
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    background: var(--navy-700);
+  }
+
+  .igp__post img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: filter 250ms var(--ease-out);
+  }
+
+  .igp__post:hover img {
+    filter: brightness(0.75);
+  }
+
+  .igp__kind {
+    position: absolute;
+    top: 0.625rem;
+    right: 0.625rem;
+    width: 1.25rem;
+    color: var(--white);
+    filter: drop-shadow(0 0 0.25rem rgb(0 0 0 / 0.5));
+  }
+
+  .igp__all {
+    margin-top: -1rem;
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .igp__all a {
+    color: var(--igp-mute);
+  }
+
+  .igp__all a:hover {
+    color: var(--white);
+  }
+
+  /* ---------- Phones: Instagram's phone profile ---------- */
+  @media (max-width: 767px) {
+    .igp {
+      padding: calc(var(--header-h) + 1rem) 0 2.5rem;
+    }
+
+    .igp__inner {
+      gap: 1.5rem;
+    }
+
+    .igp__head {
+      grid-template-columns: 5.5rem minmax(0, 1fr);
+      gap: 1rem 1.25rem;
+      padding-inline: 1rem;
+    }
+
+    .igp__avatar {
+      width: 5.5rem;
+    }
+
+    .igp__avatar--stories {
+      padding: 0.1875rem;
+      border-width: 0.1875rem;
+    }
+
+    /* The handle beside the picture, the figures under it; the rest of the profile across the screen. */
+    .igp__info {
+      display: contents;
+    }
+
+    .igp__row,
+    .igp__stats {
+      grid-column: 2;
+    }
+
+    /* The handle at the top beside the picture, the three figures under it as Instagram's app sets them: each its
+       number over its word, side by side, so they never wrap under the handle. */
+    .igp__row {
+      grid-row: 1;
+      align-self: start;
+      margin-top: 0.5rem;
+    }
+
+    .igp__stats {
+      grid-row: 1;
+      align-self: end;
+      flex-wrap: nowrap;
+      justify-content: space-between;
+      gap: 0.75rem;
+      max-width: 20rem;
+      margin-bottom: 0.625rem;
+      font-size: 0.8125rem;
+      line-height: 1.25;
+    }
+
+    .igp__stats li {
+      display: grid;
+    }
+
+    .igp__stats b {
+      font-size: 1rem;
+    }
+
+    .igp__name,
+    .igp__bio,
+    .igp__buttons {
+      grid-column: 1 / -1;
+    }
+
+    .igp__name {
+      font-weight: 600;
+    }
+
+    .igp__buttons {
+      margin-top: 0;
+    }
+
+    .igp__btn {
+      min-height: 2.25rem;
+    }
+
+    .igp__btn--icon {
+      width: 2.25rem;
+    }
+
+    .igp__highlights {
+      gap: 1rem;
+      padding-inline: 1rem;
+    }
+
+    .igp__step {
+      display: none;
+    }
+
+    .igp__highlight {
+      width: 4.375rem;
+      gap: 0.375rem;
+    }
+
+    .igp__ring {
+      width: 4.25rem;
+    }
+
+    .igp__cover {
+      font-size: 0.5rem;
+    }
+
+    .igp__cover--long {
+      font-size: 0.4375rem;
+    }
+
+    .igp__brand {
+      height: 1.75rem;
+    }
+
+    .igp__tabs {
+      justify-content: space-around;
+      gap: 0;
+    }
+
+    .igp__grid {
+      gap: 0.125rem;
+      margin-top: -1.5rem;
+    }
+
+    .igp__all {
+      margin-top: 0;
+    }
+  }
+
+  /* Tablets: the desktop's head, a little closer together. */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .igp__head {
+      gap: 1.5rem 1.75rem;
+      padding-inline: 1rem;
+    }
+
+    .igp__tabs {
+      gap: 4rem;
+    }
+  }
+
+  /* The post viewer: over the page and its frosted navy, the pictures (4:5, as Instagram's) beside the account and
+     its words, as Instagram opens a post on a computer. */
+  .igv {
+    max-width: none;
+    max-height: none;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--white);
+  }
+
+  .igv[open] {
+    display: grid;
+    place-items: center;
+  }
+
+  .igv::backdrop {
+    background: rgb(var(--navy-900-rgb) / 0.82);
+    backdrop-filter: blur(0.75rem);
+    -webkit-backdrop-filter: blur(0.75rem);
+  }
+
+  .igv__box {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, auto) 20rem;
+    max-width: calc(100vw - 6rem);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background: rgb(var(--navy-900-rgb) / 0.96);
+    box-shadow:
+      inset 0 0 0 1px rgb(var(--white-rgb) / 0.12),
+      0 2rem 5rem rgb(0 0 0 / 0.45);
+    animation: igv-in 260ms var(--ease-out) both;
+  }
+
+  @keyframes igv-in {
+    from {
+      opacity: 0;
+      transform: scale(0.97);
+    }
+  }
+
+  .igv__media {
+    position: relative;
+    height: min(calc(100vh - 6rem), 52rem);
+    aspect-ratio: 4 / 5;
+    background: rgb(0 0 0 / 0.35);
+  }
+
+  .igv__track {
+    display: flex;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    cursor: grab;
+  }
+
+  .igv__track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .igv__track.is-dragging {
+    scroll-snap-type: none;
+    cursor: grabbing;
+  }
+
+  .igv__slide {
+    flex: 0 0 100%;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+  }
+
+  .igv__slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    user-select: none;
+  }
+
+  .igv__step {
+    position: absolute;
+    top: 50%;
+    translate: 0 -50%;
+    transition: opacity 200ms var(--ease-out);
+  }
+
+  .igv__step--prev {
+    left: 0.875rem;
+  }
+
+  .igv__step--next {
+    right: 0.875rem;
+  }
+
+  .igv__step:disabled {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .igv__step svg,
+  .igv__close svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .igv__dots {
+    position: absolute;
+    left: 50%;
+    bottom: 1rem;
+    display: flex;
+    gap: 0.3125rem;
+    translate: -50% 0;
+  }
+
+  .igv__dots i {
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 50%;
+    background: rgb(var(--white-rgb) / 0.45);
+    transition:
+      background 200ms var(--ease-out),
+      scale 200ms var(--ease-out);
+  }
+
+  .igv__dots i.is-on {
+    background: var(--white);
+    scale: 1.2;
+  }
+
+  .igv__side {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.25rem 1.25rem 1.5rem;
+    border-left: 1px solid rgb(var(--white-rgb) / 0.12);
+  }
+
+  .igv__head {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding-bottom: 1rem;
+    padding-right: 3rem;
+    border-bottom: 1px solid rgb(var(--white-rgb) / 0.12);
+    font-size: 0.9375rem;
+  }
+
+  .igv__avatar {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--navy-500);
+  }
+
+  .igv__avatar :global(svg) {
+    width: 45%;
+    fill: var(--ice);
+  }
+
+  .igv__badge {
+    width: 1rem;
+    height: 1rem;
+    color: var(--igp-blue);
+  }
+
+  .igv__caption {
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+
+  .igv__caption b {
+    margin-right: 0.25rem;
+  }
+
+  .igv__count {
+    color: rgb(var(--white-rgb) / 0.6);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .igv__ig {
+    margin-top: auto;
+    color: rgb(var(--white-rgb) / 0.75);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .igv__ig:hover {
+    color: var(--white);
+  }
+
+  /* The Roster tab's posts: four of the niche's faces, the niche's name over them. */
+  .igp__post--roster {
+    color: var(--white);
+  }
+
+  .igp__collage {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 2px;
+  }
+
+  .igp__collage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .igp__post--roster::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgb(var(--navy-900-rgb) / 0.9), rgb(var(--navy-900-rgb) / 0.15) 55%, transparent);
+    pointer-events: none;
+  }
+
+  .igp__roster-label {
+    position: absolute;
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 1;
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .igp__roster-label b {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 850;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .igp__roster-label span {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    opacity: 0.85;
+  }
+
+  .igp__post--roster .igp__kind {
+    z-index: 1;
+  }
+
+  /* A roster post: each creator's photograph filling the picture, their name over its foot. */
+  .igv__slide--who {
+    position: relative;
+  }
+
+  .igv__slide--who img {
+    object-fit: cover;
+  }
+
+  .igv__who {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 3rem 1.25rem 1.25rem;
+    background: linear-gradient(to top, rgb(0 0 0 / 0.65), transparent);
+    font-size: 1.25rem;
+    font-weight: 700;
+    pointer-events: none;
+  }
+
+  /* The roster tiles and their creators' squares are buttons now (they open here, never another page). */
+  button.igp__post {
+    width: 100%;
+    padding: 0;
+    border: 0;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  /* A roster post's side: the creator on screen as their page has them, the side no taller than the picture, its
+     biography scrolling within it when it's long. */
+  .igv--roster .igv__side {
+    max-height: min(calc(100vh - 6rem), 52rem);
+    min-height: 0;
+  }
+
+  .igv__card {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.875rem;
+    min-height: 0;
+    padding-top: 1rem;
+    border-top: 1px solid rgb(var(--white-rgb) / 0.12);
+    transition: opacity 200ms var(--ease-out);
+  }
+
+  .igv__card.is-loading .igv__card-bio,
+  .igv__card.is-loading .igv__card-links {
+    opacity: 0.35;
+  }
+
+  .igv__card-label {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgb(var(--white-rgb) / 0.75);
+  }
+
+  .igv__card-label:empty {
+    display: none;
+  }
+
+  .igv__card-name {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 850;
+    line-height: 0.95;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+  }
+
+  .igv__card-bio {
+    display: grid;
+    gap: 0.625rem;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    color: rgb(var(--white-rgb) / 0.88);
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    transition: opacity 200ms var(--ease-out);
+  }
+
+  .igv__card-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    transition: opacity 200ms var(--ease-out);
+  }
+
+  .igv__card-links:empty {
+    display: none;
+  }
+
+  .igv__card-links :global(.igv__chip) {
+    min-height: 2rem;
+    padding: 0 0.875rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .igv__card-enquire {
+    align-self: flex-start;
+    margin-top: auto;
+  }
+
+  .igv__close {
+    position: absolute;
+    top: 0.875rem;
+    right: 0.875rem;
+  }
+
+  /* The Reels tab's case studies: tall as Instagram's reels, the whole cover showing. */
+  .igp__post--reel {
+    aspect-ratio: 9 / 16;
+  }
+
+  /* The reel player: the video 9:16 beside its caption; a press anywhere on it pauses, the play mark showing while
+     it's paused; the speaker at its foot, the bar along its foot edge. */
+  .igv--reel .igv__media {
+    aspect-ratio: 9 / 16;
+    overflow: hidden;
+    background: rgb(0 0 0);
+    touch-action: none;
+  }
+
+  .igv__video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .igv__play {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+  }
+
+  .igv__play svg {
+    width: 4.5rem;
+    fill: rgb(var(--white-rgb) / 0.9);
+    filter: drop-shadow(0 0 1rem rgb(0 0 0 / 0.45));
+    opacity: 0;
+    scale: 0.85;
+    transition:
+      opacity 200ms var(--ease-out),
+      scale 200ms var(--ease-out);
+  }
+
+  .igv__media.is-paused .igv__play svg {
+    opacity: 1;
+    scale: 1;
+  }
+
+  .igv__sound {
+    position: absolute;
+    right: 0.875rem;
+    bottom: 1.25rem;
+  }
+
+  .igv__sound svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .igv__sound-off,
+  .igv__media.is-muted .igv__sound-on {
+    display: none;
+  }
+
+  .igv__media.is-muted .igv__sound-off {
+    display: block;
+  }
+
+  .igv__bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 0.1875rem;
+    background: rgb(var(--white-rgb) / 0.25);
+    pointer-events: none;
+  }
+
+  .igv__bar i {
+    position: absolute;
+    inset: 0;
+    background: var(--white);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+
+  .igv__text {
+    color: rgb(var(--white-rgb) / 0.85);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    white-space: pre-line;
+  }
+
+  /* Tablets: the pictures above the words, the box as wide as the screen allows. */
+  @media (max-width: 1023px) {
+    .igv__box {
+      grid-template-columns: minmax(0, 1fr);
+      width: min(36rem, calc(100vw - 2rem));
+      max-height: calc(100dvh - 2rem);
+      overflow-y: auto;
+    }
+
+    .igv__media {
+      width: 100%;
+      height: auto;
+    }
+
+    .igv__side {
+      border-left: 0;
+      border-top: 1px solid rgb(var(--white-rgb) / 0.12);
+    }
+
+    .igv__head {
+      padding-right: 0;
+    }
+
+    /* Under the picture, the creator's side runs on down the box, which scrolls. */
+    .igv--roster .igv__side {
+      max-height: none;
+    }
+
+    .igv__card {
+      flex: none;
+    }
+
+    .igv__card-bio {
+      min-height: auto;
+      overflow: visible;
+    }
+
+    .igv__card-enquire {
+      margin-top: 0.5rem;
+    }
+
+    /* A reel as tall as the screen leaves room for its caption under it. */
+    .igv--reel .igv__media {
+      width: auto;
+      height: min(calc(100dvh - 14rem), 56rem);
+      margin-inline: auto;
+    }
+  }
+
+  /* Phones: the whole screen, as Instagram's app opens a post. */
+  @media (max-width: 767px) {
+    .igp__roster-label {
+      left: 0.5rem;
+      right: 0.5rem;
+      bottom: 0.5rem;
+    }
+
+    .igp__whos {
+      gap: 0.125rem;
+    }
+
+    .igp__whos-head {
+      flex-wrap: wrap;
+      gap: 0.25rem 0.75rem;
+      margin: 0 0.5rem 0.75rem;
+    }
+
+    .igp__whos-head b {
+      font-size: 1.125rem;
+    }
+
+    .igp__who-name {
+      left: 0.375rem;
+      right: 0.375rem;
+      bottom: 0.25rem;
+      font-size: 0.6875rem;
+    }
+
+    .igp__roster-label b {
+      font-size: 1rem;
+    }
+
+    .igp__roster-label span {
+      font-size: 0.6875rem;
+    }
+
+    .igv__box {
+      width: 100vw;
+      max-width: none;
+      height: 100dvh;
+      max-height: none;
+      border-radius: 0;
+      align-content: start;
+    }
+
+    .igv__step {
+      display: none;
+    }
+
+    .igv__close {
+      top: 0.75rem;
+      right: 0.75rem;
+    }
+
+    .igv__side {
+      padding: 1rem 1rem 2rem;
+    }
+
+    /* A reel fills the screen, as Instagram's app plays one: the caption over its foot, the speaker at the top. */
+    .igv--reel .igv__box {
+      display: block;
+      overflow: hidden;
+    }
+
+    .igv--reel .igv__media {
+      width: 100%;
+      height: 100dvh;
+      aspect-ratio: auto;
+    }
+
+    .igv--reel .igv__side {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      gap: 0.5rem;
+      padding: 4rem 4.5rem 1.25rem 1rem;
+      border: 0;
+      background: linear-gradient(to top, rgb(0 0 0 / 0.7), transparent);
+      pointer-events: none;
+    }
+
+    .igv--reel .igv__side a {
+      pointer-events: auto;
+    }
+
+    .igv--reel .igv__head {
+      padding-bottom: 0;
+      border: 0;
+    }
+
+    .igv--reel .igv__text {
+      display: -webkit-box;
+      overflow: hidden;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      font-size: 0.875rem;
+    }
+
+    .igv--reel .igv__ig {
+      margin-top: 0.25rem;
+    }
+
+    .igv__sound {
+      top: 0.75rem;
+      bottom: auto;
+      left: 0.75rem;
+      right: auto;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .igv__box {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  import { initTalentStories } from '@/scripts/system/talent-stories';
+  import { lenis, reduced } from '@/scripts/system/env';
+  import { whenLoaded } from '@/scripts/system/loaded';
+  // The highlights play their niche's stories (Talent 2.0's player).
+  initTalentStories();
+  // Posts shows them all; Reels only the reels. While the section is under the header (the top strip of the screen),
+  // the header's logo steps aside (html.on-stridegram).
+  document.querySelectorAll<HTMLElement>('[data-insta-profile]').forEach((root) => {
+    new IntersectionObserver((entries) => document.documentElement.classList.toggle('on-stridegram', entries[entries.length - 1].isIntersecting), {
+      rootMargin: '0px 0px -90% 0px',
+    }).observe(root);
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-igp-tab]')];
+    const posts = [...root.querySelectorAll<HTMLElement>('.igp__grid > li')];
+    const grid = root.querySelector<HTMLElement>('.igp__grid');
+    const wraps = [...root.querySelectorAll<HTMLElement>('[data-igp-whos]')];
+    // A roster's grid in place of the tab's posts, or back to them.
+    const showWhos = (key: string | null) => {
+      wraps.forEach((w) => (w.hidden = w.dataset.igpWhos !== key));
+      if (grid) grid.hidden = key !== null;
+      // The creators' details start coming as soon as a roster's grid shows.
+      if (key) void loadDetails();
+    };
+    // The Reels tab's "Show more": twelve more case studies at a time.
+    const reelsMore = root.querySelector<HTMLElement>('[data-igp-reels-more]');
+    const later = () => posts.filter((p) => p.dataset.tab === 'reel' && p.hasAttribute('data-later'));
+    tabs.forEach((tab) =>
+      tab.addEventListener('click', () => {
+        const kind = tab.dataset.igpTab;
+        showWhos(null);
+        tabs.forEach((t) => t.setAttribute('aria-pressed', String(t === tab)));
+        // Posts shows the posts, Reels the case studies, Roster the roster posts.
+        posts.forEach((p) => (p.hidden = p.dataset.tab !== kind || p.hasAttribute('data-later')));
+        if (reelsMore) reelsMore.hidden = kind !== 'reel' || !later().length;
+      }),
+    );
+    reelsMore?.querySelector('button')?.addEventListener('click', () => {
+      const rest = later();
+      rest.slice(0, 12).forEach((p) => {
+        p.removeAttribute('data-later');
+        p.hidden = false;
+      });
+      reelsMore.hidden = rest.length <= 12;
+    });
+
+    // A case study plays in the reel player (a modified click still opens it on Instagram).
+    const reelPlayer = root.querySelector<HTMLDialogElement>('[data-igp-reels]');
+    const reelTiles = [...root.querySelectorAll<HTMLAnchorElement>('[data-igp-reel]')];
+    if (reelPlayer && typeof reelPlayer.showModal === 'function') {
+      const play = initReels(reelPlayer, reelTiles);
+      reelTiles.forEach((a, i) =>
+        a.addEventListener('click', (e) => {
+          if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+          e.preventDefault();
+          play(i);
+        }),
+      );
+    }
+
+    // A post opens in the page's viewer (a modified click still opens it on Instagram).
+    root.querySelectorAll<HTMLElement>('[data-igp-open]').forEach((link) =>
+      link.addEventListener('click', (e) => {
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        // A roster's tile opens its grid of creators here.
+        if (link.dataset.igpRoster) {
+          e.preventDefault();
+          showWhos(link.dataset.igpRoster);
+          return;
+        }
+        const dialog = root.querySelector<HTMLDialogElement>(`[data-igp-viewer="${CSS.escape(link.dataset.igpOpen ?? '')}"]`);
+        if (!dialog || typeof dialog.showModal !== 'function') return;
+        e.preventDefault();
+        openViewer(dialog);
+      }),
+    );
+
+    // In a roster's grid: a creator opens the roster post on them; Show more, 24 more; the back arrow, the rosters.
+    wraps.forEach((wrap) => {
+      wrap.querySelector('[data-igp-whos-back]')?.addEventListener('click', () => showWhos(null));
+      const more = wrap.querySelector<HTMLButtonElement>('[data-igp-whos-more]');
+      more?.addEventListener('click', () => {
+        const hidden = [...wrap.querySelectorAll<HTMLElement>('.igp__whos > li[hidden]')];
+        hidden.slice(0, 24).forEach((li) => (li.hidden = false));
+        if (hidden.length <= 24) more.parentElement!.hidden = true;
+      });
+      wrap.querySelectorAll<HTMLElement>('[data-igp-who]').forEach((a) =>
+        a.addEventListener('click', (e) => {
+          if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+          const dialog = root.querySelector<HTMLDialogElement>(`[data-igp-viewer="roster-${CSS.escape(a.dataset.igpWhoOf ?? '')}"]`);
+          if (!dialog || typeof dialog.showModal !== 'function') return;
+          e.preventDefault();
+          openViewer(dialog, Number(a.dataset.igpWho));
+        }),
+      );
+    });
+
+    // From a niche's stories, "See full roster" (scripts/system/talent-stories.ts): the Roster tab, with that niche's
+    // grid of creators.
+    window.addEventListener('talent:roster', (e) => {
+      const niche = (e as CustomEvent<{ niche: string }>).detail?.niche ?? '';
+      if (!wraps.some((w) => w.dataset.igpWhos === niche)) return;
+      root.querySelector<HTMLButtonElement>('[data-igp-tab="roster"]')?.click();
+      showWhos(niche);
+      const tabsRow = root.querySelector<HTMLElement>('.igp__tabs');
+      if (tabsRow) {
+        const l = lenis();
+        if (l) l.scrollTo(tabsRow, { immediate: true, offset: -120 });
+        else tabsRow.scrollIntoView({ block: 'start' });
+      }
+    });
+
+    // A creator, from a name in the stories or a link anywhere on the site (routes.creator, `?creator=<id>`: the
+    // creator pages were deleted, the owner, 2026-11-18): the first roster post they're in, open on them, with their
+    // details beside them.
+    const openCreator = (id: string) => {
+      for (const dialog of root.querySelectorAll<HTMLDialogElement>('dialog[data-igp-viewer^="roster-"]')) {
+        const slides = [...dialog.querySelectorAll<HTMLElement>('[data-igv-track] > li')];
+        const at = slides.findIndex((s) => s.dataset.id === id);
+        if (at >= 0 && typeof dialog.showModal === 'function') return void openViewer(dialog, at);
+      }
+    };
+    window.addEventListener('talent:creator', (e) => openCreator((e as CustomEvent<{ id: string }>).detail?.id ?? ''));
+    // From the address, once the page has opened: ?creator=<id>, or ?roster=<niche> for that niche's Roster tab.
+    const params = new URLSearchParams(location.search);
+    const askedCreator = params.get('creator');
+    const askedRoster = params.get('roster');
+    if (askedCreator || askedRoster)
+      whenLoaded(() => {
+        if (askedRoster) window.dispatchEvent(new CustomEvent('talent:roster', { detail: { niche: askedRoster } }));
+        if (askedCreator) openCreator(askedCreator);
+      });
+  });
+
+  // The creators' details for the roster posts (src/pages/talent/creators.json.ts): fetched once, the first time a
+  // roster opens. `l` category · country, `b` biography paragraphs, `s` platforms [name, link], `e` the enquiry.
+  type CreatorDetails = { l: string; b: string[]; s: [string, string][]; e: string };
+  type AllDetails = Record<string, CreatorDetails>;
+  let details: Promise<AllDetails> | null = null;
+  const loadDetails = (): Promise<AllDetails> =>
+    (details ??= fetch('/talent/creators.json')
+      .then((r) => (r.ok ? (r.json() as Promise<AllDetails>) : {}))
+      .catch((): AllDetails => ({})));
+
+  // A roster post's side: the creator on screen, as their own page has them. The name and the way to enquire at once,
+  // the rest as soon as the details are in (a creator turned past meanwhile isn't filled in late).
+  function showCreator(dialog: HTMLDialogElement, id: string, name: string) {
+    const card = dialog.querySelector<HTMLElement>('[data-igv-card]');
+    if (!card || card.dataset.for === id) return;
+    card.dataset.for = id;
+    const q = <T extends HTMLElement>(s: string) => card.querySelector<T>(s)!;
+    q('[data-igv-name]').textContent = name;
+    q('[data-igv-enquire-label]').textContent = `Enquire about ${name}`;
+    q<HTMLAnchorElement>('[data-igv-enquire]').href = `${card.dataset.enquire ?? ''}${encodeURIComponent(id)}`;
+    const label = q('[data-igv-label]');
+    const bio = q('[data-igv-bio]');
+    const links = q('[data-igv-links]');
+    card.classList.add('is-loading');
+    loadDetails().then((all) => {
+      if (card.dataset.for !== id) return;
+      card.classList.remove('is-loading');
+      const d = all[id];
+      label.textContent = d?.l ?? '';
+      bio.replaceChildren(
+        ...(d?.b.length ? d.b : [`${name} is part of the Stride Talent roster.`]).map((t) => {
+          const p = document.createElement('p');
+          p.textContent = t;
+          return p;
+        }),
+      );
+      bio.scrollTop = 0;
+      links.replaceChildren(
+        ...(d?.s ?? []).map(([platform, href]) => {
+          const a = document.createElement('a');
+          Object.assign(a, { className: 'igv__chip exp-pill exp-pill--ghost', href, target: '_blank', rel: 'noopener', textContent: platform });
+          return a;
+        }),
+      );
+      if (d?.e) q<HTMLAnchorElement>('[data-igv-enquire]').href = d.e;
+    });
+  }
+
+  // The viewer: one picture per screen of the track (swiped, dragged, the arrows or the arrow keys), its dots and count
+  // following; the page holds still behind it.
+  const ready = new WeakSet<HTMLDialogElement>();
+  function openViewer(dialog: HTMLDialogElement, start = 0) {
+    const track = dialog.querySelector<HTMLElement>('[data-igv-track]')!;
+    const slides = track.children.length;
+    const dots = [...dialog.querySelectorAll<HTMLElement>('.igv__dots i')];
+    const count = dialog.querySelector<HTMLElement>('[data-igv-count]');
+    const prev = dialog.querySelector<HTMLButtonElement>('[data-igv-step="-1"]');
+    const next = dialog.querySelector<HTMLButtonElement>('[data-igv-step="1"]');
+    const at = () => Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+    const paint = () => {
+      const i = Math.min(slides - 1, Math.max(0, at()));
+      dots.forEach((d, n) => d.classList.toggle('is-on', n === i));
+      if (count) count.textContent = `${i + 1} / ${slides}`;
+      if (prev) prev.disabled = i === 0;
+      if (next) next.disabled = i === slides - 1;
+      // A roster post shows the creator on screen: their details beside them.
+      const cur = track.children[i] as HTMLElement | undefined;
+      if (cur?.dataset.id) showCreator(dialog, cur.dataset.id, cur.dataset.name ?? '');
+    };
+    const go = (i: number, smooth = true) =>
+      track.scrollTo({ left: Math.min(slides - 1, Math.max(0, i)) * track.clientWidth, behavior: smooth && !reduced() ? 'smooth' : 'auto' });
+
+    if (!ready.has(dialog)) {
+      ready.add(dialog);
+      let frame = 0;
+      track.addEventListener('scroll', () => {
+        cancelAnimationFrame(frame);
+        frame = requestAnimationFrame(paint);
+      });
+      // And once the glide has settled, so the dots and count always end on the picture shown.
+      track.addEventListener('scrollend', paint);
+      dialog.querySelectorAll<HTMLButtonElement>('[data-igv-step]').forEach((b) => b.addEventListener('click', () => go(at() + Number(b.dataset.igvStep))));
+      dialog.querySelector('[data-igv-close]')?.addEventListener('click', () => dialog.close());
+      // A click on the frosted page around the box closes it, as Instagram's does.
+      dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) dialog.close();
+      });
+      dialog.addEventListener('keydown', (e) => {
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        e.preventDefault();
+        go(at() + (e.key === 'ArrowRight' ? 1 : -1));
+      });
+      dialog.addEventListener('close', () => {
+        lenis()?.start();
+        // The site's glass cursor goes back to the page.
+        const glass = dialog.querySelector('[data-cursor-glass]');
+        if (glass) document.body.append(glass);
+      });
+      // A mouse drags the pictures along; a finger swipes them natively.
+      let drag: { x: number; left: number; moved: boolean } | null = null;
+      track.addEventListener('pointerdown', (e) => {
+        if (e.pointerType !== 'mouse' || e.button !== 0) return;
+        drag = { x: e.clientX, left: track.scrollLeft, moved: false };
+        track.setPointerCapture(e.pointerId);
+      });
+      track.addEventListener('pointermove', (e) => {
+        if (!drag) return;
+        const dx = e.clientX - drag.x;
+        if (Math.abs(dx) > 4) {
+          drag.moved = true;
+          track.classList.add('is-dragging');
+        }
+        if (drag.moved) track.scrollLeft = drag.left - dx;
+      });
+      const drop = (e: PointerEvent) => {
+        if (!drag) return;
+        const dx = e.clientX - drag.x;
+        const from = Math.round(drag.left / Math.max(1, track.clientWidth));
+        const moved = drag.moved;
+        drag = null;
+        track.classList.remove('is-dragging');
+        if (moved) go(Math.abs(dx) > track.clientWidth * 0.15 ? from + (dx < 0 ? 1 : -1) : from);
+      };
+      track.addEventListener('pointerup', drop);
+      track.addEventListener('pointercancel', drop);
+    }
+
+    lenis()?.stop();
+    // The site's glass cursor (global/CursorBuddy.astro) is drawn on the page, and an open dialog sits above
+    // everything on the page, so the cursor goes inside it while it's open.
+    const glass = document.querySelector('[data-cursor-glass]');
+    if (glass) dialog.append(glass);
+    dialog.showModal();
+    // It opens on the cover, its first picture.
+    requestAnimationFrame(() => {
+      go(start, false);
+      paint();
+    });
+  }
+
+  // The reel player: one dialog for every case study, given a reel's file, cover and caption (from its tile) as it
+  // opens. It plays with its sound (muted only if the browser refuses), a press on the video pauses it, the speaker
+  // mutes it, the bar follows the video; the arrows, the arrow keys or a swipe up and down go to the next or the one
+  // before. Closing stops it and lets go of the file.
+  function initReels(dialog: HTMLDialogElement, tiles: HTMLAnchorElement[]) {
+    const media = dialog.querySelector<HTMLElement>('.igv__media')!;
+    const video = dialog.querySelector<HTMLVideoElement>('[data-igr-video]')!;
+    const playBtn = dialog.querySelector<HTMLButtonElement>('[data-igr-play]')!;
+    const sound = dialog.querySelector<HTMLButtonElement>('[data-igr-sound]')!;
+    const bar = dialog.querySelector<HTMLElement>('[data-igr-bar]')!;
+    const title = dialog.querySelector<HTMLElement>('[data-igr-title]')!;
+    const text = dialog.querySelector<HTMLElement>('[data-igr-text]')!;
+    const count = dialog.querySelector<HTMLElement>('[data-igr-count]')!;
+    const link = dialog.querySelector<HTMLAnchorElement>('[data-igr-ig]')!;
+    const prev = dialog.querySelector<HTMLButtonElement>('[data-igr-step="-1"]')!;
+    const next = dialog.querySelector<HTMLButtonElement>('[data-igr-step="1"]')!;
+    let at = 0;
+    let muted = false;
+    let frame = 0;
+
+    const setMuted = (m: boolean) => {
+      muted = m;
+      video.muted = m;
+      sound.setAttribute('aria-pressed', String(m));
+      sound.setAttribute('aria-label', m ? 'Turn the sound on' : 'Mute');
+      media.classList.toggle('is-muted', m);
+    };
+    const paused = () => {
+      media.classList.toggle('is-paused', video.paused);
+      playBtn.setAttribute('aria-label', video.paused ? 'Play' : 'Pause');
+    };
+    const start = () => {
+      video.play().catch(() => {
+        // A browser that won't play it with sound plays it muted; the speaker turns the sound back on.
+        if (!video.muted) {
+          setMuted(true);
+          video.play().catch(paused);
+        } else paused();
+      });
+    };
+    const tick = () => {
+      if (video.duration) bar.style.transform = `scaleX(${video.currentTime / video.duration})`;
+      frame = requestAnimationFrame(tick);
+    };
+    const show = (i: number) => {
+      at = Math.max(0, Math.min(tiles.length - 1, i));
+      const d = tiles[at].dataset;
+      video.poster = d.poster ?? '';
+      video.src = d.src ?? '';
+      video.muted = muted;
+      bar.style.transform = 'scaleX(0)';
+      title.textContent = d.title ?? '';
+      text.textContent = d.text ?? '';
+      count.textContent = `${at + 1} / ${tiles.length}`;
+      link.href = tiles[at].href;
+      prev.disabled = at === 0;
+      next.disabled = at === tiles.length - 1;
+      start();
+    };
+
+    video.addEventListener('play', paused);
+    video.addEventListener('pause', paused);
+    let swiped = 0;
+    playBtn.addEventListener('click', () => {
+      // The press that ended a swipe isn't a pause.
+      if (performance.now() - swiped < 400) return;
+      video.paused ? start() : video.pause();
+    });
+    sound.addEventListener('click', () => {
+      setMuted(!muted);
+      if (video.paused) start();
+    });
+    [prev, next].forEach((b) => b.addEventListener('click', () => show(at + Number(b.dataset.igrStep))));
+    dialog.querySelector('[data-igv-close]')?.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+    dialog.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') show(at + 1);
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') show(at - 1);
+      else if (e.key === ' ' || e.key === 'k') video.paused ? start() : video.pause();
+      else if (e.key === 'm') setMuted(!muted);
+      else return;
+      e.preventDefault();
+    });
+    // A swipe up brings the next case study, a swipe down the one before, as Instagram's reels do.
+    let swipe: { x: number; y: number } | null = null;
+    media.addEventListener('pointerdown', (e) => {
+      if (e.pointerType !== 'mouse') swipe = { x: e.clientX, y: e.clientY };
+    });
+    media.addEventListener('pointerup', (e) => {
+      if (!swipe) return;
+      const dx = e.clientX - swipe.x;
+      const dy = e.clientY - swipe.y;
+      swipe = null;
+      if (Math.abs(dy) > 50 && Math.abs(dy) > Math.abs(dx)) {
+        swiped = performance.now();
+        show(at + (dy < 0 ? 1 : -1));
+      }
+    });
+    media.addEventListener('pointercancel', () => (swipe = null));
+    dialog.addEventListener('close', () => {
+      cancelAnimationFrame(frame);
+      video.pause();
+      video.removeAttribute('src');
+      video.load();
+      lenis()?.start();
+      const glass = dialog.querySelector('[data-cursor-glass]');
+      if (glass) document.body.append(glass);
+    });
+
+    return (i: number) => {
+      lenis()?.stop();
+      // The site's glass cursor goes inside the open dialog, as the posts' viewer does.
+      const glass = document.querySelector('[data-cursor-glass]');
+      if (glass) dialog.append(glass);
+      if (!dialog.open) dialog.showModal();
+      show(i);
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(tick);
+    };
+  }
+</script>

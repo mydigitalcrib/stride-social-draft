@@ -46,7 +46,7 @@ const { brands } = Astro.props;
   .brand-ticker__track {
     display: flex;
     flex: none;
-    animation: brand-ticker calc(var(--logo-count) * 1s) linear infinite;
+    animation: brand-ticker calc(var(--logo-count) * 1.35s) linear infinite; /* a little slower (the owner, 2026-11-17: it was 1s a logo) */
   }
 
   /* Desktop: the fades span the page margin, so the logos are gone before they pass under the

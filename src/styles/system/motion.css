@@ -10,7 +10,7 @@
  *   data-reveal="tilt"        rises while straightening from a small tilt
  * Pointer motion (src/scripts/system/motion.ts, fine pointers only):
  *   data-parallax="12"        drifts up to 12px against the pointer (more on a screen past 1920×1080)
- *   data-magnetic             leans towards the pointer while hovered, on a spring (desktop; a page's main calls
+ *   data-magnetic             (off since 2026-11-18, `LEAN` in motion.ts) leaned towards the pointer while hovered (desktop; a page's main calls
  *                             to action only)
  * On desktop the distances and blurs are in rem, so past 1920×1080 they grow with the screen (tokens.css).
  *

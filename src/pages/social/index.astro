@@ -1,20 +1,24 @@
 ---
-// Stride Social landing; its content is its own component (components/social/SocialPage.astro).
+// Stride Advertising, /social: Stride Social as a feed of its campaigns, strategies and approach, scrolled the way TikTok
+// plays one (social/SocialFeed.astro; the owner, 2026-11-18: Draft 1 became the page, the old page with its menu and
+// Draft 2 were deleted). It ends on a giant row, as Stride Talent's "Join the roster." does: "Start your campaign
+// now.", opening onto Stride's own photographs, the way to the brand enquiry.
 import { getEntry } from 'astro:content';
 import SiteLayout from '@/layouts/SiteLayout.astro';
-import SocialPage from '@/components/social/SocialPage.astro';
+import BackVideo from '@/components/core/BackVideo.astro';
+import SocialFeed from '@/components/social/SocialFeed.astro';
+import TalentClose from '@/components/talent/TalentClose.astro';
+import { getSocialPictures } from '@/lib/social-pictures';
 
 const page = await getEntry('pages', 'social');
 if (!page) throw new Error('Missing src/content/pages/social.yaml');
+const close = page.data.sections.feed?.items?.find((i) => i.key === 'close');
+// Behind it, Stride's own photographs (lib/social-pictures.ts, shared with the homepage's Stride Social row).
+const pictures = await getSocialPictures();
 ---
 
-<SiteLayout
-  title="Stride Social | Influencer Marketing Agency"
-  description={page.data.sections.hero.body}
-  division="social"
-  headerOverlay
->
-  {/* The first frame waits for the title (experience/Deck.astro), which the homepage's row flies into. */}
-  <link slot="head" rel="expect" href="#social-menu-title" blocking="render" />
-  <SocialPage />
+<SiteLayout title="Stride Social | Influencer Marketing Agency" description={page.data.sections.hero.body} division="social" look="deep" headerOverlay>
+  <BackVideo look="deep" mp4="/assets/video/stride-showreel-desktop.mp4" webm="/assets/video/stride-showreel-desktop.webm" poster="/assets/site/stride-showreel-desktop-poster.jpg" blur={10} />
+  <SocialFeed />
+  {close && <TalentClose items={[{ key: 'campaign', label: close.label, href: close.href ?? '/social/enquire' }]} pictures={pictures} tone="social" label="Start your campaign with Stride Social" fit={19.5} fitPhone={7.4} />}
 </SiteLayout>

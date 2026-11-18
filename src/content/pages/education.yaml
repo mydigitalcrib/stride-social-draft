@@ -10,7 +10,8 @@ sections:
     status: approved
     eyebrow: Stride Academy
     lines: [Coming, soon.]
-    body: "For creators who want to know more: tell us who you are."
+    # The owner's words (2026-11-18).
+    body: For creators who want to learn how to become successful on social media as a content creator.
     cta: { label: Register your interest, href: /talent/apply }
 
   hero:

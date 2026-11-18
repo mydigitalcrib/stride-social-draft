@@ -1,6 +1,6 @@
 // Opens creators' profiles over the page (creator-sheet.ts, `creators:open`: { ids, index, from }) where the page can
 // show them, and otherwise goes to the creator's own page (`base` + id: routes.creator, given by the scene's markup),
-// so a name in a scene (Stride Sport's board and squad, Stride Speakers' running order) always leads somewhere, on every
+// so a name in a scene (Stride Sport's board, Stride Speakers' running order) always leads somewhere, on every
 // screen. A sheet that opens without being drawn (a screen it isn't built for) is put away again before going.
 export function openCreators(ids: string[], index: number, from: DOMRect | null, base?: string) {
   let shown = false;

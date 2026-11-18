@@ -20,6 +20,10 @@ videos:
   - src: /assets/video/flowdrive-BdBO5NZqMtnwa9KMJnAC6.mp4
   - src: /assets/video/flowdrive-QoKOHwrVK7RH9jNgRN073.mp4
   - src: /assets/video/flowdrive-Z1C4SS10exTSU3AmY6TR6.mp4
+  # Stride's own campaign videos, from "Brad X Stride Social updates" (2026-11-17), compressed for the site.
+  - src: /assets/video/case-papaya-2.mp4
+  - src: /assets/video/case-papaya-3.mp4
+  - src: /assets/video/case-papaya-4.mp4
 brief: null
 strategy: null
 execution: null
@@ -41,4 +45,4 @@ seo:
 ---
 <!-- Original case study copy from the previous site, kept for the editorial rewrite. -->
 <p><strong>Papaya Gaming</strong> is a leading mobile game development company behind top-ranking skill-based games such as Solitaire Cash, Bingo Cash, and Bubble Cash.</p><p>The primary KPI for these campaigns is download growth, and by producing content tailored for platforms like TikTok, Instagram, and YouTube, we ensure Papaya Gaming reaches new audiences and maintains its position as a leader in the mobile gaming industry.</p>
-<p><em>At Stride Social we strive to bring the very best results to the brands we work with. Whether it's through our unique </em><a href="/our-services"><em>services</em></a><em> or our hand-picked </em><a href="/creators"><em>creator roster</em></a><em>. Our expertise comes from our unique </em><a href="/about"><em>story</em></a><em> and life experience in this space. If you would like to work with us on your campaign, then </em><a href="/contact"><em>get in touch.</em></a></p>
+<p><em>At Stride Social we strive to bring the very best results to the brands we work with. Whether it's through our unique </em><a href="/our-services"><em>services</em></a><em> or our hand-picked </em><a href="/talent"><em>creator roster</em></a><em>. Our expertise comes from our unique </em><a href="/about"><em>story</em></a><em> and life experience in this space. If you would like to work with us on your campaign, then </em><a href="/contact"><em>get in touch.</em></a></p>

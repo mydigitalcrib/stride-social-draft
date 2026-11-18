@@ -5,30 +5,24 @@
 // more the faster it goes, the light changing across the bend; as it stops it settles flat.
 // The tiles are a fixed pool, one per cell of a grid a little bigger than the screen; as the canvas moves, a tile
 // that leaves one side comes back in on the other, so it never runs out.
-// How it moves: nothing moves the canvas itself. The wheel or trackpad (any direction), a drag, the keyboard and your
-// hand through the camera (hand-motion.ts) all say where it should go, and every frame it covers a set share of the
+// How it moves: nothing moves the canvas itself. The wheel or trackpad (any direction), a drag and the keyboard all say
+// where it should go, and every frame it covers a set share of the
 // way there. So it never jumps: a notch of the wheel is a glide, and letting go of a drag is the same glide running
 // out; let go while moving, it's thrown, and carries on a little. Left alone, it drifts slowly. A drag isn't a click,
 // and a pinch on a trackpad moves nothing.
-// With the camera on, the hand is the pointer too: a ring shows where it is, the canvas swells there and the tile
-// under it comes to life. Moved quickly, the hand moves the canvas; moved slowly, it only points. Closing it into a
-// fist over a project opens it; in the case study, a fist again closes it and the hand going up and down reads it.
 // Around the pointer the canvas swells, as a sheet does over a hand: the tiles there larger and a little forward, their
 // neighbours eased aside; the swell follows the pointer and waits while the canvas is on its way. The tile under the
-// pointer plays its footage, if it has some; a press gives a little, the paper dimpling under it (a fist's and the
-// keyboard's too); a click opens the whole case study over the canvas, without leaving the page (work-preview.ts):
+// pointer plays its footage, if it has some; a press gives a little, the paper dimpling under it (the keyboard's too); a click opens the whole case study over the canvas, without leaving the page (work-preview.ts):
 // the tile lifts out of its place, its neighbours easing into the gap, its footage carrying on in the case study, and
 // the canvas holds still behind it; closed, the picture lands back in its place and settles. As the canvas first
 // appears its tiles are laid down from the middle outwards, each as its picture arrives, so nothing pops. The keyboard
 // gets a link per case study (the component), which brings its tile to the middle, ringed and playing its footage;
 // the arrow keys walk from tile to tile. Scrolled on to the close, or turned into the list, the canvas sinks back into
-// the dark. A notification from Stride says how it works, once, with the chime.
+// the dark. No notification and no hand camera since 2026-11-18 (the owner: "we're not gonna use it anymore").
 // On a screen larger than 1920×1080 all of it grows with the root size (scale.ts), so it keeps its composition beside
 // the words around it; its drawing is never more than twice a 1920×1080 screen's at double density, so a 4K or 8K
 // screen costs what a laptop's does. It only draws while something is changing.
 // Without WebGL the list view opens instead (plain links then: its floating pictures and panel come with the canvas).
-import { playChime } from './chime';
-import { startHandMotion, type HandFrame } from './hand-motion';
 import { whenLoaded } from './loaded';
 import { deskScale } from './scale';
 import { initWorkPreview, type Rect } from './work-preview';
@@ -79,11 +73,9 @@ const MAX_PIXELS = 16.6e6; // the most it draws: twice a 1920×1080 screen at do
 
 const GLIDE = 0.1; // each frame (at 60 a second), the share of the way to where it's been sent that it covers
 const DRAG = 1.5; // how far a drag sends it, for each px the pointer moves
-const FRICTION = 0.88; // per frame, how quickly a throw (the drag's, or the hand's) dies away
+const FRICTION = 0.88; // per frame, how quickly a drag's throw dies away
 const DRAG_PX = 6; // a press that moves less than this is a click
 const THROW_MS = 80; // the last this long of a drag sets the speed it's thrown at
-const NOTE_AFTER = 1600; // ms after arriving, the notification
-const NOTE_FOR = 7000; // ms it stays, unless the canvas is moved first
 const LENS_PUSH = 0.13; // how much larger the canvas is at the swell's middle (what's around is eased aside)
 const DIM = 0.4; // how dim a tile is at rest...
 const DIM_OTHERS = 0.62; // ...and while another is under the pointer
@@ -110,10 +102,6 @@ const LAY_AFTER = 40; // ...from this long after the first words are ready...
 const LAY_STEP = 0.45; // ...and this many ms later for each px from the middle of the screen
 const STEP_MS = 140; // the arrow keys: a tile at a time, at most this often
 const LIST_OUT_MS = 160; // the list's lines leaving, before the canvas comes back
-const HAND_GAIN = 1.5; // screens the canvas goes for a hand crossing the whole camera
-const HAND_FOLLOW = 0.3; // per frame, how quickly the canvas takes up the hand's speed
-const HAND_REACH = 1.5; // the middle of the camera's picture covers the whole canvas, so the hand needn't reach its edges
-const HAND_READ = 1.6; // screens a case study is read down for a hand crossing the whole camera
 
 const wrap = (v: number, size: number) => ((v % size) + size) % size;
 const ease = (t: number) => 1 - Math.pow(1 - clamp(t, 0, 1), 3);
@@ -397,8 +385,6 @@ function initCanvas(root: HTMLElement) {
   if (!gl) {
     showList(true, true);
     views.forEach((v) => (v.disabled = v.dataset.canvasView === 'grid'));
-    const hand = root.querySelector<HTMLButtonElement>('[data-canvas-hand]');
-    if (hand) hand.hidden = true;
     return;
   }
 
@@ -611,7 +597,7 @@ function initCanvas(root: HTMLElement) {
   let y = -G.cellH * 0.3;
   let tx = x; // ...and where it's been sent
   let ty = y;
-  let vx = 0; // a throw (the drag's, or the hand's), px per frame
+  let vx = 0; // a drag's throw, px per frame
   let vy = 0;
   let speed = 0; // px per frame, how fast it went last frame
   let curve = 0; // the bowl eases in as the page opens
@@ -902,18 +888,12 @@ function initCanvas(root: HTMLElement) {
     const dt = last ? clamp((now - last) / (1000 / 60), 0.25, 3) : 1;
     last = now;
     const still = reduced();
-    let stirring = pressed || hand.on || queue.length > 0;
+    let stirring = pressed || queue.length > 0;
     let drifting = false;
-    // Where it's sent, when nothing else is sending it: on by a throw (the hand's, or a drag's, dying away), or drifting.
+    // Where it's sent, when nothing else is sending it: on by a drag's throw dying away, or drifting.
     if (!pressed && !held) {
-      const handNow = hand.on && hand.moving && now - hand.at < 320; // (the model answers some ten times a second)
-      if (handNow) {
-        vx = approach(vx, (hand.vx * vw * HAND_GAIN) / 60, HAND_FOLLOW, dt);
-        vy = approach(vy, (hand.vy * vh * HAND_GAIN) / 60, HAND_FOLLOW, dt);
-      } else {
-        vx *= Math.pow(FRICTION, dt);
-        vy *= Math.pow(FRICTION, dt);
-      }
+      vx *= Math.pow(FRICTION, dt);
+      vy *= Math.pow(FRICTION, dt);
       if (Math.abs(vx) > 0.05 || Math.abs(vy) > 0.05) {
         tx += vx * dt;
         ty += vy * dt;
@@ -951,12 +931,10 @@ function initCanvas(root: HTMLElement) {
     bowlK = curve * (1 + 0.5 * sink);
     sinkZ = G.sink * sink;
     if (!held) {
-      // What points at the canvas: the hand (its ring), while the camera sees one; otherwise the pointer.
-      if (hand.on) moveRing(dt);
-      const byHand = hand.on && hand.seen;
-      const aimX = byHand ? hand.rx : pointer.x;
-      const aimY = byHand ? hand.ry : pointer.y;
-      const aiming = (byHand || pointer.in) && !asList;
+      // What points at the canvas: the pointer.
+      const aimX = pointer.x;
+      const aimY = pointer.y;
+      const aiming = pointer.in && !asList;
       // The swell: its middle follows what points, and it waits while the canvas has somewhere to be.
       const calm = 1 / (1 + (Math.abs(tx - x) + Math.abs(ty - y)) / G.lensCalm);
       const swelling = aiming && !(pressed && dragged) ? calm * (1 - sink) : 0;
@@ -975,7 +953,7 @@ function initCanvas(root: HTMLElement) {
       if (moving || !aiming || sink > 0.5) setHover(null);
       else setHover(tileAt(aimX, aimY));
       // Its footage plays; without a pointer on the canvas, the keyboard's tile plays its own.
-      hoverFilm(hovered ?? (pointer.in || byHand ? null : focused));
+      hoverFilm(hovered ?? (pointer.in ? null : focused));
       follow(now, dt, still, aimX, aimY);
     } else {
       place();
@@ -1151,7 +1129,6 @@ function initCanvas(root: HTMLElement) {
       dragged = true;
       pressTile = null;
       root.classList.add('is-dragging');
-      hideNote();
     }
     // The drag only says where it should go: the canvas follows, and glides on to there when it's let go.
     tx = fromX + (e.clientX - startX) * DRAG;
@@ -1206,7 +1183,6 @@ function initCanvas(root: HTMLElement) {
       tx -= e.deltaX * G.wheel * unit;
       ty -= e.deltaY * G.wheel * unit;
       vx = vy = 0;
-      hideNote();
       run();
     },
     { passive: false },
@@ -1338,7 +1314,6 @@ function initCanvas(root: HTMLElement) {
       lifted = previewTile && !still ? previewTile : null;
       liftedAt = performance.now();
       hoverFilm(null);
-      hideNote();
       run();
     },
     // In the same moment the panel goes, the tile is drawn back in its place (never a frame without it, nor with
@@ -1407,146 +1382,6 @@ function initCanvas(root: HTMLElement) {
   whenLoaded(() => window.setTimeout(fromAddress, 450));
   window.addEventListener('hashchange', fromAddress);
 
-  /* ---------- The camera: the canvas follows your hand (hand-motion.ts) ---------- */
-  const handButton = root.querySelector<HTMLButtonElement>('[data-canvas-hand]');
-  const handLabel = root.querySelector<HTMLElement>('[data-canvas-hand-label]');
-  const cam = root.querySelector<HTMLElement>('[data-canvas-cam]');
-  const camVideo = root.querySelector<HTMLVideoElement>('[data-canvas-cam-video]');
-  const camDot = root.querySelector<HTMLElement>('[data-canvas-cam-dot]');
-  const ring = root.querySelector<HTMLElement>('[data-canvas-hand-dot]');
-  const handWords = root.querySelector<HTMLElement>('[data-canvas-hand-note]');
-  const hand = { on: false, x: 0.5, y: 0.5, vx: 0, vy: 0, moving: false, seen: false, fist: false, at: 0, rx: 0, ry: 0, rs: 0.8 };
-  let stopHand: (() => void) | null = null;
-  let starting = false; // the camera and the model are on their way
-  // The ring on the canvas follows where the camera sees your hand, smoothly, every frame: larger while it's moving
-  // the canvas, small and full when it's a fist.
-  function moveRing(dt: number) {
-    if (!ring) return;
-    const across = (v: number) => clamp((v - 0.5) * HAND_REACH + 0.5, 0, 1);
-    hand.rx = approach(hand.rx, across(hand.x) * vw, 0.25, dt);
-    hand.ry = approach(hand.ry, across(hand.y) * vh, 0.25, dt);
-    hand.rs = approach(hand.rs, hand.fist ? 0.55 : hand.moving ? 1 : 0.8, 0.2, dt);
-    ring.style.setProperty('--hx', `${hand.rx.toFixed(1)}px`);
-    ring.style.setProperty('--hy', `${hand.ry.toFixed(1)}px`);
-    ring.style.setProperty('--hs', hand.rs.toFixed(3));
-    if (hand.moving) ring.style.setProperty('--ha', `${((Math.atan2(hand.vy * vh, hand.vx * vw) * 180) / Math.PI).toFixed(0)}deg`);
-  }
-  const onHand = (f: HandFrame) => {
-    const now = performance.now();
-    const since = hand.at ? Math.min(0.1, (now - hand.at) / 1000) : 0;
-    const closing = f.fist && !hand.fist; // it has just closed
-    const reading = !!preview?.isOpen();
-    hand.x = f.x;
-    hand.y = f.y;
-    hand.vx = f.vx;
-    hand.vy = f.vy;
-    hand.moving = f.moving && !reading && !asList;
-    hand.seen = f.seen;
-    hand.fist = f.fist;
-    hand.at = now;
-    ring?.classList.toggle('is-moving', hand.moving);
-    ring?.classList.toggle('is-seen', f.seen);
-    ring?.classList.toggle('is-fist', f.fist);
-    cam?.classList.toggle('is-seen', f.seen);
-    cam?.classList.toggle('is-fist', f.fist);
-    if (camDot) {
-      camDot.style.left = `${(f.x * 100).toFixed(1)}%`;
-      camDot.style.top = `${(f.y * 100).toFixed(1)}%`;
-    }
-    // A case study open: a fist again closes it, and the hand going up and down reads it.
-    if (reading) {
-      if (closing) preview?.close();
-      else if (f.moving && Math.abs(f.vy) > Math.abs(f.vx)) preview?.scrollBy(-f.vy * vh * HAND_READ * since);
-      return;
-    }
-    if (asList) return;
-    // Closing the hand over a project presses it, where the ring is, and opens it (not while the canvas is on its way
-    // somewhere).
-    if (closing && speed < G.fast) {
-      const t = tileAt(hand.rx, hand.ry);
-      if (t) return pressThen(t, [hand.rx, hand.ry]);
-    }
-    if (hand.moving || f.seen) {
-      if (hand.moving) hideNote();
-      run();
-    }
-  };
-  const handOff = () => {
-    stopHand?.();
-    stopHand = null;
-    hand.on = hand.moving = hand.seen = hand.fist = false;
-    hand.at = 0;
-    root.classList.remove('is-hand');
-    ring?.classList.remove('is-moving', 'is-seen', 'is-fist', 'is-start');
-    if (cam) cam.hidden = true;
-    handButton?.setAttribute('aria-pressed', 'false');
-    if (handLabel && handButton) handLabel.textContent = handButton.dataset.labelOn ?? '';
-  };
-  handButton?.addEventListener('click', async () => {
-    if (starting) return;
-    if (stopHand) return handOff();
-    if (!camVideo || !navigator.mediaDevices?.getUserMedia) return say(handWords?.dataset.canvasHandNo ?? '');
-    // The camera asks first; then the hand-tracking model arrives (a moment, the first time: a light sweeps the button
-    // meanwhile).
-    starting = true;
-    handButton.setAttribute('aria-busy', 'true');
-    if (handLabel) handLabel.textContent = handButton.dataset.labelWait ?? handLabel.textContent;
-    try {
-      stopHand = await startHandMotion(camVideo, onHand);
-    } catch {
-      if (handLabel) handLabel.textContent = handButton.dataset.labelOn ?? '';
-      return say(handWords?.dataset.canvasHandNo ?? '');
-    } finally {
-      starting = false;
-      handButton.removeAttribute('aria-busy');
-    }
-    hand.on = true;
-    hand.rx = vw / 2;
-    hand.ry = vh / 2;
-    root.classList.add('is-hand');
-    // Where the hand's pointer starts: a ring pulsing out once from the middle.
-    if (ring && !reduced()) {
-      ring.classList.add('is-start');
-      window.setTimeout(() => ring.classList.remove('is-start'), 700);
-    }
-    if (cam) cam.hidden = false;
-    handButton.setAttribute('aria-pressed', 'true');
-    if (handLabel) handLabel.textContent = handButton.dataset.labelOff ?? '';
-    say(handWords?.dataset.canvasHandNote ?? '');
-    run();
-  });
-  // Away from the page, the camera goes off.
-  document.addEventListener('visibilitychange', () => document.hidden && stopHand && handOff());
-  window.addEventListener('pagehide', handOff);
-
-  /* ---------- How it works: a notification, once, with the chime ---------- */
-  const note = root.querySelector<HTMLElement>('[data-canvas-note]');
-  let noteDone = false;
-  let noteTimer = 0;
-  function hideNote() {
-    window.clearTimeout(noteTimer);
-    note?.classList.remove('is-on');
-    noteDone = true;
-  }
-  const showNote = () => {
-    if (noteDone || !note) return;
-    noteDone = true;
-    note.classList.add('is-on');
-    playChime();
-    noteTimer = window.setTimeout(hideNote, NOTE_FOR);
-  };
-  // The same notification, with other words (the camera).
-  function say(text: string) {
-    if (!note || !text) return;
-    const words = note.querySelector('.exp-note__text');
-    if (words) words.textContent = text;
-    window.clearTimeout(noteTimer);
-    noteDone = true;
-    note.classList.add('is-on');
-    playChime();
-    noteTimer = window.setTimeout(() => note.classList.remove('is-on'), 5000);
-  }
-
   /* ---------- Start, and keep going ---------- */
   canvas.addEventListener('webglcontextlost', (e) => {
     e.preventDefault();
@@ -1561,7 +1396,6 @@ function initCanvas(root: HTMLElement) {
   new IntersectionObserver(([entry]) => {
     inView = entry.isIntersecting;
     if (inView) run();
-    if (inView && !noteDone && !noteTimer) noteTimer = window.setTimeout(showNote, NOTE_AFTER);
   }).observe(root);
   document.addEventListener('visibilitychange', run);
   window.addEventListener('resize', () => {

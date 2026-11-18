@@ -12,9 +12,7 @@
 // Big screens: the blur and the lights are in rem, so it stays as out of focus as at 1920. On an ultrawide screen
 // (21:9, 32:9) the pattern follows the height (--u), so the wall keeps its rhythm instead of its lockups growing until
 // they touch; the rows carry enough lockups for the widest screens, and the wall clips the rest.
-// A camera flash on the page (`talent:flash` with { x, y, size, power }, in screen pixels: the photocall's flashes and
-// shots, the roster's shots, a division chosen in the picker) catches the lockups around it for an instant, as a flash
-// does a vinyl backdrop (.talent-wall__glint: a small window onto a white copy of the pattern, opened where it fires).
+// No camera flash lights it any more (the owner, 2026-11-18: "very distracting").
 const ROWS = 8;
 const PER_ROW = 16;
 // Where the lights hang (% across) and how bright each is, as in the owner's picture.
@@ -44,20 +42,10 @@ const LIGHTS = [
   <div class="talent-wall__floor"><div class="talent-wall__carpet"></div></div>
   <div class="talent-wall__edge"></div>
   </div>
-  <div class="talent-wall__glint" data-talent-glint>
-    <div class="talent-wall__repeat">
-      {Array.from({ length: ROWS }, () => (
-        <div class="talent-wall__row">
-          {Array.from({ length: PER_ROW }, () => <span class="talent-wall__lockup"></span>)}
-        </div>
-      ))}
-    </div>
-  </div>
   <div class="talent-wall__shade" data-talent-shade></div>
 </div>
 
 <script>
-  import { reduced } from '@/scripts/system/env';
   const wall = document.querySelector<HTMLElement>('[data-talent-wall]');
   if (wall) {
     // The shade deepens as the page scrolls past its first screen (written only when it changes, and only its opacity).
@@ -78,26 +66,6 @@ const LIGHTS = [
       requestAnimationFrame(depth);
     }, { passive: true });
     depth();
-
-    // A flash catches the lockups around it: the window opens where it fires, over the same place on the pattern, and
-    // flares for an instant; the newest flash takes over.
-    const glint = wall.querySelector<HTMLElement>('[data-talent-glint]');
-    const repeat = wall.querySelector<HTMLElement>('[data-talent-repeat]');
-    let flare: Animation | null = null;
-    if (glint && repeat && !reduced()) {
-      document.addEventListener('talent:flash', (e) => {
-        const f = (e as CustomEvent<{ x: number; y: number; size: number; power?: number }>).detail;
-        if (!f || document.hidden || document.documentElement.classList.contains('has-sheet') || wall.classList.contains('is-quiet')) return;
-        const r = repeat.getBoundingClientRect();
-        // Lit about as far as the flash's own glow reaches (the window fades out at 70% of this).
-        const reach = Math.max(40, f.size * 1.1);
-        const x0 = f.x - reach;
-        const y0 = f.y - reach;
-        glint.style.cssText = `--gd: ${(reach * 2).toFixed(0)}px; --gx: ${x0.toFixed(0)}px; --gy: ${y0.toFixed(0)}px; --ox: ${(r.left - x0).toFixed(0)}px; --oy: ${(r.top - y0).toFixed(0)}px; --ww: ${r.width.toFixed(0)}px; --wh: ${r.height.toFixed(0)}px`;
-        flare?.cancel();
-        flare = glint.animate([{ opacity: 0 }, { opacity: 0.5 * Math.min(1, f.power ?? 1), offset: 0.1 }, { opacity: 0 }], { duration: 320, easing: 'ease-out' });
-      });
-    }
   }
 </script>
 
@@ -191,37 +159,6 @@ const LIGHTS = [
     background: rgb(var(--white-rgb) / 0.9);
     -webkit-mask: url('/assets/site/stride-social-lockup.svg') center / contain no-repeat;
     mask: url('/assets/site/stride-social-lockup.svg') center / contain no-repeat;
-  }
-
-  /* A flash's light on the pattern: a small window, as out of focus as the wall, onto a white copy of it laid exactly
-     over the wall's (the script sets where and how big). Under the shade and the grain, like the wall. */
-  .talent-wall__glint {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: var(--gd, 0px);
-    height: var(--gd, 0px);
-    overflow: hidden;
-    opacity: 0;
-    translate: var(--gx, 0px) var(--gy, 0px);
-    filter: blur(0.375rem);
-    -webkit-mask-image: radial-gradient(closest-side, #000, transparent 70%);
-    mask-image: radial-gradient(closest-side, #000, transparent 70%);
-    contain: strict;
-    pointer-events: none;
-  }
-
-  .talent-wall__glint .talent-wall__repeat {
-    inset: auto;
-    top: 0;
-    left: 0;
-    width: var(--ww, 0px);
-    height: var(--wh, 0px);
-    translate: var(--ox, 0px) var(--oy, 0px);
-  }
-
-  .talent-wall__glint .talent-wall__lockup {
-    background: var(--white);
   }
 
   /* The words that stand on the wall: the smaller ones get a navy glow, so the lockups behind don't run through

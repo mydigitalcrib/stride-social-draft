@@ -284,12 +284,12 @@ export function initShortlists() {
     showTray(tray, false, !reduced());
   });
   // "Get to know them": the profiles of the creators picked, over the page where it can (creator-sheet.ts), otherwise
-  // on the roster, which opens them as it arrives.
+  // the first of them on /talent, in their roster post (the roster page was deleted, the owner, 2026-11-18).
   document.addEventListener('click', (e) => {
     const b = (e.target as HTMLElement).closest<HTMLElement>('[data-tray-meet]');
     if (!b || !load('creators').length) return;
     if (document.querySelector('[data-csheet]')) document.dispatchEvent(new CustomEvent('creators:meet', { detail: { from: b.closest('[data-tray]')?.getBoundingClientRect() ?? null } }));
-    else location.href = '/talent/roster?meet=1';
+    else location.href = `/talent?creator=${encodeURIComponent(load('creators')[0].id)}`;
   });
   render();
 }

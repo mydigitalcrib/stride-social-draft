@@ -5,8 +5,9 @@ sections:
     status: draft
     eyebrow: Stride Podcasts
     headline: Stride Podcasts.
-    # The owner's words (2026-11-13), said better.
-    body: Podcast hosts and creators, and the brands that want to work with them. We run and manage podcasts across the UK and US, and bring our hosts commercial opportunities.
+    # The owner's words (2026-11-18: "We support podcasts hosts with commercial opportunities across the UK and US"),
+    # said once.
+    body: We support podcast hosts across the UK and US and bring them commercial opportunities.
     cta: { label: Enquire About Podcasts, href: /talent/enquire?interest=podcasts }
     # No counts under the headline (the owner, 2026-11-13).
     counts: false

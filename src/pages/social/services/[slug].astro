@@ -1,17 +1,20 @@
 ---
 // Service page, one per Stride Social service: its opening (social/ServiceHero; the owner, 2026-11-12): its name, line
-// and words, its pictures sharp in a frame, what it includes as lines added to the brief; then the shared menu:
-// Related Work, Questions, More Services. All on navy; on desktop in front of Stride Social's night sky. Phones and
-// tablets have the same opening (the owner, 2026-11-13). Content not yet supplied by Stride is left out.
+// and words, what it includes, and a phone playing videos (its case studies' own upright clips, then Stride's creators'
+// reels: config/service-phones.ts; the owner, 2026-11-17, in place of its pictures); then the shared menu: Related
+// Work, Questions, More Services. In front of Contact's background, as Stride Social is. Phones and tablets have the
+// same opening (the owner, 2026-11-13). Content not yet supplied by Stride is left out.
 import { getCollection, getEntry } from 'astro:content';
 import SiteLayout from '@/layouts/SiteLayout.astro';
 import Deck from '@/components/experience/Deck.astro';
 import { routes } from '@/lib/routes';
 import { chunks, paragraphs } from '@/lib/experience';
 import type { Card } from '@/lib/experience';
-import Tray from '@/components/experience/Tray.astro';
 import ServiceHero from '@/components/social/ServiceHero.astro';
 import BackVideo from '@/components/core/BackVideo.astro';
+import { creatorRegions } from '@/config/creator-regions';
+import { PHONE_CLIPS, phoneClips } from '@/config/service-phones';
+import { getRoster, handleOf } from '@/lib/roster';
 
 export async function getStaticPaths() {
   const services = (await getCollection('services')).sort((a, b) => a.data.number - b.data.number);
@@ -36,6 +39,27 @@ const relatedCards: Card[] = related.slice(0, 8).map((w, i) => ({
   action: { label: 'View case study', href: routes.caseStudy(w.id) },
 }));
 const faqCards: Card[] = d.faqs.map((f) => ({ name: f.q, text: f.a, href: enquire }));
+
+// The phone: its case studies' upright clips first, taking turns (each case study's first, then each one's second...),
+// then Stride's creators' reels (published creators only, by the roster's rules), each page starting at a different reel.
+const perWork = related.map((w, i) =>
+  w.data.videos
+    .map((v) => phoneClips[v.src])
+    .filter((c) => !!c)
+    .map((c) => ({ ...c, who: clients[i], href: routes.caseStudy(w.id), note: 'Case study', label: `${clients[i]}: campaign video` })),
+);
+const fromWork = Array.from({ length: Math.max(0, ...perWork.map((l) => l.length)) }, (_, k) => perWork.flatMap((l) => (l[k] ? [l[k]] : []))).flat();
+const roster = await getRoster();
+const byId = new Map(roster.map((c) => [c.id, c]));
+const platformOf = (p: Record<string, string | undefined>) => (p.tiktok ? 'TikTok' : p.instagram ? 'Instagram' : p.youtube ? 'YouTube' : p.twitch ? 'Twitch' : 'Creator');
+const reels = creatorRegions
+  .flatMap((r) => r.reels ?? [])
+  .flatMap((reel) => {
+    const c = byId.get(reel.creator);
+    return c ? [{ src: reel.src, poster: reel.poster, who: handleOf(c) ?? c.data.name, href: routes.creator(c.id), note: platformOf(c.data.platforms), label: `${c.data.name}: creator video` }] : [];
+  });
+const turn = reels.length ? (d.number * 3) % reels.length : 0;
+const clips = [...fromWork, ...reels.slice(turn), ...reels.slice(0, turn)].slice(0, PHONE_CLIPS);
 const others: Card[] = services
   .filter((x) => x.id !== service.id)
   .map((x) => ({ name: x.data.name, text: x.data.descriptor, href: routes.service(x.id), image: x.data.hero, direct: true }));
@@ -52,8 +76,8 @@ const jsonLd = [
 ---
 
 <SiteLayout title={d.seo?.title ?? `${d.name} | Stride Social`} description={d.seo?.description ?? d.descriptor} division="social" ogImage={d.hero?.src} jsonLd={jsonLd} headerOverlay>
-  {/* On navy; on desktop in front of Stride Social's night sky. */}
-  <BackVideo mp4="/assets/video/social-sky.mp4" poster="/assets/site/social-sky-poster.jpg" shade={0.35} />
+  {/* In front of Contact's background, as Stride Social is (the owner, 2026-11-17: it was the night sky). */}
+  <BackVideo look="deep" mp4="/assets/video/stride-showreel-desktop.mp4" webm="/assets/video/stride-showreel-desktop.webm" poster="/assets/site/stride-showreel-desktop-poster.jpg" blur={10} />
   <ServiceHero
     name={d.name}
     number={d.number}
@@ -61,7 +85,8 @@ const jsonLd = [
     body={body}
     items={d.deliverables}
     pictures={[...(d.hero ? [d.hero] : []), ...d.gallery]}
-    crumbs={[{ label: 'Stride Social', href: '/social' }, { label: 'Services', href: '/social/services' }, { label: d.name }]}
+    clips={clips}
+    crumbs={[{ label: 'Stride Social', href: '/social' }, { label: d.name }]}
     talk={{ label: talk, href: enquire }}
     serviceId={service.id}
   />
@@ -79,5 +104,4 @@ const jsonLd = [
     ]}
     link={{ label: final?.cta?.label ?? 'Talk To Stride Social', href: enquire }}
   />
-  <Tray list="brief" />
 </SiteLayout>

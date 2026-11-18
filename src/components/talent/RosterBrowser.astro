@@ -5,7 +5,7 @@
 // more. `tools={false}` leaves out the search, the filters and "show more": just the title and the first photographs
 // (`pageSize`), all the same size, three to a row, still narrowed by the division picker above. Editorial, not a directory: what you type goes up on the wall in giant letters, photographs have no frames
 // and every seventh one is large. When the search or a filter changes, the photos it leaves out go dark one by one
-// and the rest close up; under the pointer a photo takes a camera flash and comes into colour.
+// and the rest close up; under the pointer a photo comes into colour (no camera flash since 2026-11-18).
 // Behaviour: src/scripts/system/roster-browser.ts.
 // Desktop, everything is pictures (the owner's choice, 2026-11-12). With its tools (/talent/roster) every creator shows,
 // in a dense mosaic of photographs, the divisions above it in giant type (no other filter rows), the pointer a
@@ -16,7 +16,7 @@
 // The camera answers the keyboard as it does the pointer (the viewfinder and the swell follow focus). A press on a
 // photograph half-presses the shutter (the viewfinder closes in, the photo hunts for focus), and the shot follows on
 // release; a creator added gets their ring drawn round them, like a select marked on a contact sheet, and it unwinds
-// when they're taken out. On the roster the flash under the viewfinder comes only once it has settled on a photo.
+// when they're taken out.
 // Sizes in rem on desktop, so it all grows with a large screen; on an ultrawide screen the contact sheet keeps the
 // size it has at 16:9.
 import CreatorCard from './CreatorCard.astro';
@@ -322,32 +322,6 @@ const allFit = allDigits > 3 ? `--all-fit: ${(150 / allDigits).toFixed(1)}cqi` :
 
     to {
       filter: brightness(0);
-      opacity: 0;
-    }
-  }
-
-  /* Under the viewfinder, once it has settled on a photo: the flash, and it comes into colour in the flash
-     (roster-finder.ts: .is-flashing, never more than about two a second). */
-  .rb__grid :global(.ccc__photo)::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    background: radial-gradient(circle at 68% 24%, var(--white), rgb(var(--white-rgb) / 0.72) 28%, rgb(var(--ice-rgb) / 0.28) 62%, rgb(var(--ice-rgb) / 0.12));
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  .rb__grid :global(.ccc.is-flashing .ccc__photo)::after {
-    animation: rb-flash 460ms var(--ease-out);
-  }
-
-  @keyframes rb-flash {
-    12% {
-      opacity: 0.6;
-    }
-
-    to {
       opacity: 0;
     }
   }
@@ -983,8 +957,7 @@ const allFit = allDigits > 3 ? `--all-fit: ${(150 / allDigits).toFixed(1)}cqi` :
   @media (prefers-reduced-motion: reduce) {
     .rb__wall,
     .rb__wall :global(span),
-    .rb__grid > :global(.is-out),
-    .rb__grid :global(.ccc.is-flashing .ccc__photo)::after {
+    .rb__grid > :global(.is-out) {
       transition: none;
       animation: none;
     }

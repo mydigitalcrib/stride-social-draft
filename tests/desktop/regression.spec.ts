@@ -1,5 +1,6 @@
 // The approved desktop, guarded: every page at the desktop widths, at the top and further down, and the scroll-driven
-// stories at their own states (About's chapters, the Social globe's regions), compared with the baseline. Motion stays
+// stories at their own states (About's chapters), compared with the baseline (the Social globe's regions went with the
+// globe, 2026-11-17). Motion stays
 // on: it plays out on the page's clock (support/site.ts), which holds still for each screenshot; what changes by itself
 // regardless (footage, canvases, timed notifications) is hidden in place (stable.css).
 import { expect, test } from '@playwright/test';
@@ -31,20 +32,5 @@ test('/about: the story\'s chapters', async ({ page }) => {
     await page.evaluate((k) => (document.querySelectorAll('[data-story-go]')[k] as HTMLElement | undefined)?.click(), k);
     await settle(page, 1600);
     await expect(page).toHaveScreenshot(`about--chapter-${String(k + 1).padStart(2, '0')}.png`);
-  }
-});
-
-// The Social globe, region by region.
-test('/social: the globe\'s regions', async ({ page }) => {
-  await open(page, '/social');
-  await page.evaluate(() => {
-    const g = document.querySelector('.globe');
-    if (g) window.scrollTo(0, g.getBoundingClientRect().top + window.scrollY);
-  });
-  await settle(page);
-  for (const k of [0, 2]) {
-    await page.evaluate((k) => (document.querySelectorAll('.globe [data-globe-tab]')[k] as HTMLElement | undefined)?.click(), k);
-    await settle(page, 1800);
-    await expect(page).toHaveScreenshot(`social--globe-${k + 1}.png`, { maxDiffPixelRatio: 0.01 });
   }
 });

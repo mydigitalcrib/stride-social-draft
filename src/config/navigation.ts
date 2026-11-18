@@ -30,9 +30,7 @@ export const services: NavLink[] = [
 
 export const talentDivisions: NavLink[] = [
   { label: 'Stride Sport', href: '/sport' },
-  { label: 'Stride Travel', href: '/talent/travel' },
   { label: 'Stride Podcasts', href: '/talent/podcasts' },
-  { label: 'Stride Music', href: '/talent/music' },
   { label: 'Stride Speakers', href: '/talent/speakers' },
 ];
 
@@ -46,7 +44,6 @@ export const primaryNav: PrimaryItem[] = [
           links: [
             { label: 'About Stride', href: '/about' },
             { label: 'Our History', href: '/history' },
-            { label: 'Our Team', href: '/team' },
             { label: 'Our Sponsorships', href: '/sponsorships' },
             { label: 'Careers', href: '/careers' },
             { label: 'Insights', href: '/insights' },
@@ -83,7 +80,6 @@ export const primaryNav: PrimaryItem[] = [
         {
           links: [
             { label: 'Overview', href: '/talent', description: 'Representation, opportunities and long-term career management.' },
-            { label: 'Creator roster', href: '/talent/roster' },
             { label: 'Apply for management', href: '/talent/apply' },
           ],
         },
@@ -129,6 +125,8 @@ export const modes: Mode[] = [
   { key: 'group', label: 'Stride Group', short: 'Group', href: '/', links: [{ label: 'Home', href: '/' }, { label: 'Insights', href: '/insights' }, contactLink] },
   { key: 'social', label: 'Stride Advertising', short: 'Social', href: '/social', links: menuLinks('Stride Social') },
   { key: 'talent', label: 'Stride Talent', short: 'Talent', href: '/talent', links: menuLinks('Stride Talent') },
+  // Stride Talent 2.0, every talent as stories (talent/TalentStories.astro), beside /talent so the two can be compared
+  // (the brief, 2026-11-16).
   // Sport, Podcasts and Speakers, in that order (the owner's; Podcasts added 2026-11-11): desktop only for now,
   // phones and tablets keep their list (the Menu bar hides them). Each has a page of its own
   // (talent/SpecialistPage.astro).
@@ -154,7 +152,7 @@ export function modeOf(path: string): ModeKey {
   if (p.startsWith('/academy')) return 'education';
   if (p.startsWith('/contact')) return 'contact';
   if (p.startsWith('/sponsorships')) return 'sponsoring';
-  if (['/about', '/history', '/team', '/careers'].some((s) => p.startsWith(s))) return 'about';
+  if (['/about', '/history', '/careers'].some((s) => p.startsWith(s))) return 'about';
   return 'group';
 }
 
@@ -164,7 +162,6 @@ export const footerColumns: { title: string; links: NavLink[] }[] = [
     links: [
       // About tells the history itself (its road), so History isn't listed beside it; the page stays (/history).
       { label: 'About', href: '/about' },
-      { label: 'Team', href: '/team' },
       { label: 'Sponsorships', href: '/sponsorships' },
       { label: 'Careers', href: '/careers' },
       { label: 'Insights', href: '/insights' },
@@ -173,8 +170,9 @@ export const footerColumns: { title: string; links: NavLink[] }[] = [
   {
     title: 'Stride Social',
     links: [
-      { label: 'Overview', href: '/social' },
-      { label: 'Services', href: '/social/services' },
+      // "Services" in place of "Overview" (the owner, 2026-11-18, after trying "Our strategies"): /social is the feed of
+      // its strategies.
+      { label: 'Services', href: '/social' },
       { label: 'Our Work', href: '/work' },
       { label: 'Start a campaign', href: '/social/enquire' },
     ],
@@ -183,8 +181,6 @@ export const footerColumns: { title: string; links: NavLink[] }[] = [
     title: 'Stride Talent',
     links: [
       { label: 'Overview', href: '/talent' },
-      { label: 'Roster', href: '/talent/roster' },
-      { label: 'Divisions', href: '/talent#divisions' },
       { label: 'Apply', href: '/talent/apply' },
     ],
   },

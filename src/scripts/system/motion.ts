@@ -52,9 +52,10 @@ export function initParallax() {
   );
 }
 
-// [data-magnetic="0.3"] (desktop): leans towards the pointer by that share of its offset while hovered, on a spring
-// that settles with the slightest overshoot, and back. A page's main calls to action only. On Stride Talent's pages
-// every pill is a magnet too (the owner's brief, 2026-11-12: more to play with).
+// [data-magnetic="0.3"] (desktop): leaned towards the pointer by that share of its offset while hovered, on a spring.
+// Off across the whole site since 2026-11-18 (the owner: "I like the button, not the movement"): no button moves
+// with the pointer any more, the light on the glass stays. Set LEAN to true to bring the lean back.
+const LEAN = false;
 const MAGNETS = "[data-magnetic], html[data-division='talent'] .exp-pill";
 // The glass buttons (glass.css): the light under the pointer catches on them. Those that only wear the glass's place
 // (big words with no fill of their own: Insights' topics, Team's departments) are left alone.
@@ -181,7 +182,7 @@ export function initMagnetic() {
       px = e.clientX;
       py = e.clientY;
       const target = e.target instanceof Element ? e.target : null;
-      const magnet = target?.closest<HTMLElement>(MAGNETS) ?? null;
+      const magnet = LEAN ? (target?.closest<HTMLElement>(MAGNETS) ?? null) : null;
       if (magnet !== (over?.el ?? null)) {
         leaveMagnet();
         if (magnet) enterMagnet(magnet);

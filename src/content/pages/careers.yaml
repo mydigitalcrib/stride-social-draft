@@ -15,18 +15,3 @@ sections:
     status: approved
     eyebrow: Opportunities
     headline: Open roles.
-  # The team picker: interface copy written by us.
-  picker:
-    status: draft
-    items:
-      - key: pick
-        label: Which team would you fit?
-      - key: send
-        label: Write to the careers inbox
-
-  apply:
-    status: draft
-    eyebrow: How to apply
-    headline: Don't see your role?
-    # The current application route on the previous site is this mailbox.
-    body: Send your CV and a few lines about why you'd like to join to the careers inbox. Tell us which team you'd fit best.

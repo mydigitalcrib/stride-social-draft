@@ -1,11 +1,12 @@
 ---
 // Careers (brief §7: company information, team culture, available opportunities and an application
-// route): open roles as glass tickets that lean towards the pointer and grow into a big card, then a team
-// picker that addresses your application email (group/TeamPicker). Production lists only roles Stride has
-// confirmed open; preview also shows the previous site's postings, labelled. Culture copy must be Stride's own.
+// route): open roles as glass tickets that lean towards the pointer and grow into a big card. Production lists only
+// roles Stride has confirmed open; preview also shows the previous site's postings, labelled. Culture copy must be
+// Stride's own. A role has no page of its own: "Read the role" opens Stride's jobs on LinkedIn (`jobsUrl`), and
+// "Don't see your role?" with its team picker is gone (the owner, 2026-11-18).
 // Desktop (the owner's choice, 2026-11-12): in front of an abstract blue clip (core/BackVideo), all in one navy. The
 // roles are numbered lines of big type; pointed at, one lights up and the rest go quiet; pressed, it opens where it is
-// (what it is, where, "Read the role", "Apply by email"). The team picker carries straight on below, in the same navy.
+// (what it is, where, "Read the role", "Apply by email").
 // Phones and tablets have the same roles and the same navy (the owner, 2026-11-13).
 // Desktop motion: going quiet, a role's ink drains out of its letters and leaves the outline; lit again, the ink fills
 // back in along the line. Its details come in one after another as it opens, and one that would end below the screen
@@ -15,15 +16,13 @@ import { getCollection, getEntry } from 'astro:content';
 import SiteLayout from '@/layouts/SiteLayout.astro';
 import BigCard from '@/components/experience/BigCard.astro';
 import Breadcrumbs from '@/components/global/Breadcrumbs.astro';
-import TeamPicker from '@/components/group/TeamPicker.astro';
 import PlaceholderNotice from '@/components/core/PlaceholderNotice.astro';
 import { careersEmail } from '@/config/forms';
-import { routes } from '@/lib/routes';
+import { jobsUrl } from '@/config/site';
 import { isPreview } from '@/lib/env';
 import { pad } from '@/lib/experience';
 import { interfaceCopy } from '@/lib/ui-copy';
 import BackVideo from '@/components/core/BackVideo.astro';
-import { byOrder } from '@/lib/team';
 const t = await interfaceCopy();
 
 const s = (await getEntry('pages', 'careers'))?.data.sections;
@@ -34,20 +33,10 @@ const roleTitle = (title: string) => title.replace(/^Placement Scheme:\s*/i, '')
 // The longest word in any role's name, which the desktop lines size to so it never runs past its column.
 const roleLen = Math.max(5, ...roles.flatMap((r) => roleTitle(r.data.title).split(/\s+/).map((w) => w.length)));
 
-const labels = { talent: 'Talent', campaigns: 'Campaigns', social: 'Social media', sales: 'Sales', operations: 'Operations' } as const;
-const team = (await getCollection('team', (m) => m.data.visible)).sort(byOrder);
-const teams = (Object.keys(labels) as (keyof typeof labels)[])
-  .map((id) => {
-    const members = team.filter((m) => m.data.department === id);
-    return { id, label: labels[id], count: members.length, faces: members.slice(0, 9).map((m) => m.data.photo) };
-  })
-  .filter((t) => t.count > 0);
-const ui = (key: string, fallback: string) => s.picker?.items?.find((i) => i.key === key)?.label ?? fallback;
 ---
 
 <SiteLayout title="Careers | Stride" description={s.hero.body} look="navy" headerOverlay>
   <BackVideo look="deep" mp4="/assets/video/careers-blue.mp4" poster="/assets/site/careers-blue-poster.jpg" />
-  {/* Desktop: one navy to the end, so the team picker carries on in front of the same clip. */}
   <section class="jobs" aria-labelledby="jobs-title" data-jobs data-tone="group" data-look="navy">
     <div class="jobs__inner container-wide">
       <div class="jobs__lead" data-reveal="from-left">
@@ -82,7 +71,7 @@ const ui = (key: string, fallback: string) => s.picker?.items?.find((i) => i.key
                         {t('careers.apply')}
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
                       </a>
-                      <a class="roles__read" href={routes.role(r.id)}>
+                      <a class="roles__read" href={jobsUrl} target="_blank" rel="noopener">
                         {t('careers.read')}
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
                       </a>
@@ -102,7 +91,7 @@ const ui = (key: string, fallback: string) => s.picker?.items?.find((i) => i.key
           <ul class="jobs__tickets" role="list" data-grow-row>
             {roles.map((r, i) => (
               <li class="jobs__ticket-wrap">
-                <a class="ticket" href={routes.role(r.id)} draggable="false" data-grow-card={r.id} data-ticket>
+                <a class="ticket" href={jobsUrl} target="_blank" rel="noopener" draggable="false" data-grow-card={r.id} data-ticket>
                   <span class="ticket__sheen" aria-hidden="true"></span>
                   <span class="ticket__main">
                     {r.data.scheme && <span class="ticket__flag">Placement scheme</span>}
@@ -134,9 +123,9 @@ const ui = (key: string, fallback: string) => s.picker?.items?.find((i) => i.key
           card={{
             name: r.data.title,
             text: r.data.summary,
-            href: routes.role(r.id),
+            href: jobsUrl,
             chips: [r.data.location, r.data.salary].filter((x): x is string => !!x),
-            action: { label: 'Read the role', href: routes.role(r.id) },
+            action: { label: t('careers.read'), href: jobsUrl },
             blocks: [{ title: 'Apply by email', text: careersEmail, href: applyFor(r.data.title), action: 'Apply by email' }],
           }}
         />
@@ -144,7 +133,6 @@ const ui = (key: string, fallback: string) => s.picker?.items?.find((i) => i.key
     </div>
   </section>
 
-  <TeamPicker eyebrow={s.apply.eyebrow} headline={s.apply.headline} body={s.apply.body} email={careersEmail} teams={teams} pick={ui('pick', 'Which team would you fit?')} send={ui('send', 'Write to the careers inbox')} />
 </SiteLayout>
 
 <style>
@@ -529,7 +517,7 @@ const ui = (key: string, fallback: string) => s.picker?.items?.find((i) => i.key
       animation: jobs-sheen 6.5s ease-in-out 1.4s infinite;
     }
 
-    /* Off the screen (the visitor is down at the team picker), the sheen rests. */
+    /* Off the screen, the sheen rests. */
     .jobs.is-away .jobs__title {
       animation-play-state: paused;
     }
@@ -824,7 +812,7 @@ const ui = (key: string, fallback: string) => s.picker?.items?.find((i) => i.key
       toggles[Math.max(0, Math.min(toggles.length - 1, to))].focus();
     });
 
-    // The headline's sheen rests while the page is down at the team picker.
+    // The headline's sheen rests while the roles are off the screen.
     if ('IntersectionObserver' in window) new IntersectionObserver(([e]) => root.classList.toggle('is-away', !e.isIntersecting)).observe(root);
 
     // The tickets (phones and tablets; on desktop they're only there when no role is open, so none to set up).

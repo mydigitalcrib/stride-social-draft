@@ -5,8 +5,8 @@ sections:
     status: draft
     eyebrow: Stride Speakers
     headline: Stride Speakers.
-    # The owner's words (2026-11-13), said better.
-    body: "Creators on stage. We manage leading voices across industries: book one for your conference, panel or company event."
+    # The owner's words (2026-11-18).
+    body: "We support leading voices across industries: book one for your conference, panel or company event."
     cta: { label: Book A Speaker, href: /talent/enquire?interest=speakers }
     # No counts under the headline on this page (the owner, 2026-11-13).
     counts: false
@@ -16,6 +16,10 @@ sections:
     headline: Who you can book.
     # Who comes first in the line-up (roster entries), then the rest in roster order (the owner, 2026-11-13: Oli first).
     featured: [oli-christie]
+    # A line about a speaker in the monitor's caption, above what they make (`key`: their roster entry). Rothna's is in
+    # her own roster profile and the owner's words (2026-11-18: "she's been on the apprentice").
+    items:
+      - { key: rothna-akthar, label: Former candidate on BBC's The Apprentice }
     awaiting: [speakers and their topics, with consent]
   placements:
     status: draft

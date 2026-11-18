@@ -8,11 +8,10 @@ export const routes = {
   workFiltered: (filter: { industry?: string; service?: string }) => `/work?${new URLSearchParams(filter)}`,
   article: (slug: string) => `/insights/${slug}`,
   insightsFiltered: (category: string) => `/insights?category=${category}`,
-  role: (slug: string) => `/careers/${slug}`,
-  creator: (slug: string) => `/talent/roster/${slug}`,
-  rosterFiltered: (category: string) => `/talent/roster?category=${category}`,
+  /** Everything about Stride Talent's creators lives on /talent itself (the owner, 2026-11-18: the roster, the creator
+   *  pages and the division pages were deleted): a creator opens there in their roster post, with their details
+   *  (talent/InstaProfile.astro reads `?creator=`), and a niche's roster opens in its Roster tab (`?roster=`). */
+  creator: (slug: string) => `/talent?creator=${slug}`,
+  rosterFiltered: (category: string) => `/talent?roster=${category}`,
   creatorEnquiry: (slug: string) => `/talent/enquire?creator=${slug}`,
-  /** Sport has its own page; the rest live under Stride Talent. */
-  division: (id: string) => (id === 'sport' ? '/sport' : `/talent/${id}`),
-  talentDivision: (slug: string) => `/talent/${slug}`,
 };

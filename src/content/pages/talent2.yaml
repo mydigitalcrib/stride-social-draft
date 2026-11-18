@@ -1,0 +1,242 @@
+# The niches' stories on /talent (talent/InstaProfile.astro's highlights, its Roster tab and the story player,
+# lib/talent-stories.ts): each niche's clips, its top ten and its roster post, and the player's words. It began as
+# Stride Talent 2.0's page (/talent-2), deleted on 2026-11-18 (the owner: everything lives on /talent), so some entries
+# below (the cards, "Who are you?", "See full roster" on that page) are no longer shown. status: draft = written by us,
+# until the owner approves it.
+sections:
+  hero:
+    status: draft
+    # Read out by screen readers only: the page shows no headline, as the reference doesn't.
+    headline: Stride Talent
+    # The story rings, in this order (the owner, 2026-11-16: the rings are niches, the cards each niche's top ten).
+    # `key` is the roster category it matches (taxonomies/categories.yaml; "All ... in" opens the roster on it), `label`
+    # the name under its ring, `creators` its top ten in order (roster ids): the owner's picks. Until a niche has ten
+    # picks, the rest are filled by the roster's rules: its signed and partner creators with the largest audience
+    # figures on the roster sheet (unverified figures, used only to choose, never shown). The ring shows its first
+    # creator's face. Each story plays the creator's clip (their roster entry's `videos`), or their photo until it has one.
+    # `clips` (optional): clips of the niche itself (the owner's own clips; sources in docs/ASSET-SOURCES.md), each under
+    # its creator's name, photo and page when `creator` (a roster id) says who made it, else under Stride Talent's (the
+    # owner confirmed eight creators, 2026-11-17). A niche with clips plays only its clips, and its cards on /talent-2 are them.
+    # The owner, 2026-11-17: every niche plays only clips whose creator is known ("buscar videos para poder descartar
+    # los que no tienen nombre"): the owner's eight confirmed clips, then the latest marked ad (Paid partnership / #ad)
+    # of creators on Stride's roster sheet, found on their Instagram (docs/ASSET-SOURCES.md has each one's post).
+    niches:
+      - key: lifestyle
+        label: Lifestyle
+        creators: []
+        # Every niche's stories end on a card that offers its full roster, opened on /talent's profile, its Roster tab
+        # (the owner, 2026-11-18: Lifestyle first, then "now do the same for each niche").
+        rosterPost: true
+        clips:
+          - {src: /assets/video/talent-lifestyle-1.mp4, poster: /assets/site/talent-lifestyle-1.jpg, alt: "A winter morning routine at home in a vlog", creator: kawaiimln}
+          - {src: /assets/video/talent-lifestyle-bhavanachowdaryy.mp4, poster: /assets/site/talent-lifestyle-bhavanachowdaryy.jpg, alt: "A creator spends a day and night at The Johnnie Walker Experience", creator: bhavana-chowdaryy}
+          - {src: /assets/video/talent-lifestyle-nursenoriii.mp4, poster: /assets/site/talent-lifestyle-nursenoriii.jpg, alt: "A nurse talks about her work for the American Nurses Association", creator: nursenoriii}
+          - {src: /assets/video/talent-lifestyle-christine-shine.mp4, poster: /assets/site/talent-lifestyle-christine-shine.jpg, alt: "A man in a grey Luxome robe and slippers stands in a hallway at home", creator: christine-shine}
+          - {src: /assets/video/talent-lifestyle-brennancjennings.mp4, poster: /assets/site/talent-lifestyle-brennancjennings.jpg, alt: "A creator in his bedroom talks about dating with the Ping app", creator: brennancjennings}
+          - {src: /assets/video/ig-stridetalent-reel-Db8KuOdIiPp.mp4, poster: /assets/site/ig-stridetalent-reel-Db8KuOdIiPp-first.jpg, alt: "A creator rides on her own with an Uber teen account to get her nails done", creator: lifeewithaaliyah}
+      - key: sport
+        label: Sport
+        creators: []
+        rosterPost: true
+        clips:
+          - {src: /assets/video/talent-sport-1.mp4, poster: /assets/site/talent-sport-1.jpg, alt: "A footballer's comedy sketch that starts on a pitch at night", creator: tomallenfootball}
+          - {src: /assets/video/talent-sport-3.mp4, poster: /assets/site/talent-sport-3.jpg, alt: "A tennis player on court shows his coaching app", creator: samtennis}
+          - {src: /assets/video/talent-sport-4.mp4, poster: /assets/site/talent-sport-4.jpg, alt: "A footballer unboxes new boots on a bench and tries them on", creator: ljcollects}
+          - {src: /assets/video/talent-sport-joe-ashman.mp4, poster: /assets/site/talent-sport-joe-ashman.jpg, alt: "A creator shows his TORRAS phone case and stand", creator: joe-ashman}
+          - {src: /assets/video/talent-sport-thehijabiballer.mp4, poster: /assets/site/talent-sport-thehijabiballer.jpg, alt: "A footballer shows the Mitre ball for the Women's FA Cup", creator: thehijabiballer}
+          - {src: /assets/video/talent-sport-addaepaponette.mp4, poster: /assets/site/talent-sport-addaepaponette.jpg, alt: "A creator trains with Harlequins rugby players at The Stoop in Castore kit", creator: addae-papponette}
+          - {src: /assets/video/ig-stridetalent-reel-DfXCUFVJBeV.mp4, poster: /assets/site/ig-stridetalent-reel-DfXCUFVJBeV-first.jpg, alt: "A football creator in a Brazil shirt asks fans for questions for R9 Ronaldo before a TikTok LIVE", creator: callum-wm17}
+          - {src: /assets/video/ig-stridetalent-reel-Db-7IrUMSRm.mp4, poster: /assets/site/ig-stridetalent-reel-Db-7IrUMSRm-first.jpg, alt: "A day of grassroots football at a local club with Budget Energy", creator: winser-pt}
+      - key: beauty
+        label: Beauty
+        creators: []
+        rosterPost: true
+        clips:
+          - {src: /assets/video/talent-beauty-2.mp4, poster: /assets/site/talent-beauty-2.jpg, alt: "A creator by a pool wears her hair wrapped in a swim turban", creator: justchillkaylin}
+          - {src: /assets/video/talent-beauty-amberhollyregel.mp4, poster: /assets/site/talent-beauty-amberhollyregel.jpg, alt: "A creator styles her hair with a Shark FlexStyle", creator: ambsholly}
+          - {src: /assets/video/talent-beauty-minksbyv.mp4, poster: /assets/site/talent-beauty-minksbyv.jpg, alt: "A creator tries a Fully face mask", creator: minksbyv}
+          - {src: /assets/video/talent-beauty-yasminwild.mp4, poster: /assets/site/talent-beauty-yasminwild.jpg, alt: "A creator tries Mamonde's Azulene Ampoule for redness", creator: yasminwild0}
+          - {src: /assets/video/talent-beauty-quinciesimone.mp4, poster: /assets/site/talent-beauty-quinciesimone.jpg, alt: "A creator shows Hollywood Beauty's Gro Up! rosemary hair oil", creator: quincie-simone}
+          - {src: /assets/video/talent-beauty-iamsamanthabraham.mp4, poster: /assets/site/talent-beauty-iamsamanthabraham.jpg, alt: "A creator tries RoC Skincare's roll-on serum for dark spots", creator: iamsamanthabraham}
+          - {src: /assets/video/talent-beauty-thejenniejenkins.mp4, poster: /assets/site/talent-beauty-thejenniejenkins.jpg, alt: "A creator uses Olay Regenerist on her face and neck", creator: thejenniejenkins}
+          - {src: /assets/video/talent-beauty-curlygirl-45.mp4, poster: /assets/site/talent-beauty-curlygirl-45.jpg, alt: "A creator with curly hair shows her Refilled scalp serum", creator: curlygirl-45}
+          - {src: /assets/video/ig-stridetalent-reel-DfpD4rnpsor.mp4, poster: /assets/site/ig-stridetalent-reel-DfpD4rnpsor-first.jpg, alt: "A creator shows the golden texture of Expressions’ CryoGold Firming Gel on her skin", creator: meyserakca}
+          - {src: /assets/video/ig-stridetalent-reel-Da0Eed2oBa8.mp4, poster: /assets/site/ig-stridetalent-reel-Da0Eed2oBa8-first.jpg, alt: "A creator in a satin bonnet goes through her Axis-Y skincare routine", creator: lifeewithaaliyah}
+      - key: fitness
+        label: Fitness
+        creators: []
+        rosterPost: true
+        clips:
+          - {src: /assets/video/talent-fitness-3.mp4, poster: /assets/site/talent-fitness-3.jpg, alt: "A runner gets ready by his car and heads out for a run", creator: cameronblackk}
+          - {src: /assets/video/talent-fitness-samanthabarlow-fitness.mp4, poster: /assets/site/talent-fitness-samanthabarlow-fitness.jpg, alt: "A creator works out with FitXR", creator: samanthabarlow-fitness}
+          - {src: /assets/video/talent-fitness-mitchsercombe.mp4, poster: /assets/site/talent-fitness-mitchsercombe.jpg, alt: "A creator heads into Toby Carvery for breakfast before a day's graft", creator: mitch-sercombe}
+          - {src: /assets/video/talent-fitness-lucykentfit.mp4, poster: /assets/site/talent-fitness-lucykentfit.jpg, alt: "A creator tries on Oner Active activewear", creator: lucykentfit}
+          - {src: /assets/video/talent-fitness-karlatafra.mp4, poster: /assets/site/talent-fitness-karlatafra.jpg, alt: "A creator rebuilding her muscle after a break trains and drinks Ascent Protein", creator: karlatafra}
+          - {src: /assets/video/talent-fitness-sainasante.mp4, poster: /assets/site/talent-fitness-sainasante.jpg, alt: "A triathlete talks about fuelling her training with the Green Diet app", creator: sainasante}
+          - {src: /assets/video/ig-stridetalent-reel-DdoUD2BJkut.mp4, poster: /assets/site/ig-stridetalent-reel-DdoUD2BJkut-first.jpg, alt: "A women’s workout class training together, with Issviva", creator: feelgoodhealthfitness}
+          - {src: /assets/video/ig-stridetalent-reel-DcyPeWRIOmi.mp4, poster: /assets/site/ig-stridetalent-reel-DcyPeWRIOmi-first.jpg, alt: "A creator scans her body with the ZozoFit app to follow her weight loss at the gym", creator: the-fatgirldiaires}
+      - key: technology
+        label: Tech
+        creators: []
+        rosterPost: true
+        clips:
+          - {src: /assets/video/talent-tech-3.mp4, poster: /assets/site/talent-tech-3.jpg, alt: "A creator unboxes a special edition games console", creator: hylianpeapod}
+          - {src: /assets/video/talent-technology-andrewjpdiaz.mp4, poster: /assets/site/talent-technology-andrewjpdiaz.jpg, alt: "A creator shows August, an AI health assistant", creator: andrewjpdiaz}
+          - {src: /assets/video/talent-technology-justin-joseph-espejo.mp4, poster: /assets/site/talent-technology-justin-joseph-espejo.jpg, alt: "A creator edits a video with Adobe Express", creator: justin-espejo}
+          - {src: /assets/video/talent-technology-jaes-tech.mp4, poster: /assets/site/talent-technology-jaes-tech.jpg, alt: "A creator shows tech gadgets ordered from Temu", creator: jaeden}
+          - {src: /assets/video/talent-technology-jeorgepaolo.mp4, poster: /assets/site/talent-technology-jeorgepaolo.jpg, alt: "A creator shows an Arc Pulse phone case and a Momax power bank", creator: jeorgepaolo}
+          - {src: /assets/video/talent-technology-faithyymariee.mp4, poster: /assets/site/talent-technology-faithyymariee.jpg, alt: "A creator takes a mirror-free selfie with her phone in a Casetify case", creator: faithhh-marieee}
+          - {src: /assets/video/ig-stridetalent-reel-DZ9_xwgoVTR.mp4, poster: /assets/site/ig-stridetalent-reel-DZ9_xwgoVTR-first.jpg, alt: "A creator’s day with the RingConn smart ring and its stress and heart-rate readings", creator: bhavana-chowdaryy}
+          - {src: /assets/video/ig-stridetalent-reel-DdEQ8ZzpWXc.mp4, poster: /assets/site/ig-stridetalent-reel-DdEQ8ZzpWXc-first.jpg, alt: "A couple turns an idea into a plan with the Dola AI app", creator: crayspace}
+      - key: entertainment
+        label: Entertainment
+        creators: []
+        rosterPost: true
+        clips:
+          - {src: /assets/video/talent-entertainment-spencer-sebastian-yang.mp4, poster: /assets/site/talent-entertainment-spencer-sebastian-yang.jpg, alt: "A creator's Batman sketch for Amazon Luna", creator: spencer-sebastian-yang}
+          - {src: /assets/video/talent-entertainment-lsclarky.mp4, poster: /assets/site/talent-entertainment-lsclarky.jpg, alt: "A dad and his son's challenge in a paid partnership", creator: lsclarky}
+          - {src: /assets/video/talent-entertainment-jayyduran.mp4, poster: /assets/site/talent-entertainment-jayyduran.jpg, alt: "A creator shows a PetPivot self-cleaning litter box", creator: jayyduran}
+          - {src: /assets/video/talent-entertainment-tylerqxail.mp4, poster: /assets/site/talent-entertainment-tylerqxail.jpg, alt: "A creator shows what he ordered from Temu", creator: tylerqxail}
+          - {src: /assets/video/talent-entertainment-stchabz.mp4, poster: /assets/site/talent-entertainment-stchabz.jpg, alt: "A creator's comedy bit about heated pilates, made with Pakt Fitness", creator: stchabz}
+          - {src: /assets/video/ig-stridetalent-reel-DfFAs2oprqm.mp4, poster: /assets/site/ig-stridetalent-reel-DfFAs2oprqm-first.jpg, alt: "A couple reacts to the Twilight films on Netflix", creator: joshandjem}
+          - {src: /assets/video/ig-stridetalent-reel-DdG1xsDpXSx.mp4, poster: /assets/site/ig-stridetalent-reel-DdG1xsDpXSx-first.jpg, alt: "Two creators unbox Miniso’s YOYO blind-box toys", creator: musaandstellaa}
+      - key: fashion
+        label: Fashion
+        creators: []
+        rosterPost: true
+        clips:
+          - {src: /assets/video/talent-fashion-lauradopamineoutfits.mp4, poster: /assets/site/talent-fashion-lauradopamineoutfits.jpg, alt: "A creator styles colourful outfits from the Hacoo app", creator: lauradopamineoutfits}
+          - {src: /assets/video/talent-fashion-fernalizz.mp4, poster: /assets/site/talent-fashion-fernalizz.jpg, alt: "A creator wears a Lands' End sweater", creator: fernalizz}
+          - {src: /assets/video/talent-fashion-beatriceturner.mp4, poster: /assets/site/talent-fashion-beatriceturner.jpg, alt: "A creator shows her Fairphone", creator: beatriceturner}
+          - {src: /assets/video/talent-fashion-mimijacksonfit.mp4, poster: /assets/site/talent-fashion-mimijacksonfit.jpg, alt: "A creator styles an ASOS outfit from Arrange Studios", creator: mimijacksonfit}
+          - {src: /assets/video/talent-fashion-miacaven.mp4, poster: /assets/site/talent-fashion-miacaven.jpg, alt: "A creator finishes her outfit with Moschino perfume from The Fragrance Shop", creator: miacaven}
+          - {src: /assets/video/talent-fashion-alyssaknight-bc.mp4, poster: /assets/site/talent-fashion-alyssaknight-bc.jpg, alt: "A creator styles Blundstone Chelsea boots from SoftMoc on a rainy day", creator: alyssa}
+          - {src: /assets/video/ig-stridetalent-reel-DdWSimrpw_c.mp4, poster: /assets/site/ig-stridetalent-reel-DdWSimrpw_c-first.jpg, alt: "A creator styles two outfits with scarves and stacked bracelets", creator: ourwritesmatter}
+      - key: travel
+        label: Travel
+        creators: []
+        rosterPost: true
+        clips:
+          - {src: /assets/video/talent-travel-bethnicole-2.mp4, poster: /assets/site/talent-travel-bethnicole-2.jpg, alt: "A traveller leaves her luggage with Bounce", creator: bethnicole-2}
+          - {src: /assets/video/talent-travel-taylortakesprague.mp4, poster: /assets/site/talent-travel-taylortakesprague.jpg, alt: "A traveller talks about SafetyWing travel medical insurance", creator: taylortakesprague}
+          - {src: /assets/video/talent-travel-alyanna-ross.mp4, poster: /assets/site/talent-travel-alyanna-ross.jpg, alt: "A creator shows an Ambi Pur gel freshener", creator: alyanna-ross}
+          - {src: /assets/video/talent-travel-vanlife-with-ravi.mp4, poster: /assets/site/talent-travel-vanlife-with-ravi.jpg, alt: "A van traveller talks about PhonePe car insurance", creator: vanlife-with-ravi}
+          - {src: /assets/video/talent-travel-twinpassporttales.mp4, poster: /assets/site/talent-travel-twinpassporttales.jpg, alt: "A traveller shows a guesthouse abroad and stays connected with an Ubigi eSIM", creator: twinpassporttales}
+          - {src: /assets/video/ig-stridetalent-reel-DaQBYbJIuDF.mp4, poster: /assets/site/ig-stridetalent-reel-DaQBYbJIuDF-first.jpg, alt: "A couple explores Porto’s tiled streets with Luxury Escapes", creator: taynotalexx}
+          - {src: /assets/video/ig-stridetalent-reel-DXeTDo1IJsd.mp4, poster: /assets/site/ig-stridetalent-reel-DXeTDo1IJsd-first.jpg, alt: "A couple on their way through the airport with a SailyWorld eSIM", creator: tayandalexx}
+      - key: family
+        label: Family
+        creators: []
+        rosterPost: true
+        clips:
+          - {src: /assets/video/talent-family-paigetbrown.mp4, poster: /assets/site/talent-family-paigetbrown.jpg, alt: "A creator tries the Usmile D50 toothbrush", creator: paigetbrown}
+          - {src: /assets/video/talent-family-glutenfreefi.mp4, poster: /assets/site/talent-family-glutenfreefi.jpg, alt: "A mum shows Tonic Health's kids' multivitamins", creator: glutenfreefi}
+          - {src: /assets/video/talent-family-heidiixoxo.mp4, poster: /assets/site/talent-family-heidiixoxo.jpg, alt: "A family's holiday booked with Luxury Escapes", creator: heidiixoxo}
+          - {src: /assets/video/talent-family-hannahburnns.mp4, poster: /assets/site/talent-family-hannahburnns.jpg, alt: "A mum shows the Papablic baby bottle washer she couldn't live without", creator: hannahburnns}
+          - {src: /assets/video/talent-family-bristolwiththeboys.mp4, poster: /assets/site/talent-family-bristolwiththeboys.jpg, alt: "A mum of boys talks about trusting a Koru Kids nanny with her children after school", creator: bristolwiththeboys}
+      - key: food
+        label: Food
+        creators: []
+        rosterPost: true
+        clips:
+          - {src: /assets/video/talent-food-jimladofficial.mp4, poster: /assets/site/talent-food-jimladofficial.jpg, alt: "A creator eats a mixed grill at Harvester", creator: jimlad83}
+          - {src: /assets/video/talent-food-hijabieatslondon.mp4, poster: /assets/site/talent-food-hijabieatslondon.jpg, alt: "A creator tries heytea's Halloween drink", creator: hibjabieats}
+          - {src: /assets/video/talent-food-acegamergirl.mp4, poster: /assets/site/talent-food-acegamergirl.jpg, alt: "A creator shows White Castle's cheddar bacon sliders", creator: acegamergirl}
+          - {src: /assets/video/talent-food-jamesholt-ig.mp4, poster: /assets/site/talent-food-jamesholt-ig.jpg, alt: "A creator picks a drink from the menu at Pepsi's House Treats pop-up in London", creator: james-holt}
+          - {src: /assets/video/talent-food-wellwithkaija.mp4, poster: /assets/site/talent-food-wellwithkaija.jpg, alt: "A creator bakes spiderweb brownies with Navitas Organics cacao", creator: wellwithkaija}
+          - {src: /assets/video/talent-food-theninadaily.mp4, poster: /assets/site/talent-food-theninadaily.jpg, alt: "A creator cooks a chicken pasta bake from the ReciMe recipe app", creator: theninadaily}
+          - {src: /assets/video/ig-stridetalent-reel-DfUdgGFpV9c.mp4, poster: /assets/site/ig-stridetalent-reel-DfUdgGFpV9c-first.jpg, alt: "A creator plans a three-course dinner with the Dola app, then cooks it", creator: cookingwithtubz}
+      - key: books
+        label: Books
+        creators: []
+        rosterPost: true
+        clips:
+          - {src: /assets/video/talent-books-blossomingbookss.mp4, poster: /assets/site/talent-books-blossomingbookss.jpg, alt: "A creator shows a Hello Kitty keychain camera from Kiimento", creator: blossomingbookss}
+          - {src: /assets/video/talent-books-lit-by-adam.mp4, poster: /assets/site/talent-books-lit-by-adam.jpg, alt: "A creator listens to audiobooks on ElevenReader", creator: lit-by-adam}
+          - {src: /assets/video/talent-books-abookblog-bytay.mp4, poster: /assets/site/talent-books-abookblog-bytay.jpg, alt: "A creator reads in Quince linen sheets", creator: abookblog-bytay}
+          - {src: /assets/video/talent-books-shereadsandtravels.mp4, poster: /assets/site/talent-books-shereadsandtravels.jpg, alt: "A creator spends National Book Tokens at a bookshop", creator: julia-s-bookcase}
+          - {src: /assets/video/talent-books-mxzwastaken.mp4, poster: /assets/site/talent-books-mxzwastaken.jpg, alt: "A creator in front of his bookshelves holds up the novel Project Hail Mary", creator: mxzgaming}
+      - key: gaming
+        label: Gaming
+        creators: []
+        rosterPost: true
+        clips:
+          - {src: /assets/video/talent-gaming-steamflow1.mp4, poster: /assets/site/talent-gaming-steamflow1.jpg, alt: "A creator presents a charity bundle of horror games", creator: steamflow}
+          - {src: /assets/video/talent-gaming-soyas-sauce.mp4, poster: /assets/site/talent-gaming-soyas-sauce.jpg, alt: "A creator visits an Animal Crossing creator event at SEA LIFE Brighton", creator: djamila-de-jesus}
+          - {src: /assets/video/talent-gaming-realjgf.mp4, poster: /assets/site/talent-gaming-realjgf.jpg, alt: "A creator plays a competitive game of pool on the 8-Ball Strike app", creator: realjfg}
+          - {src: /assets/video/talent-gaming-nishgames.mp4, poster: /assets/site/talent-gaming-nishgames.jpg, alt: "A creator builds a gaming PC with an MSI power supply", creator: nishgames}
+          - {src: /assets/video/ig-stridetalent-reel-DcgN1LBosTF.mp4, poster: /assets/site/ig-stridetalent-reel-DcgN1LBosTF-first.jpg, alt: "A couple plays hide and seek in a WePlay game", creator: joshandjem}
+      - key: creative
+        label: Art and DIY
+        creators: []
+        rosterPost: true
+        clips:
+          - {src: /assets/video/talent-creative-yourlifeiswhatyoumakeit.mp4, poster: /assets/site/talent-creative-yourlifeiswhatyoumakeit.jpg, alt: "A creator installs an Arspura water purifier", creator: yourlifeiswhatyoumakeit}
+          - {src: /assets/video/talent-creative-whythepigment-studio.mp4, poster: /assets/site/talent-creative-whythepigment-studio.jpg, alt: "An artist draws with Adobe Photoshop", creator: whythepigment-studio}
+          - {src: /assets/video/talent-creative-hannahroseyb.mp4, poster: /assets/site/talent-creative-hannahroseyb.jpg, alt: "A creator freshens her home with Febreze", creator: hannahroseyb}
+          - {src: /assets/video/talent-creative-bofenglin.mp4, poster: /assets/site/talent-creative-bofenglin.jpg, alt: "An artist makes cover art for an audiobook", creator: bofenglin}
+          - {src: /assets/video/talent-creative-erinjayee.mp4, poster: /assets/site/talent-creative-erinjayee.jpg, alt: "A creator shows her new planner from Alison Bryn Paper", creator: erinjayee}
+    items:
+      - key: join
+        label: Join Stride
+        href: /talent/apply
+      - key: niches
+        label: Niches
+      # The last card of a niche's row: {n} is how many creators the roster has in it.
+      - key: nicheAll
+        label: "All {n} in {niche}"
+        href: /talent/roster
+      - key: roster
+        label: See full roster
+        href: /talent/roster
+
+  # The words on the story player.
+  story:
+    status: draft
+    items:
+      - key: close
+        label: Close stories
+      - key: pause
+        label: Pause
+      - key: play
+        label: Play
+      - key: mute
+        label: Sound on
+      - key: unmute
+        label: Sound off
+      - key: prev
+        label: Previous
+      - key: next
+        label: Next
+      # The card after a niche's last story, where the niche has its roster post (`rosterPost`; the owner, 2026-11-18):
+      # {n} is how many creators the roster has in the niche, {niche} its name.
+      - key: rosterAsk
+        label: Wanna see the full roster?
+      - key: rosterLine
+        label: "Meet all {n} {niche} creators at Stride."
+      - key: rosterYes
+        label: See full roster
+      - key: rosterNo
+        label: Keep watching
+      # The roster post on /talent's Instagram profile (its third tab).
+      - key: rosterTab
+        label: Roster
+      - key: rosterCaption
+        label: "The {niche} roster: all {n} creators. Swipe to meet them."
+      - key: rosterCount
+        label: "{n} creators"
+      - key: rosterMore
+        label: Show more
+
+  close:
+    status: draft
+    headline: Who are you?
+    # The line is the Talent page's own (talent.yaml, hero).
+    body: We give our talent 360° management, supporting every side of their career.
+    items:
+      - key: brands
+        label: Brand
+        href: /talent/enquire
+      - key: creators
+        label: Creator
+        href: /talent/apply

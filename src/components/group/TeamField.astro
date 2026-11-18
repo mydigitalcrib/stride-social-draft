@@ -48,7 +48,7 @@ const t = await interfaceCopy();
         <Title class="tfield__title exp-title" id="tfield-title" data-reveal-lines="load">{copy.headline}</Title>
       </div>
       <div class="tfield__side">
-        {copy.body && <p class="tfield__body">{copy.body}</p>}
+        {/* No line under the title (the owner, 2026-11-18): `copy.body` is only the page's description now. */}
         {tools && (
           <>
             <div class="tfield__needs" role="group" aria-label={`${t('team.brand')} / ${t('team.creator')}`}>
@@ -134,10 +134,6 @@ const t = await interfaceCopy();
     display: grid;
     gap: var(--space-3);
     justify-items: start;
-  }
-
-  .tfield__body {
-    color: rgb(var(--ink) / 0.86);
   }
 
   .tfield__chips {
@@ -435,11 +431,6 @@ const t = await interfaceCopy();
     .tfield__title-wrap {
       grid-column: 1;
       grid-row: 1 / span 3;
-    }
-
-    .tfield__body {
-      grid-column: 2;
-      grid-row: 1;
     }
 
     .tfield__needs {

@@ -1,14 +1,15 @@
 // The homepage hero's entrance on desktop (components/home/CoverHero.astro), built from Stride's triangles (the
-// owner's choice, 2026-11-12), about 2.6s:
+// owner's choice, 2026-11-12), about 2s (quicker since the owner, 2026-11-17: "We build culture" sooner; it was 2.6s):
 //   0.00–0.32s  the Stride mark, its four triangles, appears at the centre of the screen.
 //   0.38s       it breaks into hundreds of its own triangles (each the mark's shape, or the same turned over),
 //               which fly to the big word, the first letter's first, each on a gentle curve, turning and
 //               shrinking to size, and fit together into its letters, so the word stands as a mosaic.
-//   ~1.9s       complete, the word turns solid (the real headline takes over as the triangles fade), its depth
+//   ~1.4s       complete, the word turns solid (the real headline takes over as the triangles fade), its depth
 //               comes up and a light crosses it; the kicker rises in, letter by letter. The footage behind
-//               comes into focus from the navy over the flight.
+//               comes into focus from the navy over the flight (an animation of its own, so the canvas keeps
+//               its frames).
 // The letters' shapes are measured from the real headline (its type, drawn on a hidden canvas), so the mosaic
-// lands exactly on it. Afterwards it says so (`hero:landed`), for the opening film's notifications. The light that
+// lands exactly on it. Afterwards it says so (`hero:landed`). The light that
 // crosses the word as it turns solid is hero-depth.ts's (`hero:light`), so it runs on along the rule into the badges.
 // After the opening film (opening.ts, .is-opening on the hero) it waits for `hero:opening`. Handed over from the
 // film (`detail.handover`), the film's own mark has already travelled to where this one stands: it starts with the
@@ -24,12 +25,12 @@ import { clamp, reduced } from './env';
 
 const APPEAR = 0.32; // s, the mark comes in
 const BURST = 0.38; // s, it breaks into its triangles
-const FLY = 0.95; // s, each triangle's flight (up to a third longer, varied)
-const SPREAD = 0.62; // s from the first letter's triangles leaving to the last letter's
+const FLY = 0.6; // s, each triangle's flight (up to a third longer, varied; it was 0.95)
+const SPREAD = 0.4; // s from the first letter's triangles leaving to the last letter's (it was 0.62)
 const SOLID = 0.42; // s, the mosaic hands over to the solid word
 const LIGHT = 0.85; // s, the light crossing the word
-const HOLD = 0.45; // s, handed over from the opening film: the mark held while the film fades over it
-const INHALE = 0.25; // s, and swelling a touch at the end of that, before it breaks
+const HOLD = 0.2; // s, handed over from the opening film: the mark held while the film fades over it (it was 0.45)
+const INHALE = 0.12; // s, and swelling a touch at the end of that, before it breaks
 const SEED = 11; // the same flight every time
 const PIXELS = 8.3e6; // the canvas's budget of device pixels (a 4K screen's worth)
 
@@ -81,6 +82,13 @@ export function entranceMark(hero: HTMLElement) {
 // The type is preloaded, so this is normally immediate; never wait long for it.
 const fontsReady = () => Promise.race([document.fonts?.ready ?? Promise.resolve(), new Promise((r) => setTimeout(r, 500))]);
 
+// Work for a quiet moment (the gate waiting for "Enter"), or soon if the browser never has one.
+const idle = (fn: () => void) => {
+  const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
+  if (w.requestIdleCallback) w.requestIdleCallback(fn, { timeout: 600 });
+  else window.setTimeout(fn, 60);
+};
+
 export function initHeroEntrance() {
   const hero = document.querySelector<HTMLElement>('.cover');
   const canvas = hero?.querySelector<HTMLCanvasElement>('[data-hero-build]');
@@ -94,6 +102,7 @@ export function initHeroEntrance() {
 
   let state: 'waiting' | 'running' | 'done' = 'waiting';
   let raf = 0;
+  let focusPull: Animation | null = null;
   const media = hero.querySelector<HTMLElement>('.cover__media');
   const word = hero.querySelector<HTMLElement>('.cover__word');
   const wordChars = [...hero.querySelectorAll<HTMLElement>('.cover__word .cover__char')];
@@ -104,6 +113,7 @@ export function initHeroEntrance() {
     if (state === 'done') return;
     state = 'done';
     cancelAnimationFrame(raf);
+    focusPull?.cancel();
     media?.style.removeProperty('filter');
     ['--ex', '--ey'].forEach((p) => word?.style.removeProperty(p));
     hero.classList.add('is-settling');
@@ -122,32 +132,35 @@ export function initHeroEntrance() {
     if (window.scrollY > window.innerHeight * 0.34) end();
   };
 
-  const play = (handover: boolean) => {
+  /* ---------- Measuring: the word's shape and every triangle's flight ----------
+     The costly part (it reads the page's layout), so after the opening film it's done while the gate waits for
+     "Enter" (`hero:prepare`, opening.ts) and kept, rather than in the moment of the hand-over, where it held the
+     mark still and made the film's fade jump (the owner, 2026-11-17: "fix the animation once you click Enter"). */
+  const measure = () => {
     const box = canvas.getBoundingClientRect();
     const W = box.width;
     const H = box.height;
     const dpr = Math.min(2, window.devicePixelRatio || 1, Math.sqrt(PIXELS / (W * H)));
-    canvas.width = Math.round(W * dpr);
-    canvas.height = Math.round(H * dpr);
-    const ctx = canvas.getContext('2d')!;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     /* ---------- The word's shape, from the real headline ---------- */
     const first = wordChars[0]?.firstElementChild as HTMLElement | null;
     if (!word || !first) throw new Error('no headline');
     const cs = getComputedStyle(first);
     const size = parseFloat(cs.fontSize);
-    const letters = wordChars.map((el) => {
-      const inner = el.firstElementChild as HTMLElement;
-      const r = inner.getBoundingClientRect();
-      // The baseline: an empty inline box sits on it.
+    // The baselines: an empty inline box sits on each. All placed before any is read, so the page is laid out once.
+    const inners = wordChars.map((el) => el.firstElementChild as HTMLElement);
+    const probes = inners.map((inner) => {
       const probe = document.createElement('i');
       probe.style.cssText = 'display:inline-block;width:0;height:0';
       inner.append(probe);
-      const baseline = probe.getBoundingClientRect().top - box.top;
-      probe.remove();
+      return probe;
+    });
+    const letters = inners.map((inner, i) => {
+      const r = inner.getBoundingClientRect();
+      const baseline = probes[i].getBoundingClientRect().top - box.top;
       return { text: (inner.textContent ?? '').toUpperCase(), baseline, left: r.left - box.left, right: r.right - box.left, top: r.top - box.top, bottom: r.bottom - box.top };
     });
+    probes.forEach((probe) => probe.remove());
     const left = Math.floor(Math.min(...letters.map((l) => l.left)) - size * 0.05);
     const right = Math.ceil(Math.max(...letters.map((l) => l.right)) + size * 0.05);
     const top = Math.floor(Math.min(...letters.map((l) => l.top)) - size * 0.1);
@@ -216,7 +229,7 @@ export function initHeroEntrance() {
             cy: sy + dy * 0.5 + dx * bend - Math.hypot(dx, dy) * 0.18,
             r0: (rand() - 0.5) * 2.4 + (turned ? Math.PI : 0),
             s0: 0.5 + rand() * 1.4,
-            at: BURST + (li / Math.max(1, letters.length - 1)) * SPREAD + rand() * 0.14,
+            at: BURST + (li / Math.max(1, letters.length - 1)) * SPREAD + rand() * 0.1,
             dur: FLY * (1 + rand() * 0.34),
             shade: turned ? rand() * 0.25 : 0.55 + rand() * 0.45,
           });
@@ -225,6 +238,30 @@ export function initHeroEntrance() {
     }
     if (!tris.length) throw new Error('no triangles');
     const landed = Math.max(...tris.map((t) => t.at + t.dur));
+    return { W, H, dpr, c, tris, mark, mx, my, landed };
+  };
+
+  // Measured while the gate waits; measured again at the start if the window has changed size since.
+  let kept: ReturnType<typeof measure> | null = null;
+  const prepare = () => {
+    if (state !== 'waiting' || kept) return;
+    try {
+      kept = measure();
+    } catch {
+      kept = null;
+    }
+  };
+  hero.addEventListener('hero:prepare', () => idle(prepare), { once: true });
+
+  const play = (handover: boolean) => {
+    const box = canvas.getBoundingClientRect();
+    const b = kept && kept.W === box.width && kept.H === box.height ? kept : measure();
+    kept = null;
+    const { W, H, dpr, c, tris, mark, mx, my, landed } = b;
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    const ctx = canvas.getContext('2d')!;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const solidAt = landed + 0.08;
     const finishAt = solidAt + Math.max(LIGHT, SOLID) + 0.15;
 
@@ -256,7 +293,22 @@ export function initHeroEntrance() {
     const frame = (now: number) => {
       if (state !== 'running') return;
       const drawn = !!start;
-      if (!start) start = now;
+      if (!start) {
+        start = now;
+        // The footage comes into focus from the navy over the flight: one animation the browser runs by itself
+        // (on the compositor where it can), rather than a new filter written every frame, which cost the triangles
+        // their frames.
+        if (media) {
+          const from = `${grade} brightness(0.42) blur(${focus.toFixed(2)}px)`;
+          const to = `${grade} brightness(0.9) blur(0px)`;
+          focusPull = media.animate([{ filter: from }, { filter: to }], {
+            duration: (solidAt - BURST) * 1000,
+            delay: Math.max(0, (BURST - t0) * 1000),
+            easing: 'cubic-bezier(0.65, 0, 0.35, 1)',
+            fill: 'both',
+          });
+        }
+      }
       const t = t0 + (now - start) / 1000;
       ctx.clearRect(0, 0, W, H);
 
@@ -282,7 +334,9 @@ export function initHeroEntrance() {
         }
       }
 
-      // The triangles.
+      // The triangles, gathered by their shade and opacity (rounded a little, which doesn't show) into a few
+      // paths, each filled once, rather than hundreds of fills a frame.
+      const groups = new Map<number, Path2D>();
       for (const tri of tris) {
         if (t < tri.at) continue;
         const p = clamp((t - tri.at) / tri.dur);
@@ -297,25 +351,26 @@ export function initHeroEntrance() {
         const pts = shapes[tri.turned ? 1 : 0];
         // White, and the facets settling into a pale ice as they land.
         const ice = tri.shade * 0.7 * e;
-        ctx.globalAlpha = 0.35 + 0.65 * clamp(p * 2.2);
-        ctx.fillStyle = `rgb(${Math.round(255 - 59 * ice)}, ${Math.round(255 - 29 * ice)}, ${Math.round(255 - 5 * ice)})`;
-        ctx.beginPath();
-        pts.forEach(([px, py], i) => {
+        const alpha = 0.35 + 0.65 * clamp(p * 2.2);
+        const key = Math.round(alpha * 20) * 16 + Math.round(ice * 15);
+        let path = groups.get(key);
+        if (!path) groups.set(key, (path = new Path2D()));
+        for (let i = 0; i < 3; i++) {
+          const [px, py] = pts[i];
           const X = x + px * cos - py * sin;
           const Y = y + px * sin + py * cos;
-          if (i) ctx.lineTo(X, Y);
-          else ctx.moveTo(X, Y);
-        });
-        ctx.closePath();
-        ctx.fill();
+          if (i) path.lineTo(X, Y);
+          else path.moveTo(X, Y);
+        }
+        path.closePath();
+      }
+      for (const [key, path] of groups) {
+        const ice = (key % 16) / 15;
+        ctx.globalAlpha = Math.floor(key / 16) / 20;
+        ctx.fillStyle = `rgb(${Math.round(255 - 59 * ice)}, ${Math.round(255 - 29 * ice)}, ${Math.round(255 - 5 * ice)})`;
+        ctx.fill(path);
       }
       ctx.globalAlpha = 1;
-
-      // The footage comes into focus from the navy over the flight.
-      if (media) {
-        const f = easeInOut(clamp((t - BURST) / (solidAt - BURST)));
-        media.style.filter = `${grade} brightness(${(0.42 + 0.48 * f).toFixed(3)}) blur(${(focus * (1 - f)).toFixed(2)}px)`;
-      }
 
       // Complete: the word turns solid, its depth comes up, a light crosses it (hero-depth.ts); the kicker rises in.
       if (!solid && t >= solidAt) {

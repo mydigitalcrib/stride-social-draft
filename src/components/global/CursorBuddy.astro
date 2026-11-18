@@ -2,7 +2,8 @@
 // The site's cursor on desktop with a mouse: an arrow of frosted glass, blurring what's behind it, with a lit edge that
 // holds on any background. Over anything pressable it becomes a hand of the same glass, its edge ice; a press pushes
 // it in. It has to be drawn on the page, since a browser cursor can't blur what's behind it, and it only takes over once
-// the script has seen the mouse: until then, or without the script, it's the fine navy arrow below, a real cursor.
+// the script has seen the mouse (or knows where the last page left it): until then, or without the script, it's the fine
+// navy arrow below, a real cursor.
 // Text fields keep the text cursor, and anything that draws its own cursor says so ([data-own-cursor]: Stride Talent's photocall, its viewfinder).
 // Arrow and hand change over with a quick fade and a small turn of scale round the tip, never a jump. Over what can be
 // dragged (the dial, a deck's row that slides, [data-grab]) it's the hand, which closes a little while held. Over an
@@ -196,35 +197,68 @@ const hand = 'M13.2 2.5c1.4 0 2.5 1.100 2.5 2.500v7.600c.4-.6 1.100-1 1.900-1 1 
   }
 </style>
 
-<script>
-  import { uiScale } from '@/scripts/system/scale';
-  import { DESKTOP } from '@/scripts/system/env';
-
-  // It takes over at the first move of a real mouse, and steps aside for text fields and the wall's lens.
-  const glass = document.querySelector<HTMLElement>('[data-cursor-glass]');
-  const here = window.matchMedia(`(hover: hover) and (pointer: fine) and ${DESKTOP}`);
-  const FIELD = "input:not([type='checkbox'], [type='radio'], [type='range']), textarea, select, [contenteditable='true'], [data-own-cursor]";
-  const PRESS = "a[href], button, label, summary, [role='button'], [role='tab'], [role='slider'], [data-grow-card], [data-press]";
-  // What can be taken hold of and dragged: the dial (between its labels), a plain deck's row that slides (more than
-  // four cards), anything marked so. The deck's row needs :has(), which an older browser would throw on in closest().
-  const ROW = CSS.supports('selector(:has(a))') ? ', .deck:not(.deck--made) .deck__panel:has(li:nth-child(5)) .deck__cards' : '';
-  const GRAB = `.radial__grab, [data-grab]${ROW}`;
-  if (glass) {
+<script is:inline>
+  // Inline, so it runs as the page is first drawn rather than once its bundles have loaded: the old navy arrow used to
+  // show through each page's loading screen until the glass took over (the owner, 2026-11-18: "the old cursor is
+  // showing up"). And it carries over from page to page: where the pointer was as the last page went (a link followed,
+  // a reload), the glass is there at once, so the old arrow never shows in between; moving the mouse takes it from there.
+  // It takes over at the first move of a real mouse, and steps aside for text fields and anything with its own cursor.
+  (() => {
+    const glass = document.querySelector('[data-cursor-glass]');
+    if (!glass || glass.dataset.ready) return;
+    glass.dataset.ready = 'true';
     const root = document.documentElement;
-    // Its size follows the screen's, as the page's does (only ever shown on desktop, where the scale applies).
-    const fit = () => glass.style.setProperty('--k', String(uiScale()));
+    const here = window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1024px)');
+    const FIELD = "input:not([type='checkbox'], [type='radio'], [type='range']), textarea, select, [contenteditable='true'], [data-own-cursor]";
+    const PRESS = "a[href], button, label, summary, [role='button'], [role='tab'], [role='slider'], [data-grow-card], [data-press]";
+    // What can be taken hold of and dragged: the dial (between its labels), a plain deck's row that slides (more than
+    // four cards), anything marked so. The deck's row needs :has(), which an older browser would throw on in closest().
+    const ROW = CSS.supports('selector(:has(a))') ? ', .deck:not(.deck--made) .deck__panel:has(li:nth-child(5)) .deck__cards' : '';
+    const GRAB = '.radial__grab, [data-grab]' + ROW;
+    const KEY = 'stride:pointer';
+    // Its size follows the screen's, as the page's does (the desktop's scale: the root size over 16, scripts/system/scale.ts).
+    const fit = () => glass.style.setProperty('--k', String(parseFloat(getComputedStyle(root).fontSize) / 16 || 1));
     fit();
     window.addEventListener('resize', fit, { passive: true });
     let x = -1;
     let y = -1;
     let held = false; // pressed on something that drags, until let go
-    const read = (over: Element | null) => {
+    const place = () => {
+      glass.style.transform = 'translate(' + (x - 3) + 'px, ' + (y - 3) + 'px)';
+    };
+    const read = (over) => {
       glass.classList.toggle('is-on', !!over && !over.closest(FIELD));
-      glass.classList.toggle('is-press', !!over?.closest(PRESS));
+      glass.classList.toggle('is-press', !!(over && over.closest(PRESS)));
       const grabbing = held || root.classList.contains('is-radial-dragging');
-      glass.classList.toggle('is-grab', grabbing || !!over?.closest(GRAB));
+      glass.classList.toggle('is-grab', grabbing || !!(over && over.closest(GRAB)));
       glass.classList.toggle('is-grabbing', grabbing);
     };
+
+    // Where the last page left the pointer, if that was a moment ago and it's on this screen: the glass there now.
+    try {
+      const last = JSON.parse(sessionStorage.getItem(KEY) || 'null');
+      if (last && here.matches && Date.now() - last.t < 15000 && last.x >= 0 && last.y >= 0 && last.x < innerWidth && last.y < innerHeight) {
+        x = last.x;
+        y = last.y;
+        root.classList.add('has-glass-cursor');
+        place();
+        glass.classList.add('is-on');
+        const look = () => x >= 0 && read(document.elementFromPoint(x, y));
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', look, { once: true });
+        else look();
+      }
+    } catch (e) {
+      /* no storage: the old arrow until the mouse moves */
+    }
+    window.addEventListener('pagehide', () => {
+      try {
+        if (x >= 0 && root.classList.contains('has-glass-cursor')) sessionStorage.setItem(KEY, JSON.stringify({ x: x, y: y, t: Date.now() }));
+        else sessionStorage.removeItem(KEY);
+      } catch (e) {
+        /* no storage */
+      }
+    });
+
     window.addEventListener(
       'pointermove',
       (e) => {
@@ -235,7 +269,7 @@ const hand = 'M13.2 2.5c1.4 0 2.5 1.100 2.5 2.500v7.600c.4-.6 1.100-1 1.900-1 1 
         root.classList.add('has-glass-cursor');
         x = e.clientX;
         y = e.clientY;
-        glass.style.transform = `translate(${x - 3}px, ${y - 3}px)`;
+        place();
         read(e.target instanceof Element ? e.target : null);
       },
       { passive: true },
@@ -245,7 +279,7 @@ const hand = 'M13.2 2.5c1.4 0 2.5 1.100 2.5 2.500v7.600c.4-.6 1.100-1 1.900-1 1 
       (e) => {
         glass.classList.add('is-down');
         held = e.target instanceof Element && !!e.target.closest(GRAB);
-        if (held) read(e.target as Element);
+        if (held) read(e.target);
       },
       { passive: true },
     );
@@ -290,5 +324,5 @@ const hand = 'M13.2 2.5c1.4 0 2.5 1.100 2.5 2.500v7.600c.4-.6 1.100-1 1.900-1 1 
       { passive: true },
     );
     window.addEventListener('blur', away);
-  }
+  })();
 </script>

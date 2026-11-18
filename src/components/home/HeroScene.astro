@@ -6,6 +6,8 @@
 // grows through one of them until the footage fills the screen again. As the cards rise, the hero's type fades
 // away, its footage blurs and dims under a frosted navy glass (still moving underneath), and the
 // cards and the brand ticker arrive on top; the footer follows. Behaviour: src/scripts/system/hero-scene.ts.
+// With the door, "Three sides of Stride" comes close behind it and its heading resolves out of the frost with the
+// scroll (--sides-in), one movement from the footage into the rows (the owner, 2026-11-18: "more smooth").
 ---
 
 <div class="scene" data-scene data-media-hold>
@@ -21,7 +23,7 @@
   @media (prefers-reduced-motion: no-preference) {
     .scene :global(.scene__door) {
       display: block;
-      height: 110vh;
+      height: 140vh;
     }
   }
 
@@ -42,6 +44,21 @@
       padding-top: 40vh;
       padding-bottom: 0.5rem;
       background: linear-gradient(to bottom, transparent calc(100% - 34vh), rgb(var(--navy-900-rgb) / 0.55) calc(100% - 14vh), var(--navy-900));
+    }
+  }
+
+  /* With the door (motion allowed): after it the type has long gone, so the three sides come close behind it, and the
+     heading and its line rise out of the frost as the scroll brings them (src/scripts/system/hero-scene.ts sets
+     --sides-in). After the rules above, which they refine. */
+  @media (prefers-reduced-motion: no-preference) {
+    .scene :global(.sides) {
+      padding-top: 14vh;
+    }
+
+    .scene :global(.sides__intro) {
+      opacity: var(--sides-in, 1);
+      filter: blur(calc((1 - var(--sides-in, 1)) * 0.625rem));
+      translate: 0 calc((1 - var(--sides-in, 1)) * 3.5rem);
     }
   }
 

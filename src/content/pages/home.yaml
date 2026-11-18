@@ -93,7 +93,7 @@ sections:
     status: approved
     eyebrow: The team
     headline: The people behind Stride.
-    cta: { label: Meet The Team, href: /team }
+    cta: { label: Meet The Team, href: /about#team }
 
   presence:
     status: approved

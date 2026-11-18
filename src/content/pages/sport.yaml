@@ -6,7 +6,8 @@ sections:
     eyebrow: Stride Sport
     headline: Stride Sport.
     # The owner's words (2026-11-13), said better; the button's words are the owner's.
-    body: We manage athletes and sport creators, and bring them together with the brands that want to work with them.
+    # The owner's idea, worded by us (2026-11-18): "We manage athletes and sport related creators. Spotting our talent with commercial opportunities".
+    body: We manage athletes and sport-related creators, and match our talent with commercial opportunities.
     cta: { label: Work with Stride Sport Talent, href: /talent/enquire?interest=sport }
   people:
     status: draft

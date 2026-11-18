@@ -1,13 +1,13 @@
 // The searchable roster and the division picker above it (talent/RosterBrowser, talent/DivisionPicker).
 // Search and filters narrow the cards already on the page, kept in the URL so a result can be shared. What's typed
 // goes up on the wall in giant letters. When the result changes, the photos left out go dark one by one and the rest
-// close up, new ones arriving in a flash: quickly, and a newer change overtakes it. The division picker's block of type is
+// close up, new ones fading in: quickly, and a newer change overtakes it. The division picker's block of type is
 // sized to its width here and brought in line by line. Without a search box (the roster
 // on /talent) only the division picker narrows it. A card with a video plays it on hover.
 // On /talent a division chosen in the picker is remembered at once (the URL, the word, the count), and the crowd changes
 // once the page has carried the visitor down to it, where they can see it; the whole roster's tile counts its way to
 // the new figure. The picker's type grows with a large screen and never stands taller than the screen allows.
-import { deskScale, uiScale } from './scale';
+import { deskScale } from './scale';
 import { PHONE, desktop, lenis, reduced, tapWords } from './env';
 
 const PARAMS = ['division', 'niche', 'relationship'] as const;
@@ -28,12 +28,6 @@ const PICKER_PHONE_TALL = 0.12; // a phone: one division to a line, as wide as t
 // (smaller type, the owner, 2026-11-13: it was 176px, 12% of the height and 98.5% of the width)
 const ROLL = 700; // ms: the whole roster's tile counting to a new figure
 const IN_SIGHT = 0.35; // share of the photographs in view before the crowd changes for a division chosen above
-
-// A camera flash where a division is chosen, for the wall behind to catch (TalentWall.astro).
-const flashAt = (el: HTMLElement) => {
-  const r = el.getBoundingClientRect();
-  document.dispatchEvent(new CustomEvent('talent:flash', { detail: { x: r.left + r.width / 2, y: r.top + r.height / 2, size: Math.min(r.height * 1.2, 300 * uiScale()), power: 1 } }));
-};
 
 // Choose a division: `now` changes the roster at once; otherwise it's remembered, and the change to run once it's in
 // sight comes back.
@@ -195,14 +189,8 @@ export function initRosterBrowsers() {
         if (now.top > window.innerHeight || now.bottom < 0) return;
         const was = before.get(c);
         if (!was) {
-          c.animate(
-            [
-              { filter: 'brightness(2.6)', opacity: 0 },
-              { filter: 'brightness(1.6)', opacity: 1, offset: 0.25 },
-              { filter: 'brightness(1)', opacity: 1 },
-            ],
-            { duration: 480, delay: Math.random() * LIGHTS_SPREAD, easing: 'ease-out', fill: 'backwards' },
-          );
+          // A plain fade in (no white flash since 2026-11-18, the owner: "very distracting").
+          c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 480, delay: Math.random() * LIGHTS_SPREAD, easing: 'ease-out', fill: 'backwards' });
           return;
         }
         const dx = was.left - now.left;
@@ -399,14 +387,6 @@ export function initDivisionPicker() {
         if (!roster || !setDivision) return; // no script: the link still goes to the filtered roster
         e.preventDefault();
         const again = a.getAttribute('aria-pressed') === 'true';
-        // The camera's flash on the word as it's chosen (the wall behind catches it too).
-        if (!again && !reduced()) {
-          a.classList.remove('is-flashed');
-          void a.offsetWidth;
-          a.classList.add('is-flashed');
-          window.setTimeout(() => a.classList.remove('is-flashed'), 560);
-          flashAt(a);
-        }
         // In the roster (its own page) it changes at once. Above it (/talent): down to it, and the crowd changes once
         // it's in sight (the scroll there done, or enough of it in view), so the lights go out where the visitor looks.
         const inside = roster.contains(a);

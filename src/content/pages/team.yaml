@@ -1,10 +1,9 @@
-# Our Team copy.
+# The team's copy, for About's "The people behind Stride." (group/TeamField; Our Team's own page went on 2026-11-18).
 sections:
   hero:
     status: draft
     eyebrow: Our group
     headline: The people behind Stride.
-    body: Talent managers, campaign leads and the people who keep it all moving.
   # The field of faces: interface copy written by us.
   field:
     status: draft

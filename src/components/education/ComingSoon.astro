@@ -21,7 +21,7 @@ const Title = embedded ? 'h2' : 'h1';
 const lines = soon.lines ?? [soon.headline ?? ''];
 ---
 
-<section class:list={['soon', { 'soon--page': !embedded }]} aria-labelledby="soon-title" data-tone="education" data-look="slate" data-soon-page={embedded ? undefined : ''}>
+<section class:list={['soon', { 'soon--page': !embedded }]} aria-labelledby="soon-title" data-tone={embedded ? 'education' : 'group'} data-look={embedded ? 'slate' : 'deep'} data-soon-page={embedded ? undefined : ''}>
   <div class="soon__inner">
     {/* The division's name is part of the heading, so it reads "Stride Academy: coming soon". */}
     <Title class="soon__title exp-title" id="soon-title">

@@ -30,9 +30,12 @@ export interface Props {
    *  Social globe's starfield, as sharp and lightly shaded as the globe has it, running on under the next section's
    *  top, where the globe's own fades in over it, so the two read as one sky. */
   background?: { video: string; poster: string; speed?: number; stars?: boolean };
+  /** In front of the page's own video (core/BackVideo) rather than one of its own: the same plain tab bar as over its
+   *  own (Stride Social, whose whole page stands in front of Contact's background since 2026-11-17). */
+  onVideo?: boolean;
 }
 
-const { id, label, tabs: allTabs, link, tone = 'group', look = 'deep', variant = 'row', intro, title, background } = Astro.props;
+const { id, label, tabs: allTabs, link, tone = 'group', look = 'deep', variant = 'row', intro, title, background, onVideo = false } = Astro.props;
 const opens = variant === 'spines';
 const lineup = variant === 'lineup';
 // A line-up with one tab of quotes (Stride Talent's creator stories): no tab bar, the quote written large beside.
@@ -59,7 +62,7 @@ const icons: Record<string, string> = {
 };
 ---
 
-<section class:list={['deck', { 'deck--made': variant !== 'row', 'deck--open': opens, 'deck--lineup': lineup, 'deck--said': said, 'deck--stairs': stairs }]} id={id} aria-label={label} data-deck data-variant={variant} data-tone={tone} data-look={look}>
+<section class:list={['deck', { 'deck--made': variant !== 'row', 'deck--open': opens, 'deck--lineup': lineup, 'deck--said': said, 'deck--stairs': stairs, 'deck--on-video': onVideo }]} id={id} aria-label={label} data-deck data-variant={variant} data-tone={tone} data-look={look}>
   {background && (
     <div class:list={['exp-haze', { 'deck__haze--stars': background.stars }]} aria-hidden="true">
       <video muted loop playsinline preload="none" poster={background.poster} tabindex="-1" data-haze-video data-speed={background.speed}>
@@ -339,21 +342,23 @@ const icons: Record<string, string> = {
       overflow: visible;
     }
 
-    .deck:has(> .exp-haze) .deck__bar {
+    .deck:is(:has(> .exp-haze), .deck--on-video) .deck__bar {
       background: none;
       backdrop-filter: none;
       -webkit-backdrop-filter: none;
     }
 
-    .deck:has(> .exp-haze) .deck__pill {
+    .deck:is(:has(> .exp-haze), .deck--on-video) .deck__pill {
       background: none;
       box-shadow: inset 0 0 0 1.5px rgb(var(--ink));
     }
 
+    /* A night sky (`stars`) runs a little past the deck and fades out there, into the page's own background. (Unused
+       since 2026-11-17: Stride Social, which had it, stands in front of Contact's background whole.) */
     .deck > .deck__haze--stars {
       --haze-blur: 0.0375rem;
       --haze-shade: 0.16;
-      --haze-mask: none;
+      --haze-mask: linear-gradient(to bottom, #000 calc(100% - 24svh), transparent);
       bottom: -10svh;
     }
 
@@ -755,19 +760,37 @@ const icons: Record<string, string> = {
       min-height: 0;
       padding: var(--pad);
       background: linear-gradient(170deg, var(--navy-500), var(--navy-900));
+      /* The spread's style on the row too (the owner, 2026-11-17): a rim of ice, brighter and glowing on the open card. */
       box-shadow:
-        inset 0 0 0 1px rgb(var(--white-rgb) / 0.14),
+        inset 0 0 0 1px rgb(var(--ice-rgb) / 0.16),
         0 1.5rem 3.125rem -1.875rem rgb(var(--shade) / 0.8);
       backdrop-filter: none;
       -webkit-backdrop-filter: none;
       translate: none;
       outline: none;
+      transition: box-shadow 520ms var(--ease-out);
     }
 
     :global(.js) .deck--open .deck__panel .deck__cards > li.is-open .deck__card {
       box-shadow:
-        inset 0 0 0 1.5px rgb(var(--white-rgb) / 0.55),
+        inset 0 0 0 1.5px rgb(var(--ice-rgb) / 0.62),
+        0 0 2.5rem -1rem rgb(var(--ice-rgb) / 0.4),
         0 1.875rem 3.75rem -1.75rem rgb(var(--shade) / 0.9);
+    }
+
+    /* A closed card pointed at lifts out of its shade, its name in ice. */
+    :global(.js) .deck--open .deck__panel .deck__cards > li:not(.is-open) .deck__card:hover {
+      box-shadow:
+        inset 0 0 0 1px rgb(var(--ice-rgb) / 0.4),
+        0 1.5rem 3.125rem -1.875rem rgb(var(--shade) / 0.8);
+    }
+
+    :global(.js) .deck--open li:not(.is-open) .deck__card:hover .deck__image {
+      filter: saturate(0.92) brightness(0.94);
+    }
+
+    :global(.js) .deck--open li:not(.is-open) .deck__card:hover .deck__spine {
+      color: var(--ice);
     }
 
     :global(.js) .deck--open .deck__panel .deck__cards .deck__card:focus-visible {
@@ -848,7 +871,9 @@ const icons: Record<string, string> = {
       white-space: nowrap;
       writing-mode: vertical-rl;
       transform: translateX(-50%) rotate(180deg);
-      transition: opacity 420ms var(--ease-out) 180ms;
+      transition:
+        opacity 420ms var(--ease-out) 180ms,
+        color 300ms var(--ease-out);
     }
 
     :global(.js) .deck--open li.is-open .deck__spine {

@@ -30,10 +30,12 @@ export interface Props {
   people: { eyebrow?: string; headline?: string };
   placements: { eyebrow?: string; headline?: string };
   speakers: CreatorView[];
+  /** A line about a speaker, by roster id, shown in the caption above what they make (speakers.yaml `people.items`). */
+  notes?: Record<string, string>;
   seen: { label: string; copy?: string; image?: string; alt?: string; position?: string; href?: string; who: { name: string; href: string } | null }[];
 }
 
-const { profile, people, placements, speakers, seen } = Astro.props;
+const { profile, people, placements, speakers, seen, notes = {} } = Astro.props;
 const t = await interfaceCopy();
 const ids = speakers.map((s) => s.id).join(' ');
 ---
@@ -62,6 +64,7 @@ const ids = speakers.map((s) => s.id).join(' ');
       <span class="lineup__cut" aria-hidden="true" data-lineup-cut></span>
       <div class="lineup__caption" aria-live="polite">
         <b data-lineup-cap-name>{speakers[0]?.name}</b>
+        <span class="lineup__note" data-lineup-cap-note>{(speakers[0] && notes[speakers[0].id]) ?? ''}</span>
         <span data-lineup-cap-what>{[speakers[0]?.niche, speakers[0]?.handle].filter(Boolean).join(' · ')}</span>
         <em class="exp-label" data-lineup-cap-act data-shoot={t('photocall.shoot')} data-kept={t('photocall.kept')}>{t('photocall.shoot')}</em>
       </div>
@@ -70,7 +73,7 @@ const ids = speakers.map((s) => s.id).join(' ');
           <span class="keep-off">+ {t('hand.keep')} {s.name}</span><span class="keep-on">{t('hand.kept')}</span>
         </button>
       ))}
-      <script type="application/json" data-lineup-data set:html={JSON.stringify(speakers.map((s) => ({ name: s.name, what: [s.niche, s.handle].filter(Boolean).join(' · '), src: s.portrait?.src ?? '' }))).replace(/</g, '\\u003c')} />
+      <script type="application/json" data-lineup-data set:html={JSON.stringify(speakers.map((s) => ({ name: s.name, note: notes[s.id] ?? '', what: [s.niche, s.handle].filter(Boolean).join(' · '), src: s.portrait?.src ?? '' }))).replace(/</g, '\\u003c')} />
     </div>
   </div>
 </section>
@@ -344,6 +347,12 @@ const ids = speakers.map((s) => s.id).join(' ');
   .lineup__caption span {
     font-size: 0.9375rem;
     color: rgb(var(--ink) / 0.8);
+  }
+
+  /* A line about them (a show they've been on): brighter than what they make. */
+  .lineup__caption .lineup__note {
+    color: rgb(var(--ink));
+    font-weight: 600;
   }
 
   .lineup__caption span:empty {

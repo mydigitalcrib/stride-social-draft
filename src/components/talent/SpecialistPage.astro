@@ -6,8 +6,8 @@
 // awaited, never filled in. Copy lives in src/content/pages/{sport,podcasts,speakers}.yaml.
 // Desktop (the owner's choice, 2026-11-12), after Stride Talent's interactions, in front of the same footage: the
 // headline stays lit, with the division counted below it, and each page has scenes of its own. Stride Sport: a stadium's
-// LED board running its athletes' names along the foot of the hero, its athletes as a contact sheet, and the squad the
-// visitor picks lined up on a pitch (SportBoard, SportSquad). Stride Podcasts: an ON AIR sign (PodcastOnAir; no
+// LED board running its athletes' names along the foot of the hero and its athletes as a contact sheet (SportBoard; the
+// squad on a pitch went on 2026-11-18, the owner: "I don't like the graphics"). Stride Podcasts: an ON AIR sign (PodcastOnAir; no
 // waveform, count or radio dial since 2026-11-13, the owner's call). Stride Speakers: its
 // speakers as a studio's monitor with a broadcast caption, and where they've spoken as slides on the stage's screen
 // with a laser pointer (SpeakerStage). Everywhere a click adds a creator to "Meet our talents" and a name opens their
@@ -32,7 +32,6 @@ import Tray from '../experience/Tray.astro';
 import CreatorSheet from './CreatorSheet.astro';
 import RosterBrowser from './RosterBrowser.astro';
 import SportBoard from './SportBoard.astro';
-import SportSquad from './SportSquad.astro';
 import PodcastOnAir from './PodcastOnAir.astro';
 import SpeakerStage from './SpeakerStage.astro';
 import VideoWall from './VideoWall.astro';
@@ -84,12 +83,14 @@ const reels: Partial<Record<Props['page'], { poster: string; shots: Shot[] }>> =
     poster: '/assets/site/stride-sport-poster.jpg',
     shots: [{ src: '/assets/video/stride-sport-stadium.mp4', from: 0, to: 0, place: '--at: 60%; --shift: 0%; --focus: 55%' }],
   },
-  // One of its shows at work: the Back Side podcast's studio, from an episode on its YouTube channel that the owner
-  // recorded off the screen (2026-11-11): one host, then two, then all three under the neon sign, in one clip with
-  // the show's own cuts, stopped before the player's controls come up.
+  // One of its shows at work: The Big 6ix's studio, fifteen seconds from the episode the owner sent (2026-11-18: "just
+  // the best part of the video", then "another clip"; "LONDON'S BURNING! (Man City 2-1 Arsenal)", the first of the
+  // page's episodes), with the show's own cuts: a host's hands to his head, the hosts trading points, all four on the
+  // red sofa under the lit MoB sign as he throws his arms up, and laughter, ending on a cut so it goes round as one. It
+  // was the Back Side's studio. On a phone it's cut around the middle of the frame.
   podcasts: {
-    poster: '/assets/site/stride-podcasts-poster.jpg',
-    shots: [{ src: '/assets/video/stride-podcasts-studio.mp4', from: 0, to: 0, place: '--at: 62%; --shift: 0%; --focus: 60%' }],
+    poster: '/assets/site/stride-podcasts-big6ix-poster.jpg',
+    shots: [{ src: '/assets/video/stride-podcasts-big6ix.mp4', from: 0, to: 0, place: '--at: 50%; --shift: 0%; --focus: 52%' }],
   },
   // A studio's stage seen from behind its audience: three seconds from Jack Durkin's own post of the game show he was
   // on (the owner's call, 2026-11-11), played forward then back in one file, so it goes round without a jump. The
@@ -209,13 +210,10 @@ const deskPlacements = page === 'speakers' && seen.length > 0;
 {deskPeople && (
   <div data-spec-desk>
     {page === 'sport' && (
-      <>
-        <RosterBrowser eyebrow={people.eyebrow} headline={people.headline} creators={members.slice(0, 17)} totals={{ '': members.length }} divisions={[]} niches={[]} copy={browserWords} tools={false} pageSize={17} sizes="(min-width: 1024px) 16vw, 50vw" cta={{ label: t('spec.sport.all'), href: '/talent/roster?division=sport' }} />
-        <SportSquad profile={routes.creator('')} />
-      </>
+      <RosterBrowser eyebrow={people.eyebrow} headline={people.headline} creators={members.slice(0, 17)} totals={{ '': members.length }} divisions={[]} niches={[]} copy={browserWords} tools={false} pageSize={17} sizes="(min-width: 1024px) 16vw, 50vw" cta={{ label: t('spec.sport.all'), href: routes.rosterFiltered('sport') }} />
     )}
     {/* Stride Podcasts has no people scene (the owner, 2026-11-13: the radio dial is gone and its section with it). */}
-    {page === 'speakers' && <SpeakerStage profile={routes.creator('')} people={{ eyebrow: people.eyebrow, headline: people.headline }} placements={{ eyebrow: placements.eyebrow, headline: placements.headline }} speakers={members} seen={seen} />}
+    {page === 'speakers' && <SpeakerStage profile={routes.creator('')} people={{ eyebrow: people.eyebrow, headline: people.headline }} placements={{ eyebrow: placements.eyebrow, headline: placements.headline }} speakers={members} seen={seen} notes={Object.fromEntries((people.items ?? []).filter((n) => n.key).map((n) => [n.key!, n.label]))} />}
   </div>
 )}
 

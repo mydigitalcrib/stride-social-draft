@@ -5,7 +5,8 @@ sections:
   hero:
     status: approved
     eyebrow: Stride Social
-    lines: [The right, creators., Real impact.]
+    # The owner's words (2026-11-17): it was "The right creators. Real impact.", the brief's headline.
+    lines: [The right, strategies., Real impact.]
     body: We build influencer campaigns that put brands in front of the audiences that matter, through talent, content, and social-first strategy.
     items:
       - label: Speak To Our Team
@@ -45,7 +46,7 @@ sections:
     status: approved
     eyebrow: What we do
     headline: Our services.
-    cta: { label: All services, href: /social/services }
+    cta: { label: All services, href: /social }
 
   # The page's menu (SocialMenu.astro), Our Strategies: as written in the owner's mock-up
   # (2026-11-04); Stride to confirm. Each key is the service its card opens.
@@ -67,19 +68,13 @@ sections:
         label: Social Commerce
         copy: TikTok Shop campaigns and livestream experiences that turn attention into action.
       - key: influencer-events
-        image: /assets/site/social-experiences.webp
-        alt: Two staff in red caps and aprons laughing and serving a guest at a food counter during a brand event
-        # Which part of the photo stays in view when the card is narrow.
-        position: 27% 50%
+        # A podcast picture, a stand-in the owner supplied (2026-11-17) until Stride has its own: docs/ASSET-SOURCES.md.
+        image: /assets/site/social-podcast-mic.jpg
+        alt: A vintage silver microphone on a stand, lit in purple and blue
+        # Which part of the photo stays in view when the card is narrow: the microphone, on the right.
+        position: 66% 50%
         label: Experiences & Audio
         copy: Creator events, PR activations and podcast partnerships that bring brands into relevant conversations.
-
-  # Intro for the services index page (/social/services).
-  servicesPage:
-    status: draft
-    eyebrow: Stride Social
-    headline: Our services.
-    body: Seven ways we put brands in front of the audiences that matter.
 
   industries:
     status: approved
@@ -138,3 +133,37 @@ sections:
         label: The form is temporarily unavailable. Email us and we'll pick it up from there.
       - key: consent
         label: We use these details to reply to your enquiry. See our privacy policy.
+
+  # Stride Advertising's page, /social (social/SocialFeed.astro; the owner, 2026-11-18: it was Draft 1): Stride Social's
+  # campaigns as a feed you scroll the way TikTok plays one, its strategies and its approach as swipeable posts among
+  # them, everything on the one page. The interface's words, written by us.
+  feed:
+    status: draft
+    # The page's one heading, read by screen readers and search (Social's approved name and line).
+    headline: Stride Social. The right strategies. Real impact.
+    items:
+      - { key: forYou, label: For You }
+      - { key: strategies, label: Strategies }
+      # In place of "Talk to us": opens the approach's post (the owner, 2026-11-18).
+      - { key: approach, label: Our approach }
+      - { key: search, label: Search campaigns }
+      # The giant row the page ends on, as Talent's "Join the roster." (the owner, 2026-11-18).
+      - { key: close, label: Start your campaign now., href: /social/enquire }
+      - { key: like, label: Like }
+      - { key: details, label: Details }
+      - { key: save, label: Save }
+      - { key: share, label: Share }
+      - { key: copied, label: Link copied }
+      - { key: sound, label: "original sound · Stride Social" }
+      - { key: soundOn, label: Sound on }
+      - { key: soundOff, label: Sound off }
+      - { key: none, label: No campaigns match that. }
+      - { key: end, label: You're all caught up. }
+      - { key: instagram, label: View on Instagram }
+      - { key: strategy, label: Strategy }
+      - { key: swipe, label: Swipe to read more }
+      - { key: service, label: Service }
+      - { key: included, label: What's included }
+      - { key: questions, label: Questions }
+      - { key: viewWork, label: View case studies, href: /work }
+      - { key: servicesIn, label: Its services }

@@ -1,11 +1,10 @@
 // A camera shot, for anything on Stride Talent's pages that keeps a creator by taking their picture (the roster's
-// viewfinder, roster-finder.ts): a flash from where they are, the shutter (chime.ts), and their press print coming out
-// and flying into the shortlist's tray. The photocall has its own, drawn in its section (photocall.ts). Nothing under
-// reduced motion. Styles: .shot-flash and .shot-print, styles/system/glass.css.
+// viewfinder, roster-finder.ts; Stride Speakers' monitor): the shutter (chime.ts) and their press print coming out and
+// flying into the shortlist's tray. No flash (the owner, 2026-11-18: "very distracting"). Nothing under reduced motion.
+// Styles: .shot-print, styles/system/glass.css.
 // The print lands on its own place in the tray: the tray's print for that creator (`id`, or the one just added) waits,
 // unseen, until the flying one reaches it, and then simply shows there.
 import { playShutter } from './chime';
-import { flashCancel, flashTurn } from './flash-limit';
 import { uiScale } from './scale';
 import { reduced } from './env';
 
@@ -14,21 +13,6 @@ export function takeShot({ rect, src, name, id }: { rect: DOMRect; src: string; 
   // Shots are desktop only: the print's sizes and its flight are those of 1920×1080, grown with a larger screen as the
   // CSS around them is (scale.ts).
   const k = uiScale();
-  // The flash takes its turn among the flashes, at most three a second (flash-limit.ts): when it would have to wait
-  // more than a moment (shots taken in quick succession), this shot goes without one.
-  const now = performance.now();
-  const turn = flashTurn(now);
-  if (turn - now > 120) flashCancel(turn - 1);
-  else
-    window.setTimeout(() => {
-      const flash = document.createElement('div');
-      flash.className = 'shot-flash';
-      flash.setAttribute('aria-hidden', 'true');
-      flash.style.setProperty('--fx', `${rect.left + rect.width / 2}px`);
-      flash.style.setProperty('--fy', `${rect.top + rect.height / 2}px`);
-      document.body.append(flash);
-      flash.animate([{ opacity: 0.88 }, { opacity: 0 }], { duration: 460, easing: 'cubic-bezier(0.1, 0.7, 0.3, 1)' }).finished.then(() => flash.remove(), () => flash.remove());
-    }, turn - now);
   playShutter();
 
   const print = document.createElement('div');
@@ -45,7 +29,6 @@ export function takeShot({ rect, src, name, id }: { rect: DOMRect; src: string; 
   print.style.left = `${rect.left + rect.width / 2 - w / 2}px`;
   print.style.top = `${rect.top + Math.max(0, rect.height / 2 - w * 0.75)}px`;
   document.body.append(print);
-  image.animate([{ filter: `brightness(3.2) contrast(0.6) blur(${3 * k}px)` }, { filter: `brightness(1.4) blur(${k}px)`, offset: 0.35 }, { filter: 'none' }], { duration: 900, easing: 'ease-out' });
 
   // Its place in the tray (shortlist.ts has just added it): hidden until the print gets there.
   const tray = document.querySelector<HTMLElement>('.tray[data-tray="creators"]:not([hidden])');

@@ -1,0 +1,357 @@
+---
+// Stride Talent 2.0's story player (talent/TalentStories.astro; behaviour: src/scripts/system/talent-stories.ts), as
+// close as it can be to fyndafit.com/en/creators': the page dims, one upright story in the middle, a bar per creator of
+// its niche along its top, the creator's face, name and niche (a link to their page), sound and pause, and a × to close.
+// A niche's creators one after another, each their clip, or their photograph drifting slowly closer until they have
+// one; after the niche's last, the next niche's first. The right of the story goes on, the left goes back, holding it
+// pauses, a swipe down closes; the keyboard has ←/→, Space, M and Escape. Full screen on a phone. Clips play muted until
+// the sound is turned on. Where a niche has its roster post (`rosterPost`), its stories end on a card offering the full
+// roster (the owner, 2026-11-18), and its name in a story's head leads there too.
+export interface Props {
+  /** `end`: the card after a niche's last story, offering its full roster (how many creators, and the picture behind). */
+  /** `pic`: the story's own picture when it isn't the face beside the name (a profile's own stories); `alt`, what it shows. */
+  creators: { id: string; n: string; p: string; v: string | null; vp: string | null; u: string; pic?: string; alt?: string; end?: { count: number; bg?: string } }[];
+  /** The niches in order: key, name and its creators' ids. `own`: a profile's own stories (/talent's picture), which
+   *  show no niche and end where they end. */
+  niches: { k: string; l: string; ids: string[]; own?: boolean }[];
+  words: Record<string, string>;
+}
+
+const { creators, niches, words } = Astro.props;
+// In a script element: `<` written out so nothing in a name can end it early.
+const json = JSON.stringify({ creators, niches, words }).replace(/</g, '\\u003c');
+const w = (key: string, fallback: string) => words[key] ?? fallback;
+---
+
+<div class="sp" role="dialog" aria-modal="true" aria-label="Stories" data-story-player hidden>
+  <div class="sp__dim" aria-hidden="true" data-sp-close></div>
+  <button class="sp__close" type="button" aria-label={w('close', 'Close stories')} data-sp-close>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" /></svg>
+  </button>
+  <div class="sp__frame" data-sp-frame></div>
+  <p class="visually-hidden" aria-live="polite" data-sp-live></p>
+  <script type="application/json" data-sp-data set:html={json} />
+</div>
+
+<style>
+  .sp {
+    position: fixed;
+    inset: 0;
+    z-index: 400;
+    display: grid;
+    place-items: center;
+    color: var(--white);
+    opacity: 0;
+    transition: opacity 280ms var(--ease-out);
+  }
+
+  .sp[hidden] {
+    display: none;
+  }
+
+  .sp.is-open {
+    opacity: 1;
+  }
+
+  /* The page, dimmed. */
+  .sp__dim {
+    position: absolute;
+    inset: 0;
+    background: rgb(0 0 0 / 0.82);
+  }
+
+  .sp__close {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    color: var(--white);
+  }
+
+  .sp__close svg {
+    width: 1.75rem;
+    height: 1.75rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+  }
+
+  .sp__close:focus-visible {
+    outline: 2px solid var(--white);
+    border-radius: 50%;
+  }
+
+  /* The story: upright, as one is. */
+  .sp__frame {
+    position: relative;
+    z-index: 2;
+    width: calc(min(90svh, 60rem) * 9 / 16);
+    height: min(90svh, 60rem);
+    transition: scale 280ms var(--ease-out);
+  }
+
+  .sp:not(.is-open) .sp__frame {
+    scale: 0.96;
+  }
+
+  .sp :global(.sf) {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    background: #111;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+  }
+
+  .sp :global(.sf__media img),
+  .sp :global(.sf__media video) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* A photograph drifts slowly closer for as long as its story lasts. */
+  .sp :global(.sf.is-drift .sf__media img) {
+    animation: sf-drift var(--sf-dur, 6s) linear forwards;
+  }
+
+  .sp :global(.sf.is-paused .sf__media img) {
+    animation-play-state: paused;
+  }
+
+  @keyframes sf-drift {
+    from {
+      scale: 1;
+    }
+    to {
+      scale: 1.1;
+    }
+  }
+
+  .sp :global(.sf__shade) {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 18%;
+    background: linear-gradient(to bottom, rgb(0 0 0 / 0.45), transparent);
+    pointer-events: none;
+  }
+
+  /* A bar per creator of the niche: those watched full, this one filling. */
+  .sp :global(.sf__bars) {
+    position: absolute;
+    inset: 0.5rem 0.5rem auto;
+    z-index: 2;
+    display: flex;
+    gap: 0.1875rem;
+  }
+
+  .sp :global(.sf__bar) {
+    flex: 1;
+    height: 0.125rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.35);
+  }
+
+  .sp :global(.sf__bar i) {
+    display: block;
+    height: 100%;
+    background: var(--white);
+    transform-origin: left;
+    transform: scaleX(var(--k, 0));
+  }
+
+  .sp :global(.sf__head) {
+    position: absolute;
+    inset: 1.125rem 0.75rem auto;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .sp :global(.sf__who) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    color: inherit;
+  }
+
+  .sp :global(.sf__who img) {
+    flex: none;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .sp :global(.sf__who b) {
+    overflow: hidden;
+    font-size: 0.875rem;
+    font-weight: 700;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* The niche beside the name, fainter. */
+  .sp :global(.sf__niche) {
+    flex: none;
+    font-size: 0.8125rem;
+    opacity: 0.7;
+  }
+
+  /* Where the niche has its roster card, its name is the way to the full roster too. */
+  .sp :global(.sf__niche--link) {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: rgb(255 255 255 / 0.4);
+    text-underline-offset: 0.2em;
+  }
+
+  .sp :global(.sf__niche--link:hover),
+  .sp :global(.sf__niche--link:focus-visible) {
+    opacity: 1;
+    text-decoration-color: currentColor;
+  }
+
+  /* The card after a niche's last story (the owner, 2026-11-18, as Instagram ends a profile's highlights): the niche's
+     first picture blurred and darkened behind Stride's mark, the question, the full roster and the way on. */
+  .sp :global(.sf--end .sf__blur) {
+    filter: blur(1.75rem) brightness(0.55) saturate(1.2);
+    scale: 1.25;
+  }
+
+  .sp :global(.sf__end) {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 2rem 1.5rem;
+    text-align: center;
+  }
+
+  .sp :global(.sf__end-mark) {
+    display: grid;
+    place-items: center;
+    width: 5.5rem;
+    aspect-ratio: 1;
+    margin-bottom: 0.5rem;
+    border-radius: 50%;
+    background: var(--navy-500);
+    box-shadow: 0 0.75rem 2rem rgb(0 0 0 / 0.35);
+  }
+
+  .sp :global(.sf__end-mark svg) {
+    width: 42%;
+    fill: var(--ice);
+  }
+
+  .sp :global(.sf__end-title) {
+    font-size: 1.375rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .sp :global(.sf__end-line) {
+    max-width: 18rem;
+    font-size: 0.9375rem;
+    line-height: 1.45;
+    opacity: 0.85;
+  }
+
+  .sp :global(.sf__end-yes) {
+    margin-top: 0.75rem;
+  }
+
+  .sp :global(.sf__end-yes:focus-visible),
+  .sp :global(.sf__end-no:focus-visible) {
+    outline: 2px solid var(--white);
+    outline-offset: 3px;
+  }
+
+  .sp :global(.sf__tools) {
+    display: flex;
+    gap: 0.25rem;
+    margin-left: auto;
+  }
+
+  .sp :global(.sf__tool) {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    color: inherit;
+  }
+
+  .sp :global(.sf__tool svg) {
+    width: 1.125rem;
+    height: 1.125rem;
+    fill: currentColor;
+  }
+
+  .sp :global(.sf__tool:focus-visible),
+  .sp :global(.sf__who:focus-visible) {
+    outline: 2px solid var(--white);
+    outline-offset: 2px;
+  }
+
+  /* Phones and tablets: the story's own × in its head (the one beside it is the desktop's). */
+  .sp :global(.sf__close) {
+    display: none;
+  }
+
+  /* ---------- Phones: the story is the screen ---------- */
+  @media (max-width: 767px) {
+    .sp__frame {
+      width: 100vw;
+      height: 100svh;
+    }
+
+    .sp :global(.sf) {
+      border-radius: 0;
+    }
+  }
+
+  @media (max-width: 1023px) {
+    .sp__close {
+      display: none;
+    }
+
+    .sp :global(.sf__close) {
+      display: grid;
+    }
+  }
+
+  /* Tablets: the upright story, as tall as the screen allows. */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .sp__frame {
+      width: min(100vw, calc(94svh * 9 / 16));
+      height: min(94svh, calc(100vw * 16 / 9));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sp,
+    .sp__frame {
+      transition: none;
+    }
+
+    .sp :global(.sf.is-drift .sf__media img) {
+      animation: none;
+    }
+  }
+</style>

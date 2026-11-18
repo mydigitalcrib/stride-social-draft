@@ -48,9 +48,10 @@ function initLineup() {
   const caption = root.querySelector<HTMLElement>('.lineup__caption');
   const capName = root.querySelector<HTMLElement>('[data-lineup-cap-name]');
   const capWhat = root.querySelector<HTMLElement>('[data-lineup-cap-what]');
+  const capNote = root.querySelector<HTMLElement>('[data-lineup-cap-note]');
   const capAct = root.querySelector<HTMLElement>('[data-lineup-cap-act]');
   const keeps = [...root.querySelectorAll<HTMLButtonElement>('[data-lineup-keep]')];
-  let people: { name: string; what: string; src: string }[] = [];
+  let people: { name: string; note?: string; what: string; src: string }[] = [];
   try {
     people = JSON.parse(root.querySelector('[data-lineup-data]')?.textContent || '[]');
   } catch {
@@ -86,6 +87,7 @@ function initLineup() {
     imgs.forEach((img) => img.classList.toggle('is-on', Number(img.dataset.lineupImg) === i));
     caption?.setAttribute('aria-live', auto ? 'off' : 'polite');
     if (capName) capName.textContent = people[i].name;
+    if (capNote) capNote.textContent = people[i].note ?? '';
     if (capWhat) capWhat.textContent = people[i].what;
     if (caption && !still) {
       caption.classList.remove('is-in');
@@ -99,12 +101,12 @@ function initLineup() {
     cutTimer = window.setTimeout(() => cut(i), auto ? 0 : SKIM);
   };
 
-  // The frame marks snap in further as a click adds the speaker, flashing white, and settle back.
+  // The frame marks snap in further as a click adds the speaker, and settle back (no white flash since 2026-11-18).
   const snap = () => {
     if (still) return;
     marks.forEach((m, k) => {
       const [x, y] = CORNERS[k];
-      m.animate([{ translate: `${x * 0.875}rem ${y * 0.875}rem`, borderColor: '#fff', offset: 0 }], { duration: 140, easing: 'ease-out' });
+      m.animate([{ translate: `${x * 0.875}rem ${y * 0.875}rem`, offset: 0 }], { duration: 140, easing: 'ease-out' });
     });
   };
   const shoot = () => {

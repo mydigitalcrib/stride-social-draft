@@ -1,9 +1,9 @@
 ---
 // Homepage section 2, "Three sides of Stride": the intro (heading, one line) above the three businesses.
-// Desktop: three giant rows, one per division, margin to margin ("STRIDE" in outline, the name solid), who it
+// Desktop: three giant rows, one per division, margin to margin ("STRIDE" and the name both solid), who it
 // is for on the right (the owner's choice, 2026-11-12). Pointed at (or focused), a row opens: it takes most of
-// the height while the others close up and dim, and its world comes up behind it (Social: its campaigns, one
-// photograph after another; Talent: its creators, side by side in black and white; Academy: a creator's setup in
+// the height while the others close up and dim, and its world comes up behind it (Social: Stride's photographs side by side, as
+// behind /social's closing row, lib/social-pictures.ts; the owner, 2026-11-18; Talent: its creators, side by side in black and white; Academy: a creator's setup in
 // its colour, as it isn't open yet), with its line and the way in. Phones and tablets: a row of glass cards (an icon, the name,
 // who it is for, an arrow). Below, the brand partners: a scroll cue and the logos on their ticker (core/BrandTicker).
 // Desktop, in motion (the script below): the rows arrive with their lines drawing in and their names rising out of
@@ -19,6 +19,7 @@ import BrandTicker from '../core/BrandTicker.astro';
 import PlaceholderNotice from '../core/PlaceholderNotice.astro';
 import { getPartners } from '@/lib/partners';
 import { getRoster } from '@/lib/roster';
+import { getSocialPictures } from '@/lib/social-pictures';
 
 type Division = 'social' | 'talent' | 'education';
 
@@ -45,11 +46,7 @@ const full = (s: string) => (/[.!?]$/.test(s) ? s : `${s}.`);
 const soon = ((await getEntry('pages', 'education'))?.data.sections.soon?.lines ?? []).join(' ');
 // The worlds behind the rows (desktop): real photographs already on the site.
 const worlds: Record<Division, { src: string; alt: string }[]> = {
-  social: [
-    { src: '/assets/site/social-influencer-campaigns.webp', alt: '' },
-    { src: '/assets/site/social-experiences.webp', alt: '' },
-    { src: '/assets/site/social-commerce.webp', alt: '' },
-  ],
+  social: [], // its photographs side by side, below
   talent: [],
   // Academy has no photography of its own yet: a licensed stock photograph of a creator's setup (a phone on a
   // tripod under a ring light), never presented as Stride's talent. Source and licence: docs/ASSET-SOURCES.md.
@@ -63,6 +60,8 @@ const faces = featured
   .filter((c) => c?.data.portrait)
   .slice(0, 7)
   .map((c) => ({ src: c!.data.portrait!.src, alt: '' }));
+// Social's world: the same photographs as behind /social's closing row, side by side in colour (the owner, 2026-11-18).
+const socialPictures = await getSocialPictures();
 ---
 
 <section class="sides on-photo" aria-labelledby="sides-title">
@@ -70,8 +69,9 @@ const faces = featured
   <span class="sides__anchor" id="stride-group" aria-hidden="true"></span>
   <div class="sides__inner container-wide">
     <header class="sides__intro">
-      <h2 class="sides__title" id="sides-title" data-reveal="from-left">{headline}</h2>
-      {body && <p class="sides__lede" data-reveal="from-left" style="--reveal-delay: 0.08s">{body}</p>}
+      {/* No reveal of their own: they come up with the scroll out of the hero's frost (home/HeroScene.astro, --sides-in). */}
+      <h2 class="sides__title" id="sides-title">{headline}</h2>
+      {body && <p class="sides__lede">{body}</p>}
     </header>
 
     {/* The giant rows (every screen; on phones and tablets the one in the middle of the screen stands open). */}
@@ -83,6 +83,11 @@ const faces = featured
               {worlds[item.key].map((w, k) => (
                 <img src={w.src} alt={w.alt} sizes="100vw" loading="lazy" decoding="async" draggable="false" style={`--k: ${k}; --of: ${worlds[item.key].length}`} />
               ))}
+              {item.key === 'social' && socialPictures.length > 0 && (
+                <span class="sides__world-faces sides__world-faces--photos">
+                  {socialPictures.map((f, k) => <img src={f.src} alt="" sizes="16vw" loading="lazy" decoding="async" draggable="false" style={`--k: ${k}${f.position ? `; object-position: ${f.position}` : ''}`} />)}
+                </span>
+              )}
               {item.key === 'talent' && faces.length > 0 && (
                 <span class="sides__world-faces">
                   {faces.map((f, k) => <img src={f.src} alt={f.alt} sizes="16vw" loading="lazy" decoding="async" draggable="false" style={`--k: ${k}`} />)}
@@ -138,7 +143,8 @@ const faces = featured
     const links = [...rows.querySelectorAll<HTMLAnchorElement>('.sides__row-link')];
 
     /* ---------- Arriving ----------
-       Once the rows are a third of the way up the screen: their lines draw in and their names rise (the CSS). Only if
+       As the rows come onto the screen (the owner, 2026-11-18: one smooth movement from the footage, not a wait once
+       they're up): their lines draw in and their names rise (the CSS). Only if
        they start below the screen; a row can open once the last has landed (and the pointer moves). The keyboard
        doesn't wait. */
     if (motion && rows.getBoundingClientRect().top > window.innerHeight) {
@@ -154,7 +160,7 @@ const faces = featured
             rows.classList.add('is-still');
           }, (links.length - 1) * STEP + LANDS + 60);
         },
-        { rootMargin: '0px 0px -35% 0px' },
+        { rootMargin: '0px 0px -6% 0px' },
       );
       io.observe(rows);
       rows.addEventListener(
@@ -540,7 +546,8 @@ const faces = featured
   }
 
   /* The name: the longest ("STRIDE ACADEMY") fits the width, and no taller than the screen and its row allow, so on a
-     short, wide screen it stays clear of who it is for; "STRIDE" in outline, the division solid. */
+     short, wide screen it stays clear of who it is for; "STRIDE" solid, exactly as the division beside it (the owner,
+     2026-11-18: "the exact same typography style as social"; it was in outline). */
   .sides__row-name {
     flex: none;
     font-family: var(--font-display);
@@ -555,12 +562,6 @@ const faces = featured
     transition:
       scale 720ms var(--ease-out),
       opacity 500ms var(--ease-out);
-  }
-
-  /* The outline in rem, so it keeps its weight as the type grows past 1920×1080. */
-  .sides__row-stride {
-    color: transparent;
-    -webkit-text-stroke: 0.09375rem rgb(var(--ink) / 0.85);
   }
 
   .sides__rows:not(.is-still, .is-rising):hover .sides__row:not(:hover) .sides__row-name,
@@ -809,36 +810,6 @@ const faces = featured
     initial-value: 0%;
   }
 
-  /* Social: its campaigns, one photograph after another (each in turn for a third of the round). */
-  .sides__row--social .sides__world > img {
-    opacity: 0;
-    animation: sides-turn 9s linear calc(var(--k) * 3s - 0.01s) infinite;
-    animation-play-state: paused;
-  }
-
-  .sides__row--social .sides__world > img:first-child {
-    opacity: 1;
-  }
-
-  .sides__rows:not(.is-still, .is-rising) .sides__row--social:hover .sides__world > img,
-  .sides__rows:not(.is-rising) .sides__row--social:has(> .sides__row-link:focus-visible) .sides__world > img {
-    animation-play-state: running;
-  }
-
-  @keyframes sides-turn {
-    0% {
-      opacity: 0;
-    }
-    6%,
-    33% {
-      opacity: 1;
-    }
-    40%,
-    100% {
-      opacity: 0;
-    }
-  }
-
   /* Talent: its creators side by side, in black and white, drifting slowly sideways. The face under the pointer
      develops into colour like a print, and goes back to grey more slowly than it came, so a short trail of colour
      follows the pointer along the row (.is-lit, src below). */
@@ -867,6 +838,16 @@ const faces = featured
   .sides__rows:not(.is-still, .is-rising) .sides__row:hover .sides__world-faces,
   .sides__rows:not(.is-rising) .sides__row:has(> .sides__row-link:focus-visible) .sides__world-faces {
     translate: -4% 0;
+  }
+
+  /* Social: Stride's photographs side by side, nearly in colour, as /social's closing row shows them open; the one
+     under the pointer comes fully into colour. */
+  .sides__world-faces--photos img {
+    filter: grayscale(0.2) contrast(1.05);
+  }
+
+  .sides__world-faces--photos img.is-lit {
+    filter: grayscale(0) contrast(1.05) brightness(1.06);
   }
 
   /* Academy: a creator's setup in its colour (the photograph lends only its light to the slate). */
@@ -935,10 +916,6 @@ const faces = featured
     .sides__world-faces img,
     .sides__world-faces img.is-lit {
       transition: filter 150ms var(--ease-out);
-    }
-
-    .sides__row--social .sides__world > img {
-      animation: none;
     }
   }
 
@@ -1074,10 +1051,6 @@ const faces = featured
       font-size: calc((100vw - 2 * var(--margin) - 2 * var(--pad)) / 11.2);
     }
 
-    .sides__row-stride {
-      -webkit-text-stroke-width: 0.0625rem;
-    }
-
     .sides__row-side {
       top: 0.75rem;
       right: var(--pad);
@@ -1127,10 +1100,6 @@ const faces = featured
 
     .sides__rows.is-auto:not(.is-waiting, .is-rising) .sides__row.is-open .sides__world > img {
       scale: 1;
-    }
-
-    .sides__rows.is-auto:not(.is-waiting, .is-rising) .sides__row--social.is-open .sides__world > img {
-      animation-play-state: running;
     }
 
     .sides__rows.is-auto:not(.is-waiting, .is-rising) .sides__row.is-open .sides__world-faces {

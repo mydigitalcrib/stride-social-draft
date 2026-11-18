@@ -87,7 +87,8 @@ sections:
         href: /history
       - label: Our Team
         copy: The people behind Stride.
-        href: /team
+        # About's own team section (Our Team's page went on 2026-11-18).
+        href: /about#team
       - label: Careers
         copy: Open roles and the placement scheme.
         href: /careers

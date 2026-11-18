@@ -1,11 +1,13 @@
 // Checks the built site against the previous site's sitemap (docs/inventory/old-sitemap.txt):
 // every old URL must resolve to a page, directly or through exactly one redirect, and the host
-// redirect file (dist/_redirects) must agree with the redirect pages. Run after `npm run build`.
+// redirect file (dist/_redirects) must agree with the redirect pages; the sections gone on purpose (goneSections in
+// scripts/redirects/map.mjs: the old creators) must have nothing at them, so they show the 404 page. Run after
+// `npm run build`.
 // Usage: node scripts/checks/redirects.mjs
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { oldSitemap } from '../redirects/map.mjs';
+import { isGone, oldSitemap } from '../redirects/map.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const dist = path.join(root, 'dist');
@@ -23,10 +25,15 @@ const rules = new Map(
     .map(([from, to, status]) => [from, { to, status: Number.parseInt(status, 10) }]),
 );
 
-const counts = { page: 0, redirect: 0 };
+const counts = { page: 0, redirect: 0, gone: 0 };
 const problems = [];
 for (const url of oldSitemap()) {
   const html = read(url);
+  if (isGone(url.replace(/^\/zh(?=\/|$)/, '') || '/')) {
+    counts.gone++;
+    if (html || rules.has(url)) problems.push(`${url}: should be gone (404), but something is there`);
+    continue;
+  }
   if (!html) {
     problems.push(`${url}: nothing at this URL`);
     continue;
@@ -47,7 +54,7 @@ for (const url of oldSitemap()) {
   if (!rule || rule.to !== target) problems.push(`${url}: _redirects says ${rule ? rule.to : 'nothing'}, page says ${target}`);
 }
 
-console.log(`${oldSitemap().length} old URLs: ${counts.page} unchanged pages, ${counts.redirect} redirects, ${problems.length} problems.`);
+console.log(`${oldSitemap().length} old URLs: ${counts.page} unchanged pages, ${counts.redirect} redirects, ${counts.gone} gone on purpose (404), ${problems.length} problems.`);
 if (problems.length) {
   console.log(problems.slice(0, 40).join('\n'));
   process.exit(1);

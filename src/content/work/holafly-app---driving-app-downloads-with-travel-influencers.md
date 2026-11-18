@@ -21,6 +21,13 @@ videos:
   - src: /assets/video/flowdrive-lrkyUl4tbIrCZB9L1mUrl.mp4
   - src: /assets/video/flowdrive-FLDm1lbKBfmPgt3tPPumf.mp4
   - src: /assets/video/flowdrive-cjk8f6Yu4Q1YvH7zk4kNl.mp4
+  # Stride's own campaign videos, from "Brad X Stride Social updates" (2026-11-17), compressed for the site.
+  - src: /assets/video/case-holafly-1.mp4
+  - src: /assets/video/case-holafly-2.mp4
+  - src: /assets/video/case-holafly-3.mp4
+  - src: /assets/video/case-holafly-4.mp4
+  - src: /assets/video/case-holafly-5.mp4
+  - src: /assets/video/case-holafly-7.mp4
 brief: null
 strategy: null
 execution: null
@@ -47,4 +54,4 @@ seo:
 ---
 <!-- Original case study copy from the previous site, kept for the editorial rewrite. -->
 <p>Holafly is a leading eSIM provider offering affordable data packages for international destinations. Users simply install an eSIM through the Holafly app and can add data anytime without the need for a physical SIM card.</p><p><br><strong>The Challenge</strong></p><p>Stride Social leveraged our in-house software to identify influencers with strong engagement and proven conversion rates in the travel sector. Since the client had already prepared campaign briefs, our focus was on influencer discovery and campaign execution.</p><p>We recommended running the activation on <strong>Instagram</strong>, with a mix of feed posts and Instagram Stories. Stories were particularly effective because the swipe-up CTA drove users directly to Holafly’s app sign-up page, increasing downloads and measurable clicks.</p>
-<p><em>At Stride Social we strive to bring the very best results to the brands we work with. Whether it's through our unique </em><a href="/our-services"><em>services</em></a><em> or our hand-picked </em><a href="/creators"><em>creator roster</em></a><em>. Our expertise comes from our unique </em><a href="/about"><em>story</em></a><em> and life experience in this space. If you would like to work with us on your campaign, then </em><a href="/contact"><em>get in touch.</em></a></p>
+<p><em>At Stride Social we strive to bring the very best results to the brands we work with. Whether it's through our unique </em><a href="/our-services"><em>services</em></a><em> or our hand-picked </em><a href="/talent"><em>creator roster</em></a><em>. Our expertise comes from our unique </em><a href="/about"><em>story</em></a><em> and life experience in this space. If you would like to work with us on your campaign, then </em><a href="/contact"><em>get in touch.</em></a></p>

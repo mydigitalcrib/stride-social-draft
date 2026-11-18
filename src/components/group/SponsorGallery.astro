@@ -13,6 +13,8 @@
 // one column, its photographs two (three on tablets) across.
 import Breadcrumbs from '../global/Breadcrumbs.astro';
 import { pad } from '@/lib/experience';
+import sharp from 'sharp';
+import path from 'node:path';
 
 type Pic = { src: string; alt: string };
 export interface Props {
@@ -28,6 +30,23 @@ const pile = events.map((e, i) => ({ id: e.id, pic: e.images[0], i })).reverse()
 // The collage's arrangement by how many photographs an event has (more than six use the six-up arrangement and the
 // rest follow in the viewer).
 const layoutOf = (n: number) => (n >= 6 ? 6 : n >= 3 ? 3 : n === 2 ? 2 : 1);
+// Each print takes its photograph's own shape, so the whole photograph shows (the owner, 2026-11-18: "make sure to show
+// the full image"), read from the file at build time (turned as its EXIF says).
+const shapes = new Map<string, string>();
+await Promise.all(
+  events.flatMap((e) => e.images.slice(0, 6)).map(async (pic) => {
+    if (shapes.has(pic.src) || !pic.src.startsWith('/')) return;
+    try {
+      const m = await sharp(path.join(process.cwd(), 'public', pic.src)).metadata();
+      const turned = (m.orientation ?? 1) >= 5;
+      const w = turned ? m.height : m.width;
+      const h = turned ? m.width : m.height;
+      if (w && h) shapes.set(pic.src, `${w} / ${h}`);
+    } catch {
+      /* the layout's own shape */
+    }
+  }),
+);
 // How wide a print shows, for the file the browser picks: the six-up's second print spans most of the width.
 const printSizes = (layout: number, k: number) => (layout === 6 && k === 1 ? '(min-width: 1024px) 50vw, 100vw' : '(min-width: 1024px) 40vw, 100vw');
 ---
@@ -55,10 +74,12 @@ const printSizes = (layout: number, k: number) => (layout === 6 && k === 1 ? '(m
           </ol>
         </div>
 
+        {/* Each print fills a 4:5 frame, so a landscape photograph needs a file wider than the frame: sizes allows for that
+            (a big screen got a file too small, 2026-11-18). */}
         <div class="sgal__pile" data-sgal-pile aria-hidden="true">
           {pile.map((p, k) => (
             <a class="sgal__pile-print" href={`#${p.id}`} tabindex="-1" style={`--k: ${k}; --n: ${pile.length}`} data-sgal-pile-print={p.id} data-sgal-go={p.id}>
-              <img src={p.pic.src} alt="" sizes="(min-width: 1921px) 16vw, 360px" decoding="async" draggable="false" />
+              <img src={p.pic.src} alt="" sizes="(min-width: 1921px) 26vw, 500px" decoding="async" draggable="false" />
             </a>
           ))}
         </div>
@@ -78,7 +99,7 @@ const printSizes = (layout: number, k: number) => (layout === 6 && k === 1 ? '(m
           </header>
           <ul class="sgal__prints" role="list">
             {e.images.slice(0, 6).map((pic, k) => (
-              <li class={`sgal__print sgal__print--${k + 1}`} style={`--depth: ${[60, -40, 90, -70, 40, -90][k]}; --tilt: ${[-1.6, 1.2, -0.8, 2, 1.4, -1.2][k]}deg`}>
+              <li class={`sgal__print sgal__print--${k + 1}`} style={`--depth: ${[60, -40, 90, -70, 40, -90][k]}; --tilt: ${[-1.6, 1.2, -0.8, 2, 1.4, -1.2][k]}deg${shapes.has(pic.src) ? `; --sgal-ar: ${shapes.get(pic.src)}` : ''}`}>
                 <button class="sgal__print-btn" type="button" aria-label={`${ui.open}: ${pic.alt}`} data-sgal-open={e.id} data-sgal-at={k}>
                   <img src={pic.src} alt={pic.alt} sizes={printSizes(layoutOf(e.images.length), k)} loading="lazy" decoding="async" draggable="false" />
                   <span class="sgal__glare" aria-hidden="true"><i></i></span>
@@ -422,9 +443,10 @@ const printSizes = (layout: number, k: number) => (layout === 6 && k === 1 ? '(m
     justify-items: center;
   }
 
+  /* One or two photographs: each print in its photograph's own shape (--sgal-ar), so none is cropped. */
   .sgal__chapter--1 .sgal__print {
     width: min(100%, 27.5rem);
-    aspect-ratio: 3 / 4;
+    aspect-ratio: var(--sgal-ar, 3 / 4);
   }
 
   /* The gaps (and the six-up's rows) are a share of the screen's width up to the content's own 1920 proportions: on
@@ -436,7 +458,7 @@ const printSizes = (layout: number, k: number) => (layout === 6 && k === 1 ? '(m
   }
 
   .sgal__chapter--2 .sgal__print {
-    aspect-ratio: 3 / 4;
+    aspect-ratio: var(--sgal-ar, 3 / 4);
   }
 
   .sgal__chapter--2 .sgal__print--2 {
@@ -799,7 +821,7 @@ const printSizes = (layout: number, k: number) => (layout === 6 && k === 1 ? '(m
     .sgal__chapter--6 .sgal__print--6 {
       grid-area: auto;
       margin-top: 0;
-      aspect-ratio: 4 / 5;
+      aspect-ratio: var(--sgal-ar, 4 / 5);
       translate: 0 calc((var(--p) - 0.5) * var(--depth) * 0.025rem);
     }
 

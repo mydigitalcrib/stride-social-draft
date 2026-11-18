@@ -7,6 +7,12 @@
 // sky sharp (`plain`). The navy deepens as the page scrolls on (--deep), so what follows the first screen reads on it. The poster alone with reduced motion or data
 // saving; it rests while the tab is hidden. Stock footage: licensed for commercial use, sources in
 // docs/ASSET-SOURCES.md. Behaviour: back-video.ts. One per page.
+// The deep look blurs the footage into soft light, so no detail survives: on desktop it plays a light copy of the file
+// where there is one (`-haze.mp4` beside it, 960 by 540; the showreel's is 2.2 MB in place of 16), which looks the same
+// and loads and plays far more lightly, on a 4K screen or a TV above all (2026-11-18).
+import fs from 'node:fs';
+import path from 'node:path';
+
 export interface Props {
   mp4: string;
   webm?: string;
@@ -27,8 +33,13 @@ export interface Props {
   phone?: string;
 }
 
-const { mp4, webm, poster, blur = 0, shade = 0.55, position = '50% 50%', tint = '6 20 43', look = 'plain' } = Astro.props;
-const phone = Astro.props.phone ?? mp4.replace(/(-desktop)?\.mp4$/, '-phone.mp4');
+const { poster, blur = 0, shade = 0.55, position = '50% 50%', tint = '6 20 43', look = 'plain' } = Astro.props;
+const phone = Astro.props.phone ?? Astro.props.mp4.replace(/(-desktop)?\.mp4$/, '-phone.mp4');
+// Under the deep look, its light copy where there is one (checked in public/ at build time); no webm beside it then.
+const haze = look === 'deep' ? Astro.props.mp4.replace(/(-desktop)?\.mp4$/, '-haze.mp4') : '';
+const hazed = !!haze && fs.existsSync(path.join(process.cwd(), 'public', haze));
+const mp4 = hazed ? haze : Astro.props.mp4;
+const webm = hazed ? undefined : Astro.props.webm;
 ---
 
 <div class:list={['exp-haze backvid', { 'backvid--deep': look === 'deep' }]} aria-hidden="true" data-backvid data-phone={phone} style={`--haze-blur: ${blur / 16}rem; --shade: ${shade}; --at: ${position}; --tint: ${tint}`}>

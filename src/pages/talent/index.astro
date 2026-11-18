@@ -10,7 +10,5 @@ if (!page) throw new Error('Missing src/content/pages/talent.yaml');
 ---
 
 <SiteLayout title="Stride Talent | Creator Management" description={page.data.sections.hero.body} division="talent" look="deep" headerOverlay>
-  {/* The first frame waits for the headline, which the homepage's row flies into word by word (talent/Photocall.astro). */}
-  <link slot="head" rel="expect" href="#talent-title" blocking="render" />
   <TalentPage />
 </SiteLayout>

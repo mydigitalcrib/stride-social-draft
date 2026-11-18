@@ -52,13 +52,15 @@ export const sectionRedirects = {
   '/education': '/academy',
   '/education/enquire': parkedRedirects['/academy/enquire'],
   '/talent/sport': '/sport',
-  '/our-services': '/social/services',
-  '/influencer-strategies': '/social/services',
+  // The services index is gone (the owner, 2026-11-18): Stride Social's feed has its strategies.
+  '/our-services': '/social',
+  '/influencer-strategies': '/social',
   '/influencer-seeding': '/social/services/influencer-seeding',
   '/case-studies': '/work',
   '/blog': '/insights',
-  '/creators': '/talent/roster',
-  '/meet-the-team': '/team',
+  // Our Team's own page is gone (the owner, 2026-11-18: "/team should redirect you to /about"): About has the team.
+  '/team': '/about',
+  '/meet-the-team': '/about',
   '/creator-sign-up': formRedirects['/talent/apply'],
 };
 
@@ -66,27 +68,28 @@ export const sectionRedirects = {
 export const collectionRedirects = {
   '/case-studies/': ['/work/', '/work'],
   '/blog/': ['/insights/', '/insights'],
-  '/creators/': ['/talent/roster/', '/talent/roster'],
   '/jobs/': ['/careers/', '/careers'],
 };
+
+/**
+ * The old site's sections that are gone on purpose and show the 404 page: its creators (/creators and every
+ * /creators/<name>), since the roster page and the creator pages were deleted (the owner, 2026-11-18: everything lives
+ * on /talent, and old addresses of deleted pages show the 404 page).
+ */
+export const goneSections = ['/creators'];
+export const isGone = (p) => goneSections.some((s) => p === s || p.startsWith(`${s}/`));
 
 /** Pages that exist on both sites at the same URL. */
 const unchanged = new Set(['/', '/about', '/contact', '/careers']);
 
 /**
- * Which new collection pages exist. Mirrors the rules in src/lib/roster.ts (consent, and no profile
- * without a photo) and the roles page (open, or legacy in preview); keep them in step.
+ * Which new collection pages exist. The roles have no pages of their own since 2026-11-18 (the owner: "Read the role"
+ * opens Stride's jobs on LinkedIn), so an old job posting goes to Careers.
  */
-function existingPages(production) {
+function existingPages() {
   const work = new Set(frontmatter('work').filter((w) => w.visible !== false).map((w) => w.id));
   const insights = new Set(frontmatter('insights').filter((p) => p.visible !== false).map((p) => p.id));
-  const roster = new Set(
-    frontmatter('roster')
-      .filter((c) => c.visible !== false && !!c.portrait && (c.consent?.status === 'confirmed' || (!production && ['legacy', 'listed'].includes(c.consent?.status))))
-      .map((c) => c.id),
-  );
-  const roles = new Set(frontmatter('careers').filter((r) => r.status === 'open' || (!production && r.status === 'legacy')).map((r) => r.id));
-  return { '/work/': work, '/insights/': insights, '/talent/roster/': roster, '/careers/': roles };
+  return { '/work/': work, '/insights/': insights, '/careers/': new Set() };
 }
 
 /** Where an old English path goes on the new site (or itself, if unchanged). */
@@ -116,7 +119,8 @@ export function oldSitemap() {
  * Returns [{ from, to, status }].
  */
 export function buildRedirects({ production }) {
-  const pages = existingPages(production);
+  void production; // no rule depends on it since the roles lost their pages; the callers' options stay the same
+  const pages = existingPages();
   const out = new Map();
   for (const [from, to] of Object.entries(sectionRedirects)) out.set(from, { from, to, status: 301 });
   for (const [from, to] of Object.entries(formRedirects)) out.set(from, { from, to, status: 302 });
@@ -124,10 +128,12 @@ export function buildRedirects({ production }) {
   for (const url of oldSitemap()) {
     if (url === '/zh' || url.startsWith('/zh/')) {
       const english = url === '/zh' ? '/' : url.slice(3);
+      if (isGone(english)) continue;
       const to = resolve(english, pages) ?? '/';
       out.set(url, { from: url, to, status: 302 });
       continue;
     }
+    if (isGone(url)) continue;
     const to = resolve(url, pages);
     if (to && to !== url) out.set(url, { from: url, to, status: 301 });
   }

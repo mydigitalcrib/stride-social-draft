@@ -8,6 +8,15 @@
 // leaving the footage whole. Then, as the destinations rise over the pinned hero, its depth: --fade (the type
 // fading, over the first third) and --deep (the blur and the glass, building over most of the way), with .is-deep
 // on the hero while either is under way.
+// The hand-off into "Three sides of Stride" is one movement (the owner, 2026-11-18: "more smooth like a really good
+// transition"): the frost starts as the door finishes opening, so the footage never sits still between them, and the
+// heading and its line resolve out of the frost with the scroll (--sides-in on the section: they rise, sharpen and
+// come up), close behind the door, rather than fading in on their own once they're on the screen.
+// It never jumps with the scroll (the owner, 2026-11-18: "make the transition way smoother"): the scene's progress
+// glides after where the page has scrolled to, a share of the way each frame, so a quick flick of the wheel or the
+// trackpad plays the door out instead of cutting through it; and the navy round the letter dissolves over a longer
+// stretch while the letter is still growing, rather than being swept off at the end. A jump of more than a couple of
+// screens (a link to the three sides, the End key) goes straight there.
 // On a screen wider than 16:9 (21:9, 32:9) the margin grows to centre the content and the word is a smaller share
 // of the width, so the door grows that much further, and the letter's stroke still fills the screen; at 16:9 or
 // narrower, and up to 1920 wide, it grows as drawn.
@@ -19,6 +28,8 @@ const ease = (a: number, b: number, x: number) => {
 };
 const GROW = 44; // how much the word grows by the end: enough for a letter's stroke to fill the screen (at 1920×1080)
 const SHARE = 1560 / 1920; // the word's share of the screen's width at 1920×1080
+const FOLLOW = 0.11; // per 60th of a second, the share of the way the scene's progress goes towards the scroll's
+const LEAP = 2.2; // screens: a jump further than this goes straight there
 
 export function initHeroScene() {
   const scene = document.querySelector<HTMLElement>('[data-scene]');
@@ -32,11 +43,12 @@ export function initHeroScene() {
   let queued = false;
   let grow = GROW;
 
-  const set = (name: string, value: number, digits = 3) => {
+  const sides = scene.querySelector<HTMLElement>('.sides');
+  const set = (name: string, value: number, digits = 3, on: HTMLElement = hero) => {
     const v = value.toFixed(digits);
     if (values[name] === v) return;
     values[name] = v;
-    hero.style.setProperty(name, v);
+    on.style.setProperty(name, v);
   };
 
   // Where the word grows from: low in the stem of its T (or of its middle letter), measured with the word at rest;
@@ -56,27 +68,43 @@ export function initHeroScene() {
     hero.style.setProperty('--oy', `${(t.offsetTop + t.offsetHeight * 0.68).toFixed(1)}px`);
   };
 
-  const update = () => {
+  // The progress shown (screens into the scene), gliding after the scroll's; -1 until the first measure.
+  let shown = -1;
+  let last = 0;
+  const update = (now = performance.now()) => {
     queued = false;
     const box = scene.getBoundingClientRect();
-    const p = Math.max(0, -box.top / window.innerHeight);
+    const goal = Math.max(0, -box.top / window.innerHeight);
+    const dt = last ? Math.min(4, (now - last) / (1000 / 60)) : 1;
+    last = now;
+    if (shown < 0 || still.matches || Math.abs(goal - shown) > LEAP) shown = goal;
+    else shown += (goal - shown) * (1 - Math.pow(1 - FOLLOW, dt));
+    if (Math.abs(goal - shown) < 0.0005) shown = goal;
+    const p = shown;
     // The door's length, in screens (none with reduced motion, or without its runway).
     const run = !still.matches && runway && runway.offsetHeight ? runway.offsetHeight / window.innerHeight : 0;
     hero.classList.toggle('has-door', run > 0);
     if (run > 0) {
       const t = clamp(p / run);
-      set('--door-band', ease(0, 0.2, t));
-      set('--swap', ease(0.12, 0.3, t));
-      set('--door-show', ease(0.12, 0.3, t) * (1 - ease(0.8, 1, t)));
-      const z = clamp((t - 0.24) / 0.76);
+      // The navy closes in round the letters over a longer stretch, so it doesn't snap shut.
+      set('--door-band', ease(0, 0.22, t));
+      set('--swap', ease(0.08, 0.34, t));
+      // and it dissolves over the last third, while the letter is still growing, so the footage takes over softly.
+      set('--door-show', ease(0.08, 0.34, t) * (1 - ease(0.64, 0.98, t)));
+      const z = clamp((t - 0.26) / 0.74);
       set('--door-scale', Math.pow(grow, Math.pow(z, 1.35)), 4);
     }
-    const q = Math.max(0, p - run);
-    const f = ease(0, 0.32, q);
-    const d = ease(0.04, 0.72, q);
+    const q = p - run; // past the door (negative while it's still opening)
+    const f = ease(0, 0.32, Math.max(0, q));
+    // With the door, the frost starts as it finishes opening and is whole by the time the heading has come up.
+    const d = run > 0 ? ease(-0.06, 0.55, q) : ease(0.04, 0.72, q);
     set('--fade', f);
     set('--deep', d);
     hero.classList.toggle('is-deep', f > 0 || d > 0);
+    if (sides) set('--sides-in', run > 0 ? ease(0.02, 0.5, q) : 1, 3, sides);
+    // Still on its way: the next frame carries on (and stops once it's there).
+    if (shown !== goal) queue();
+    else last = 0;
   };
   const queue = () => {
     if (queued) return;
@@ -94,8 +122,11 @@ export function initHeroScene() {
     { passive: true },
   );
   still.addEventListener('change', queue);
-  // Coming back to the page part-way down (bfcache): start from where it is.
-  window.addEventListener('pageshow', queue);
+  // Coming back to the page part-way down (bfcache): start from where it is, without gliding there.
+  window.addEventListener('pageshow', () => {
+    shown = -1;
+    queue();
+  });
   // The typeface may arrive after the first measure.
   document.fonts?.ready.then(() => {
     aim();

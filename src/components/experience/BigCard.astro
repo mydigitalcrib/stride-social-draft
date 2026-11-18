@@ -4,6 +4,10 @@
 // it whatever that card holds: services, case studies, verified results, a quote, a video.
 // Desktop: it opens like a lens coming into focus (the photo settles, the words follow it in, the close button turns
 // in), closes clean (its contents fade before it shrinks), and holds the keyboard while it's open (grow.ts).
+// In a deck that opens (Stride Social and its services, `opens`) it's a spread (the owner, 2026-11-17: "the colors
+// inside the box are off" and "it's weird to have to scroll"): on navy glass, the photo and the name on the left, and
+// what it holds side by side on the right, a column a service, no boxes, sized to fit (grow.ts sets --fit), so nothing
+// scrolls; on a phone, a sheet over the whole screen that scrolls as a page does.
 import type { Card } from '@/lib/experience';
 import { pad } from '@/lib/experience';
 import { interfaceCopy } from '@/lib/ui-copy';
@@ -23,10 +27,13 @@ const { card: c, growKey, eyebrow, index, total, opens = false } = Astro.props;
 const t = await interfaceCopy();
 // How wide the photo shows on desktop (the content is about 82vw), so a large screen fetches a large enough file.
 const storyOnly = !(c.blocks?.length || c.stats?.length);
-const sizes = opens ? (storyOnly ? '(min-width: 1024px) 82vw, 50vw' : '(min-width: 1024px) 28vw, 50vw') : '50vw';
+const sizes = opens ? (storyOnly ? '(min-width: 1024px) 82vw, 100vw' : '(min-width: 1024px) 28vw, 100vw') : '50vw';
+// The spread's columns: a column a service (three at most); case studies two to a row.
+const listy = !!c.blocks?.some((b) => b.list?.length);
+const cols = c.blocks?.length ? Math.min(c.blocks.length, listy ? 3 : 2) : 1;
 ---
 
-<div class="bigcard" role="dialog" aria-label={c.name} hidden data-grow-detail={growKey} data-lenis-prevent>
+<div class:list={['bigcard', { 'bigcard--spread': opens }]} role="dialog" aria-label={c.name} hidden data-grow-detail={growKey} data-lenis-prevent>
   {c.image && !c.video && <img class="bigcard__image" src={c.image.src} alt={c.image.alt} style={c.image.position ? `object-position: ${c.image.position}` : undefined} sizes={sizes} loading="lazy" decoding="async" />}
   <button class="bigcard__close" type="button" aria-label="Close" data-grow-close>
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
@@ -39,7 +46,7 @@ const sizes = opens ? (storyOnly ? '(min-width: 1024px) 82vw, 50vw' : '(min-widt
       {c.chips && c.chips.length > 0 && <p class="bigcard__chips">{c.chips.map((x) => <span>{x}</span>)}</p>}
     </header>
 
-    <div class="bigcard__rest">
+    <div class="bigcard__rest" data-fit={opens ? '' : undefined}>
     {c.quote && (
       <figure class="bigcard__quote">
         <blockquote>{c.quote}</blockquote>
@@ -62,11 +69,11 @@ const sizes = opens ? (storyOnly ? '(min-width: 1024px) 82vw, 50vw' : '(min-widt
     )}
 
     {c.blocks && c.blocks.length > 0 && (
-      <ul class="bigcard__blocks" role="list">
-        {c.blocks.map((b) => (
+      <ul class="bigcard__blocks" role="list" data-cols={cols}>
+        {c.blocks.map((b, bi) => (
           <li class="bigcard__slot">
             <a class="bigcard__block" href={b.href} aria-label={`${b.action}: ${b.title}`}>
-              <h4 class="bigcard__block-title">{b.title}</h4>
+              <h4 class="bigcard__block-title" data-n={pad(bi + 1)}>{b.title}</h4>
               {b.text && <p class="bigcard__block-text">{b.text}</p>}
               {b.list && b.list.length > 0 && (
                 <ol class="bigcard__block-list" role="list">
@@ -582,16 +589,271 @@ const sizes = opens ? (storyOnly ? '(min-width: 1024px) 82vw, 50vw' : '(min-widt
     }
   }
 
-  /* ---------- In a deck that opens (Stride Social, desktop) ----------
-     The photo keeps a clean column with the name on it; what the card holds sits beside it on the
-     division's colour and scrolls on its own, fading out at the foot when there's more below. */
-  @media (min-width: 1024px) {
-    :global(.js .deck--open) .bigcard:not([hidden]) {
-      overflow: hidden;
-    }
+  /* ---------- The spread: in a deck that opens (Stride Social and its services), every screen ----------
+     The owner, 2026-11-17: a new style ("the colors inside the box are off", and no scrolling inside it). Navy glass
+     with a rim of ice; the photo and the name on the left; on the right what the card holds side by side, a column a
+     service (case studies two to a row), parted by hairlines of ice, the services read as plain numbered lines and
+     nothing boxed. Its sizes scale with --fit, which grow.ts lowers until everything fits the card, so it never
+     scrolls. A phone has a sheet over the whole screen instead, read as a page (below). */
+  .bigcard.bigcard--spread {
+    --ink: 255 255 255;
+    --tone-lit: var(--ice-rgb);
+    --halo: var(--navy-900-rgb);
+    --fit: 1;
+    overflow: hidden;
+    border-radius: 1.625rem;
+    background:
+      radial-gradient(55% 65% at 100% 0%, rgb(var(--ice-rgb) / 0.1), transparent 62%),
+      radial-gradient(70% 80% at 40% 120%, rgb(41 67 104 / 0.5), transparent 70%),
+      linear-gradient(160deg, rgb(12 39 83 / 0.95), rgb(var(--navy-900-rgb) / 0.98) 62%);
+    box-shadow:
+      inset 0 0 0 1px rgb(var(--ice-rgb) / 0.22),
+      inset 0 1px 0 rgb(var(--white-rgb) / 0.24),
+      0 0 3rem -1.25rem rgb(var(--ice-rgb) / 0.4),
+      0 2rem 4rem -2rem rgb(0 0 0 / 0.75);
+    color: var(--white);
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--ice-rgb) / 0.3) transparent;
+  }
 
-    :global(.js .deck--open) .bigcard__body {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  .bigcard--spread .bigcard__eyebrow {
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+    color: rgb(var(--ice-rgb) / 0.82);
+  }
+
+  .bigcard--spread .bigcard__eyebrow span {
+    color: var(--white);
+  }
+
+  .bigcard--spread .bigcard__name,
+  .bigcard--spread .bigcard__copy {
+    text-shadow: none;
+  }
+
+  .bigcard--spread .bigcard__copy {
+    color: rgb(var(--white-rgb) / 0.86);
+  }
+
+  /* What it holds: no boxes. */
+  .bigcard--spread .bigcard__blocks {
+    gap: 0;
+  }
+
+  .bigcard--spread .bigcard__slot {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    container-type: inline-size;
+  }
+
+  /* A soft light behind the column pointed at. */
+  .bigcard--spread .bigcard__slot::before {
+    content: '';
+    position: absolute;
+    inset: -30% -12% auto;
+    height: 75%;
+    background: radial-gradient(50% 50% at 50% 50%, rgb(var(--ice-rgb) / 0.12), transparent 70%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 500ms var(--ease-out);
+  }
+
+  .bigcard--spread .bigcard__slot:hover::before {
+    opacity: 1;
+  }
+
+  .bigcard--spread .bigcard__block,
+  .bigcard--spread .bigcard__block:hover {
+    position: relative;
+    isolation: auto;
+    display: flex;
+    flex-direction: column;
+    gap: calc(0.625rem * var(--fit));
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+    padding: 0;
+    overflow: visible;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    translate: none;
+  }
+
+  .bigcard--spread .bigcard__block::before {
+    display: none;
+  }
+
+  /* The room its foot needs (the way in, and Add to brief beside it), kept as part of what it holds, so a column that
+     runs too long shows as running over and the spread fits itself smaller (grow.ts) instead of covering its foot. */
+  .bigcard--spread .bigcard__block::after {
+    content: '';
+    flex: none;
+    height: calc(2.75rem * var(--fit) + 0.5rem);
+    margin-top: auto;
+  }
+
+  .bigcard--spread .bigcard__block:focus-visible {
+    outline: none;
+  }
+
+  .bigcard--spread .bigcard__block:focus-visible .bigcard__block-title {
+    text-decoration: underline;
+    text-decoration-color: var(--ice);
+    text-underline-offset: 0.25em;
+  }
+
+  /* Its name, numbered in ice above it. */
+  .bigcard--spread .bigcard__block-title {
+    font-size: calc(clamp(1.0625rem, 1.45vw, 1.5rem) * var(--fit));
+    font-weight: 800;
+    line-height: 1.04;
+    letter-spacing: -0.005em;
+    color: var(--white);
+    transition: color 300ms var(--ease-out);
+  }
+
+  .bigcard--spread .bigcard__block-title::before {
+    content: attr(data-n);
+    display: block;
+    margin-bottom: calc(0.5rem * var(--fit));
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 400;
+    letter-spacing: 0.16em;
+    color: rgb(var(--ice-rgb) / 0.85);
+  }
+
+  .bigcard--spread .bigcard__slot:hover .bigcard__block-title {
+    color: var(--ice);
+  }
+
+  .bigcard--spread .bigcard__block-text {
+    font-size: calc(0.9375rem * var(--fit));
+    line-height: 1.45;
+    color: rgb(var(--ice-rgb) / 0.8);
+  }
+
+  /* Its parts keep their size (a squeezed one would clip its words without the spread knowing it had run over). */
+  .bigcard--spread .bigcard__block > * {
+    flex-shrink: 0;
+  }
+
+  /* A case study (nothing to add to a brief): three lines of its summary (the rest is on its page), and its way in a
+     smaller ring at the foot on the right, beside its words, with no foot of its own. */
+  .bigcard--spread .bigcard__block:not(:has(.bigcard__block-list)) .bigcard__block-text {
+    display: -webkit-box;
+    overflow: hidden;
+    padding-right: 2.75rem;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  .bigcard--spread .bigcard__block:not(:has(.bigcard__block-list))::after {
+    height: 0;
+  }
+
+  .bigcard--spread .bigcard__block:not(:has(.bigcard__block-list)) .bigcard__arrow {
+    width: 2.125rem;
+    height: 2.125rem;
+  }
+
+  .bigcard--spread .bigcard__block:not(:has(.bigcard__block-list)) .bigcard__go {
+    display: none;
+  }
+
+  /* The services: plain lines, a hairline between, numbered in ice. */
+  .bigcard--spread .bigcard__block-list {
+    display: block;
+    margin: calc(0.25rem * var(--fit)) 0 0;
+    font-family: var(--font-text);
+    font-size: calc(0.9375rem * var(--fit));
+    line-height: 1.3;
+    letter-spacing: 0;
+    text-transform: none;
+    color: rgb(var(--white-rgb) / 0.92);
+  }
+
+  .bigcard--spread .bigcard__block-list li {
+    display: grid;
+    grid-template-columns: 1.75rem minmax(0, 1fr);
+    gap: 0.375rem;
+    align-items: baseline;
+    padding-block: calc(0.5rem * var(--fit));
+    border-top: 1px solid rgb(var(--white-rgb) / 0.09);
+    break-inside: avoid;
+  }
+
+  .bigcard--spread .bigcard__block-list span {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    color: rgb(var(--ice-rgb) / 0.85);
+  }
+
+  /* Its way in: a ring of ice that fills when the column is pointed at, its words beside it where there's room. */
+  .bigcard--spread .bigcard__arrow {
+    right: 0;
+    bottom: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    background: transparent;
+    color: var(--ice);
+    box-shadow: inset 0 0 0 1px rgb(var(--ice-rgb) / 0.5);
+    transition:
+      background-color 360ms var(--ease-out),
+      color 360ms var(--ease-out),
+      box-shadow 360ms var(--ease-out);
+  }
+
+  .bigcard--spread .bigcard__slot:hover .bigcard__arrow,
+  .bigcard--spread .bigcard__block:focus-visible .bigcard__arrow {
+    background: var(--ice);
+    color: var(--navy-900);
+    box-shadow: 0 0 1.25rem -0.25rem rgb(var(--ice-rgb) / 0.75);
+  }
+
+  @container (min-width: 18.75rem) {
+    .bigcard--spread .bigcard__go {
+      position: absolute;
+      right: 3.25rem;
+      bottom: 0;
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.625rem;
+      letter-spacing: 0.12em;
+      line-height: 2.5rem;
+      text-transform: uppercase;
+      color: rgb(var(--ice-rgb) / 0.85);
+    }
+  }
+
+  .bigcard--spread .bigcard__keep {
+    left: var(--pl, 0rem);
+    bottom: 0;
+  }
+
+  .bigcard--spread .bigcard__stats {
+    gap: calc(1rem * var(--fit)) clamp(1.5rem, 3vw, 3rem);
+  }
+
+  .bigcard--spread .bigcard__stats dd {
+    font-size: calc(clamp(1.75rem, 3vw, 3rem) * var(--fit));
+    color: var(--ice);
+  }
+
+  .bigcard--spread .bigcard__stats dt {
+    color: rgb(var(--ice-rgb) / 0.75);
+  }
+
+  /* ---------- Tablets and desktop: the spread ---------- */
+  @media (min-width: 768px) {
+    .bigcard--spread .bigcard__body {
+      grid-template-columns: minmax(0, 34fr) minmax(0, 66fr);
       grid-template-rows: minmax(0, 1fr);
       align-content: stretch;
       justify-items: stretch;
@@ -600,168 +862,254 @@ const sizes = opens ? (storyOnly ? '(min-width: 1024px) 82vw, 50vw' : '(min-widt
       padding: 0;
     }
 
-    :global(.js .deck--open) .bigcard__image {
+    .bigcard--spread .bigcard__image {
       inset: 0 auto 0 0;
-      width: 33.334%;
+      width: 34%;
       height: 100%;
       opacity: 1;
       filter: none;
       mask-image: none;
     }
 
-    :global(.js .deck--open) .bigcard__close {
+    .bigcard--spread .bigcard__close {
       position: absolute;
-      top: 0.875rem;
-      right: 0.875rem;
+      top: 1rem;
+      right: 1rem;
       float: none;
       margin: 0;
     }
 
-    :global(.js .deck--open) .bigcard__head {
+    .bigcard--spread .bigcard__head {
       align-content: end;
+      gap: 0.75rem;
       min-height: 0;
       max-width: none;
       padding: clamp(1.25rem, 1.9vw, 2rem);
     }
 
-    :global(.js .deck--open) .bigcard:has(.bigcard__image) .bigcard__head {
-      --ink: 255 255 255;
-      --tone-lit: 255 255 255;
-      --halo: 6 20 43;
-      background: linear-gradient(to top, rgb(var(--navy-900-rgb) / 0.92), rgb(var(--navy-900-rgb) / 0.62) 42%, rgb(var(--navy-900-rgb) / 0.1) 72%, rgb(var(--navy-900-rgb) / 0.2));
-      color: var(--white);
+    .bigcard--spread:has(.bigcard__image) .bigcard__head {
+      background: linear-gradient(to top, rgb(var(--navy-900-rgb) / 0.94), rgb(var(--navy-900-rgb) / 0.6) 42%, rgb(var(--navy-900-rgb) / 0.08) 72%, rgb(var(--navy-900-rgb) / 0.2));
     }
 
-    :global(.js .deck--open) .bigcard__name {
+    .bigcard--spread .bigcard__name {
       font-size: clamp(1.375rem, 1.95vw, 2.4rem);
       line-height: 1;
       overflow-wrap: normal;
     }
 
-    :global(.js .deck--open) .bigcard__copy {
+    .bigcard--spread .bigcard__copy {
       font-size: 0.9375rem;
     }
 
-    :global(.js .deck--open) .bigcard__rest {
-      display: grid;
-      align-content: start;
-      justify-items: start;
-      gap: clamp(var(--space-4), 3vh, var(--space-6));
+    /* The right-hand side: its columns fill it, and anything after them (results, the way on) sits at its foot. */
+    .bigcard--spread .bigcard__rest {
+      display: flex;
+      flex-direction: column;
+      gap: calc(1.5rem * var(--fit));
       min-height: 0;
-      padding: 4.5rem clamp(1.25rem, 2vw, 2rem) 4rem;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      scrollbar-width: thin;
-      scrollbar-color: rgb(var(--hair) / 0.3) transparent;
-      mask-image: linear-gradient(to bottom, #000 calc(100% - 3.5rem), transparent);
+      padding: calc(clamp(1.5rem, 2.3vw, 2.5rem) * var(--fit)) clamp(1.5rem, 2.4vw, 2.75rem);
+      overflow: hidden;
     }
 
-    :global(.js .deck--open) .bigcard__rest:has(.bigcard__slot:only-child) {
-      align-content: center;
-    }
-
-    /* Only its story to tell (a case study without verified results): the photo takes the whole card. */
-    :global(.js .deck--open) .bigcard:not(:has(.bigcard__blocks, .bigcard__stats)) .bigcard__body {
-      grid-template-columns: minmax(0, 1fr);
-    }
-
-    :global(.js .deck--open) .bigcard:not(:has(.bigcard__blocks, .bigcard__stats)) .bigcard__image {
+    .bigcard--spread .bigcard__blocks {
+      --cols: 2;
+      display: grid;
+      flex: 1 1 auto;
+      grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+      grid-auto-rows: minmax(0, 1fr);
+      min-height: 0;
       width: 100%;
     }
 
-    :global(.js .deck--open) .bigcard:not(:has(.bigcard__blocks, .bigcard__stats)) .bigcard__head {
+    .bigcard--spread .bigcard__blocks[data-cols='1'] {
+      --cols: 1;
+    }
+
+    .bigcard--spread .bigcard__blocks[data-cols='3'] {
+      --cols: 3;
+    }
+
+    /* Each column's gutters, and the hairline at its left; none before the first of a row, none after the last. */
+    .bigcard--spread .bigcard__slot {
+      --pl: clamp(1rem, 1.7vw, 2rem);
+      --pr: clamp(1rem, 1.7vw, 2rem);
+      padding-inline: var(--pl) var(--pr);
+    }
+
+    .bigcard--spread .bigcard__slot::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 1px;
+      background: linear-gradient(to bottom, rgb(var(--ice-rgb) / 0.3), rgb(var(--ice-rgb) / 0.06));
+      transform-origin: top;
+    }
+
+    .bigcard--spread .bigcard__blocks[data-cols='1'] > .bigcard__slot,
+    .bigcard--spread .bigcard__blocks[data-cols='2'] > .bigcard__slot:nth-child(2n + 1),
+    .bigcard--spread .bigcard__blocks[data-cols='3'] > .bigcard__slot:nth-child(3n + 1) {
+      --pl: 0rem;
+    }
+
+    .bigcard--spread .bigcard__blocks[data-cols='1'] > .bigcard__slot,
+    .bigcard--spread .bigcard__blocks[data-cols='2'] > .bigcard__slot:nth-child(2n),
+    .bigcard--spread .bigcard__blocks[data-cols='3'] > .bigcard__slot:nth-child(3n) {
+      --pr: 0rem;
+    }
+
+    .bigcard--spread .bigcard__blocks[data-cols='1'] > .bigcard__slot::after,
+    .bigcard--spread .bigcard__blocks[data-cols='2'] > .bigcard__slot:nth-child(2n + 1)::after,
+    .bigcard--spread .bigcard__blocks[data-cols='3'] > .bigcard__slot:nth-child(3n + 1)::after {
+      display: none;
+    }
+
+    /* Two rows of case studies: a hairline between the rows. */
+    .bigcard--spread .bigcard__blocks[data-cols='2'] > .bigcard__slot:nth-child(n + 3) {
+      margin-top: calc(1.25rem * var(--fit));
+      padding-top: calc(1.25rem * var(--fit));
+      border-top: 1px solid rgb(var(--ice-rgb) / 0.12);
+    }
+
+    /* The close button sits in the top right corner: the first row's last name keeps clear of it. */
+    .bigcard--spread .bigcard__blocks[data-cols='1'] > .bigcard__slot:first-child .bigcard__block-title,
+    .bigcard--spread .bigcard__blocks[data-cols='2'] > .bigcard__slot:nth-child(2) .bigcard__block-title,
+    .bigcard--spread .bigcard__blocks[data-cols='3'] > .bigcard__slot:nth-child(3) .bigcard__block-title {
+      padding-right: 2.75rem;
+    }
+
+    /* One service: its lines in two columns. */
+    .bigcard--spread .bigcard__blocks[data-cols='1'] .bigcard__block-list {
+      columns: 2;
+      column-gap: clamp(1.5rem, 2.4vw, 2.75rem);
+    }
+
+    .bigcard--spread .bigcard__rest > .bigcard__action {
+      align-self: flex-start;
+      margin-top: auto;
+    }
+
+    /* Only its story to tell (a case study without verified results, a question): the photo, if any, takes the
+       whole card, the words large over it, and the way on at its foot on the right. */
+    .bigcard--spread:not(:has(.bigcard__blocks, .bigcard__stats)) .bigcard__body {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .bigcard--spread:not(:has(.bigcard__blocks, .bigcard__stats)) .bigcard__image {
+      width: 100%;
+    }
+
+    .bigcard--spread:not(:has(.bigcard__blocks, .bigcard__stats)) .bigcard__head {
       padding: clamp(1.75rem, 3vw, 3rem);
       padding-right: 17.5rem;
     }
 
-    :global(.js .deck--open) .bigcard:not(:has(.bigcard__blocks, .bigcard__stats)) .bigcard__name {
+    .bigcard--spread:not(:has(.bigcard__blocks, .bigcard__stats)) .bigcard__name {
       font-size: clamp(2rem, 4vw, 4rem);
     }
 
-    :global(.js .deck--open) .bigcard:not(:has(.bigcard__blocks, .bigcard__stats)) .bigcard__copy {
+    .bigcard--spread:not(:has(.bigcard__blocks, .bigcard__stats)) .bigcard__copy {
       max-width: 44rem;
       font-size: 1.0625rem;
     }
 
-    :global(.js .deck--open) .bigcard:not(:has(.bigcard__blocks, .bigcard__stats)) .bigcard__rest {
+    .bigcard--spread:not(:has(.bigcard__blocks, .bigcard__stats)) .bigcard__rest {
       position: absolute;
-      --press: 207 237 248;
-      --press-on: 6 20 43;
-      --press-hover: 255 255 255;
       right: clamp(1.75rem, 3vw, 3rem);
       bottom: clamp(1.75rem, 3vw, 3rem);
       padding: 0;
       overflow: visible;
-      mask-image: none;
+    }
+  }
+
+  /* ---------- Phones: a sheet over the whole screen, read as a page ----------
+     The photo across its top, the name and words over its foot, then each service one after another, parted by a
+     hairline of ice; the close button stays at hand as it scrolls. */
+  @media (max-width: 767px) {
+    /* The header steps up out of the way while the sheet is open, so the sheet's own close button has the corner. */
+    :global(html:has(.bigcard--spread:not([hidden])) .chrome) {
+      transform: translateY(-100%);
+      pointer-events: none;
     }
 
-    :global(.js .deck--open) .bigcard__slot {
-      container-type: inline-size;
+    .bigcard.bigcard--spread {
+      position: fixed;
+      inset: 0;
+      z-index: 190;
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      border-radius: 0;
+      background:
+        radial-gradient(90% 40% at 100% 0%, rgb(var(--ice-rgb) / 0.08), transparent 70%),
+        linear-gradient(180deg, var(--navy-700), var(--navy-900) 46%);
+      box-shadow: none;
     }
 
-    /* A short screen: a little tighter, so more fits before the fade. */
-    @media (max-height: 800px) {
-      :global(.js .deck--open) .bigcard__rest {
-        padding-top: 4rem;
-      }
-
-      :global(.js .deck--open) .bigcard__block-list li {
-        padding-block: 0.25rem;
-      }
+    .bigcard--spread .bigcard__image {
+      position: absolute;
+      inset: 0 0 auto;
+      width: 100%;
+      height: 52svh;
+      opacity: 1;
+      filter: none;
+      mask-image: linear-gradient(to bottom, #000 45%, transparent);
     }
 
-    :global(.js .deck--open) .bigcard__block {
-      min-height: 100%;
-      background: rgb(var(--white-rgb) / 0.5);
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
+    .bigcard--spread .bigcard__close {
+      top: max(0.875rem, env(safe-area-inset-top));
+      margin: max(0.875rem, env(safe-area-inset-top)) 0.875rem 0 0;
+      background: rgb(var(--navy-900-rgb) / 0.5);
+      box-shadow: inset 0 0 0 1px rgb(var(--ice-rgb) / 0.4);
     }
 
-    :global(.js .deck--open) .bigcard__block:hover {
-      translate: none;
+    .bigcard--spread .bigcard__body {
+      display: flex;
+      flex-direction: column;
+      gap: 1.75rem;
+      padding: 34svh 1.25rem calc(2.5rem + env(safe-area-inset-bottom));
     }
 
-    /* The services read first: plain text with a hairline between, not small labels. */
-    :global(.js .deck--open) .bigcard__block-list {
-      gap: 0;
-      font-family: var(--font-text);
-      font-size: 0.9375rem;
-      line-height: 1.32;
-      letter-spacing: 0;
-      text-transform: none;
-      color: rgb(var(--ink) / 0.92);
+    .bigcard--spread:not(:has(.bigcard__image)) .bigcard__body {
+      padding-top: 5rem;
     }
 
-    :global(.js .deck--open) .bigcard__block-list li {
-      padding-block: 0.4375rem;
-      border-top: 1px solid rgb(var(--hair) / 0.14);
+    .bigcard--spread .bigcard__name {
+      font-size: 2rem;
+      text-shadow: 0 0.125rem 1.5rem rgb(var(--navy-900-rgb) / 0.7);
     }
 
-    :global(.js .deck--open) .bigcard__block-list span {
-      font-family: var(--font-mono);
-      font-size: var(--type-label);
-      line-height: 1.7;
+    .bigcard--spread .bigcard__rest {
+      display: flex;
+      flex-direction: column;
+      gap: 1.75rem;
     }
 
-    :global(.js .deck--open) .bigcard__slot:only-child .bigcard__block-list {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      column-gap: var(--space-5);
+    .bigcard--spread .bigcard__blocks {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
     }
 
-    /* In rem (300px up to 1920×1080), so the same cards show it on a larger screen. */
-    @container (min-width: 18.75rem) {
-      :global(.js .deck--open) .bigcard__go {
-        position: absolute;
-        right: 3.875rem;
-        bottom: 1rem;
-        display: block;
-        font-family: var(--font-mono);
-        font-size: 0.625rem;
-        letter-spacing: 0.05em;
-        line-height: 2.5rem;
-        text-transform: uppercase;
-        color: rgb(var(--ink) / 0.8);
-      }
+    .bigcard--spread .bigcard__slot {
+      padding-block: 1.5rem;
+      border-top: 1px solid rgb(var(--ice-rgb) / 0.16);
+    }
+
+    .bigcard--spread .bigcard__slot:last-child {
+      padding-bottom: 0.5rem;
+    }
+
+    .bigcard--spread .bigcard__keep {
+      bottom: 1.5rem;
+    }
+
+    .bigcard--spread .bigcard__slot:last-child .bigcard__keep {
+      bottom: 0.5rem;
+    }
+
+    .bigcard--spread .bigcard__block-title {
+      font-size: 1.375rem;
     }
   }
 

@@ -125,13 +125,22 @@ const words = description.split(' ');
     {/* Frosted glass that forms over the footage as the next section rises (home/HeroScene.astro). */}
     <div class="cover__glass" aria-hidden="true"></div>
 
-    {/* Desktop, scrolling on: the big word becomes a door. This copy of it, white on navy laid over the footage
-        with `multiply`, leaves the footage showing only inside the letters; it then grows, through one of
-        them, until the footage fills the screen again (src/scripts/system/hero-scene.ts). Laid out as the
-        word is, letter by letter, so the two match exactly. */}
+    {/* Desktop, scrolling on: the big word becomes a door. This copy of it, white on black laid over the footage
+        with `multiply`, leaves the footage showing only inside the letters; the second, black on navy with
+        `screen`, turns the black around them into Stride's navy exactly (the owner, 2026-11-18: one multiplied navy
+        over the dark footage came out near black) and leaves the letters as they are. Both then grow, through one
+        of the letters, until the footage fills the screen again (src/scripts/system/hero-scene.ts). Laid out as
+        the word is, letter by letter, so they match exactly. */}
     <div class="cover__door" aria-hidden="true" data-door>
       <span class="cover__door-wrap" data-parallax="-12">
         <span class="cover__door-word" data-door-word>
+          {[...word].map((ch) => <span class="cover__door-ch">{ch}</span>)}
+        </span>
+      </span>
+    </div>
+    <div class="cover__door cover__door--tint" aria-hidden="true">
+      <span class="cover__door-wrap" data-parallax="-12">
+        <span class="cover__door-word">
           {[...word].map((ch) => <span class="cover__door-ch">{ch}</span>)}
         </span>
       </span>
@@ -722,11 +731,18 @@ const words = description.split(' ');
       position: absolute;
       inset: 0;
       display: block;
-      background: var(--navy-900);
+      background: rgb(0 0 0);
       color: var(--white);
       mix-blend-mode: multiply;
       opacity: var(--door-show, 0);
       pointer-events: none;
+    }
+
+    /* Navy around the letters, exactly: screen on black gives the navy, and the black letters leave the footage. */
+    .cover__door--tint {
+      background: var(--navy-900);
+      color: rgb(0 0 0);
+      mix-blend-mode: screen;
     }
 
     .cover__door-wrap {
@@ -899,6 +915,7 @@ const words = description.split(' ');
 
   .cover.is-entrance .cover__media {
     filter: contrast(1.16) saturate(0.94) brightness(0.42) blur(0.875rem);
+    will-change: filter; /* its focus pull (hero-entrance.ts) runs on its own layer */
   }
 
   /* The pointer drift waits too, so the letters land exactly on the headline; it eases back in. */
@@ -1102,6 +1119,12 @@ const words = description.split(' ');
       background:
         linear-gradient(to bottom, rgb(var(--navy-900-rgb) / 0.55), transparent 20%),
         linear-gradient(to top, rgb(var(--navy-900-rgb) / 0.92) 18%, rgb(var(--navy-900-rgb) / 0.55) 42%, transparent 62%);
+    }
+
+    /* As the word becomes the door its deep base fades, so the letters show the footage, not a navy as deep as the
+       door's own (the owner, 2026-11-18). */
+    .cover.has-door .cover__shade {
+      opacity: calc(1 - var(--swap, 0));
     }
   }
 

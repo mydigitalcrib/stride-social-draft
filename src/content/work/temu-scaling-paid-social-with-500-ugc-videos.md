@@ -21,6 +21,12 @@ videos:
   - src: /assets/video/flowdrive-XlaHBz0jbaLXA20tZIdSs.mp4
   - src: /assets/video/flowdrive-cnznWAeyJfibVyCx4TuIu.mp4
   - src: /assets/video/flowdrive-ZaoGEYi2ZsGFVD97RViJD.mp4
+  # Stride's own campaign videos, from "Brad X Stride Social updates" (2026-11-17), compressed for the site.
+  - src: /assets/video/case-temu-2.mp4
+  - src: /assets/video/case-temu-3.mp4
+  - src: /assets/video/case-temu-4.mp4
+  - src: /assets/video/case-temu-5.mp4
+  - src: /assets/video/case-temu-6.mp4
 brief: null
 strategy: null
 execution: null
@@ -43,4 +49,4 @@ seo:
 ---
 <!-- Original case study copy from the previous site, kept for the editorial rewrite. -->
 <p><strong>Temu</strong> is a leading e-commerce platform connecting manufacturers directly to consumers, making products more cost effective and accessible worldwide.</p><p>Our solution was to produce over <strong>500 UGC videos per campaign</strong> across categories including fashion, home, and outdoor products. Using our in-house studios and a network of creators, we managed everything from scripting to editing to backgrounds. Content was shot in realistic, relatable environments such as homes, outdoor spaces, and even factory settings to ensure variety and authenticity.</p><p>The results have been consistent, scalable, and conversion-driven, with Temu continuing as a valued client for more than two years.</p><p>&nbsp;</p>
-<p><em>At Stride Social we strive to bring the very best results to the brands we work with. Whether it's through our unique </em><a href="/our-services"><em>services</em></a><em> or our hand-picked </em><a href="/creators"><em>creator roster</em></a><em>. Our expertise comes from our unique </em><a href="/about"><em>story</em></a><em> and life experience in this space. If you would like to work with us on your campaign, then </em><a href="/contact"><em>get in touch.</em></a></p>
+<p><em>At Stride Social we strive to bring the very best results to the brands we work with. Whether it's through our unique </em><a href="/our-services"><em>services</em></a><em> or our hand-picked </em><a href="/talent"><em>creator roster</em></a><em>. Our expertise comes from our unique </em><a href="/about"><em>story</em></a><em> and life experience in this space. If you would like to work with us on your campaign, then </em><a href="/contact"><em>get in touch.</em></a></p>

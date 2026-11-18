@@ -111,6 +111,8 @@ const area = path === '/' ? -1 : Math.max(0, modes.findIndex((m) => m.key === mo
   <body>
     {/* The loading screen, first in the page so it's there before anything else (it only shows when a page is slow). */}
     <PageLoader />
+    {/* The cursor straight after it, so its script runs as the page is first drawn (the old arrow never shows). */}
+    <CursorBuddy />
     {headerOverlay && <div class="backdrop" aria-hidden="true" data-backdrop><Ambient /></div>}
     <a class="skip-link" href="#main">Skip to content</a>
     <SiteHeader path={path} overlay={headerOverlay} />
@@ -118,7 +120,6 @@ const area = path === '/' ? -1 : Math.max(0, modes.findIndex((m) => m.key === mo
       <slot />
     </main>
     <SiteFooter noDesk={noDeskFooter} />
-    <CursorBuddy />
     <ConsentBanner />
     <script>
       import { initSmoothScroll } from '@/scripts/system/smooth-scroll';

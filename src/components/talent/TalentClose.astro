@@ -6,46 +6,61 @@
 // page features, side by side across the whole row (through the roster's rules: consent, a photo). Full pictures, edge
 // to edge. Its line and its way in come with it. (`items` come from the page's copy; `key` says whose row it is.)
 // Big screens: its height, padding and the words' inset are in rem, so the rows grow with the type on 2K to 8K.
+// Draft 1 of Stride Social ends on the same row (the owner, 2026-11-18): `pictures` in place of the creators' faces,
+// its own `tone` and `label`, and `fit` (how many letters wide the line is set: 12 for "Join the roster.") for a
+// longer line.
 import { getEntry } from 'astro:content';
 import { getRoster } from '@/lib/roster';
 
 export interface Props {
   items: { key?: string; label: string; copy?: string; cta?: string; href?: string }[];
+  /** Pictures for the row's world, in place of the featured creators' faces. */
+  /** `position`: the part of a picture its narrow column keeps (object-position). */
+  pictures?: { src: string; position?: string }[];
+  tone?: string;
+  label?: string;
+  /** How many letters wide the line is set across the page (desktop and tablet), and on a phone. */
+  fit?: number;
+  fitPhone?: number;
 }
 
-const { items } = Astro.props;
+const { items, pictures, tone = 'talent', label = 'Work with Stride Talent', fit = 12, fitPhone = 6.6 } = Astro.props;
 // Creators: the faces of the creators Stride Talent's page features, by the roster's rules.
 const featured = (await getEntry('pages', 'talent'))?.data.sections.hero?.featured ?? [];
 const roster = await getRoster();
-const faces = featured
-  .map((id) => roster.find((c) => c.id === id))
-  .filter((c) => c?.data.portrait)
-  .slice(0, 7)
-  .map((c) => ({ name: c!.data.name, src: c!.data.portrait!.src }));
+const faces = pictures
+  ? pictures.slice(0, 7)
+  : featured
+      .map((id) => roster.find((c) => c.id === id))
+      .filter((c) => c?.data.portrait)
+      .slice(0, 7)
+      .map((c) => ({ src: c!.data.portrait!.src, position: undefined as string | undefined }));
 ---
 
-<section class="tclose" aria-label="Work with Stride Talent" data-tone="talent" data-look="deep" data-tclose>
+<section class="tclose" aria-label={label} data-tone={tone} data-look="deep" data-tclose style={`--fit: ${fit}; --fit-phone: ${fitPhone}`}>
   <ol class="tclose__rows" role="list">
     {items.map((i) => (
       <li class:list={['tclose__row', `tclose__row--${i.key ?? 'way'}`]}>
         <a class="tclose__link" href={i.href ?? '/talent/apply'}>
           <span class="tclose__world" aria-hidden="true">
-            {i.key === 'creators' && faces.length > 0 && (
+            {(i.key === 'creators' || pictures) && faces.length > 0 && (
               <span class="tclose__faces">
-                {faces.map((p, k) => <img src={p.src} alt="" sizes="16vw" loading="lazy" decoding="async" draggable="false" style={`--k: ${k}`} />)}
+                {faces.map((p, k) => <img src={p.src} alt="" sizes="16vw" loading="lazy" decoding="async" draggable="false" style={`--k: ${k}${p.position ? `; object-position: ${p.position}` : ''}`} />)}
               </span>
             )}
           </span>
           <span class="tclose__label">{i.label}</span>
-          <span class="tclose__side">
-            {i.copy && <span class="tclose__copy">{i.copy}</span>}
-            {i.cta && (
-              <span class="tclose__action exp-pill">
-                <span>{i.cta}</span>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
-              </span>
-            )}
-          </span>
+          {(i.copy || i.cta) && (
+            <span class="tclose__side">
+              {i.copy && <span class="tclose__copy">{i.copy}</span>}
+              {i.cta && (
+                <span class="tclose__action exp-pill">
+                  <span>{i.cta}</span>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
+                </span>
+              )}
+            </span>
+          )}
         </a>
       </li>
     ))}
@@ -108,7 +123,7 @@ const faces = featured
   .tclose__label {
     flex: none;
     font-family: var(--font-display);
-    font-size: min(calc((100vw - 2 * var(--margin) - 2 * clamp(0.75rem, 1.6vw, 1.75rem)) / 12), 13vh);
+    font-size: min(calc((100vw - 2 * var(--margin) - 2 * clamp(0.75rem, 1.6vw, 1.75rem)) / var(--fit, 12)), 13vh);
     font-weight: 850;
     font-stretch: var(--stretch-wide);
     line-height: 0.86;
@@ -212,13 +227,13 @@ const faces = featured
     transition: filter 900ms var(--ease-out);
   }
 
-  .tclose__row--creators:hover .tclose__faces,
-  .tclose__row--creators:focus-within .tclose__faces {
+  .tclose__row:hover .tclose__faces,
+  .tclose__row:focus-within .tclose__faces {
     translate: -4% 0;
   }
 
-  .tclose__row--creators:hover .tclose__faces img,
-  .tclose__row--creators:focus-within .tclose__faces img {
+  .tclose__row:hover .tclose__faces img,
+  .tclose__row:focus-within .tclose__faces img {
     filter: grayscale(0.2) contrast(1.05);
   }
 
@@ -257,7 +272,7 @@ const faces = featured
     .tclose__label,
     .tclose__rows:hover .tclose__row:not(:hover) .tclose__label,
     .tclose__rows:focus-within .tclose__row:not(:focus-within) .tclose__label {
-      font-size: min(clamp(2.75rem, 14vw, 6rem), calc((100vw - 2 * var(--margin) - 2 * var(--pad)) / 6.6));
+      font-size: min(clamp(2.75rem, 14vw, 6rem), calc((100vw - 2 * var(--margin) - 2 * var(--pad)) / var(--fit-phone, 6.6)));
       line-height: 0.9;
       white-space: normal;
       scale: none;
@@ -287,8 +302,8 @@ const faces = featured
 
     /* The faces, three across and two down, filling the panel. */
     .tclose__faces,
-    .tclose__row--creators:hover .tclose__faces,
-    .tclose__row--creators:focus-within .tclose__faces {
+    .tclose__row:hover .tclose__faces,
+    .tclose__row:focus-within .tclose__faces {
       inset: 0;
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -312,7 +327,7 @@ const faces = featured
 
     .tclose__label {
       white-space: nowrap;
-      font-size: min(6rem, calc((100vw - 2 * var(--margin) - 2 * var(--pad)) / 12));
+      font-size: min(6rem, calc((100vw - 2 * var(--margin) - 2 * var(--pad)) / var(--fit, 12)));
     }
 
     .tclose__faces {

@@ -2,7 +2,7 @@
 // whole case study over the canvas, without leaving the page. The tile grows into its picture (from where it was on
 // the screen to its place on the left, the picture inside keeping its proportions and starting as the tile showed it),
 // the canvas dims behind it, and the case rises in on the right, part after part, to read down (the wheel anywhere
-// over it, the up and down keys and the hand all read it on in one glide; a hairline beside it shows how far). Its
+// over it and the up and down keys read it on in one glide; a hairline beside it shows how far). Its
 // footage plays over the picture, if it has some, as stories do: a bar for each clip along the top, filling as it
 // plays, one clip running on into the next (the tile's own footage carrying on from where it was); a press on the
 // picture goes on to the next (on its left edge, back), a drag sideways does the same, and held, the clip waits. A tall
@@ -13,7 +13,7 @@
 // the left and right keys) swaps it in: its picture travels in from where it was waiting, this one goes to wait at
 // the other edge, and the next one along slides into the place it left. Escape, the close button or a click on the
 // dark around it closes it, the picture shrinking back into its tile. Meanwhile the page doesn't scroll and the
-// keyboard stays inside. The canvas can close it and read down it too (for the hand, through the camera).
+// keyboard stays inside. The canvas can close it and read down it too.
 // On a screen larger than 1920×1080 its distances grow with the root size, as the styles do (scale.ts).
 import { deskScale } from './scale';
 import { clamp, lenis, reduced } from './env';

@@ -32,7 +32,9 @@ One clip, played whole and round again behind the page (the same component and s
 
 | File | What it is | Source | Licence | Fetched |
 | --- | --- | --- | --- | --- |
-| `public/assets/video/stride-podcasts-studio.mp4` | The Back Side podcast's studio: one host, then two, then all three under the show's neon sign; 17.8 seconds | A screen recording the owner made on 2026-11-11 (1920 by 1080, 19 seconds, 21 MB) of an episode on the show's YouTube channel, "Why One Scandal Built YouTube, Lewis Helping The Police & ChrisMD's Theo Baker Tribute" (https://www.youtube.com/watch?v=lvcKHJ9vMeM, from about 3:19) | **Back Side's footage.** The show is on Stride's podcast deck, which says not every show on it is signed: needs the show's OK, or the owner's word that Stride has it | 2026-11-11 |
+| `public/assets/video/stride-podcasts-big6ix.mp4` | Stride Podcasts' background since 2026-11-18: The Big 6ix's studio, the hosts' reactions with the show's own cuts (a two-shot, the wide shot of all four under the lit MoB sign as one throws his arms up, laughter); 15.4 seconds, muted, 1280 by 720 | The owner's file of the show's YouTube episode "LONDON'S BURNING! 🔥🥵 (Man City 2-1 Arsenal)" (https://youtu.be/VcZkO8pkfQY, 720p), 15:40.35 to 15:55.7, chosen by us at the owner's request (2026-11-18; a first pick, 16:19.9 to 16:37.9, was swapped for this one the same day); the show is one of the page's own (`podcasts.yaml`) |
+| `public/assets/site/stride-podcasts-big6ix-poster.jpg` | The clip's first frame, shown before the footage loads and with reduced motion | Made from the clip |
+| (removed 2026-11-18) `public/assets/video/stride-podcasts-studio.mp4` | The Back Side podcast's studio, Stride Podcasts' background until The Big 6ix's took its place; its poster and wide frame below are still used by the Podcast Activations service page | |
 | `public/assets/site/stride-podcasts-poster.jpg` | The clip's first frame, shown before the footage loads and with reduced motion | Made from the clip | As the clip | 2026-11-11 |
 | `public/assets/site/stride-podcasts-studio-wide.jpg` | A frame from 13 seconds into the clip: all three hosts under the show's neon sign (1600 by 900) | Made from the clip with ffmpeg | As the clip | 2026-11-12 |
 
@@ -176,6 +178,7 @@ first moments fade in over its last, so the loop has no jump. Nothing else was c
 | File | What it is | Source | Licence | Fetched |
 | --- | --- | --- | --- | --- |
 | `public/assets/video/careers-blue.mp4` (+ `site/careers-blue-poster.jpg`) | Blue silk moving softly, close up; 18 seconds, 3 MB | Pexels video 7677240 by Mikhail Nilov, "Close-Up Video of a Blue Silk Cloth" (https://www.pexels.com/video/close-up-video-of-a-blue-silk-cloth-7677240/), the 1920×1080 file | Pexels License: free to use, commercial use included, no attribution required (as the clip's page says) | 2026-11-12 |
+| `public/assets/video/careers-blue-haze.mp4` | The same clip at 960 by 540, 1.5 MB, for the deep look's blur on desktop (core/BackVideo picks it up) | Made from `careers-blue.mp4` (2026-11-18) | As `careers-blue.mp4` | 2026-11-18 |
 
 Notes:
 
@@ -222,6 +225,74 @@ Notes:
   its first frame, and cut to the picture alone: no logo, figure or slide text. Their case studies' figures are not
   used anywhere with them.
 
+## Stride Social: Experiences & Audio's picture (`/social`, the Strategies deck)
+
+A podcast picture in place of the event photograph (`social-experiences.webp`, which the homepage's Social row still
+shows), until Stride has one of its own (the owner, 2026-11-17: "replace it with a podcast image; in the meantime use
+the first image I'm sending you").
+
+| File | What it is | Source | Licence | Fetched |
+| --- | --- | --- | --- | --- |
+| `public/assets/site/social-podcast-mic.jpg` | A vintage silver microphone on a stand against a purple and blue haze, 625 by 350 | Supplied by the owner in the chat on 2026-11-17 (saved as a JPEG, nothing else changed); where it was found isn't recorded | **Not recorded: confirm it's licensed for commercial use, or replace it, before launch** | 2026-11-17 |
+
+## Stride Social: the services' phones (`/social/services/<service>`)
+
+Each service's phone (`social/ServiceHero.astro`, `config/service-phones.ts`) plays footage already on the site: its
+case studies' own upright clips (the case studies' `videos`, from the old site's case studies) and the creators' reels
+the Social globe played (`config/creator-regions.ts`, shown by the roster's rules). Made from them on 2026-11-17, with
+ffmpeg, nothing else changed:
+
+| File | What it is | Source | Licence | Made |
+| --- | --- | --- | --- | --- |
+| `public/assets/video/flowdrive-{HeObIJFscD3ia8AzSLKMa,cjk8f6Yu4Q1YvH7zk4kNl,QoKOHwrVK7RH9jNgRN073,XlaHBz0jbaLXA20tZIdSs}-phone.mp4` | 540×960 copies of four 1080×1920 case-study clips (Holafly, Papaya Gaming, Temu), sound kept | The clips beside them | As the clips | 2026-11-17 |
+| `public/assets/site/phone-flowdrive-*.jpg` | The first frame of each upright case-study clip the phones play (13) | The clips | As the clips | 2026-11-17 |
+
+## Our Work: Stride's own campaign videos (2026-11-17)
+
+From the owner's document "Brad X Stride Social updates" (Google Docs; its first page left aside, as the owner asked):
+the case studies' videos, in the Drive folders and files its sheets link to, downloaded on 2026-11-17 and compressed
+with ffmpeg (upright, 720 wide, at most 40 seconds, sound kept; a first frame beside each as its poster). Stride's own
+campaign deliverables, made by the creators for these campaigns. They play in each case study (Our Work) and on the
+services' phones.
+
+| File | Case study | Source (Drive file) |
+| --- | --- | --- |
+| `public/assets/video/case-holafly-{1,2,3,4,5,7}.mp4` | Holafly | the creators' reels in the Holafly sheet's folders (`VIDEO-2025-06-30…`, `Reels.MOV`, `…VEED Export.mp4`, `Reels.mp4`, `FINAL REEL.mov`, `UPDATED reel (1).mov`) |
+| `public/assets/video/case-glam-{1,2}.mp4` | Glam AI | `Glam AI Reel.mp4`, `GLAM AI x MISSTECHY.mp4` |
+| `public/assets/video/case-papaya-{2,3,4}.mp4` | Papaya Gaming | `Brandon's No1.mp4`, `Solitaire Cash or CardV2…mp4`, `solitaire.mp4` |
+| `public/assets/video/case-temu-{2,3,4,5,6}.mp4` | Temu | `V1 food processor`, `V1 kitchen storage`, `V1 storage boxes`, `V1 LED`, `V1 pans` |
+| `public/assets/video/case-glam-ig-*.mp4` (8) | Glam AI | the creators' own reels the Glam AI sheet links to on Instagram (@adam.godigital, @aitrendz.xyz, @digitalrajas.ai, @maskedguyai, @menu.design.jor, @microotech007, @_raviranjan_singh, @uxui_shrut), fetched through Instagram's public embed on 2026-11-17 |
+| `public/assets/video/case-trainpal-1.mp4` | TrainPal | The Fellas, "FULL POD EP.194" on YouTube (D0q7IZSAlIk), 0:12–0:52: the episode's sponsored read for TrainPal; YouTube gave only 360p to the tool used (yt-dlp), so a sharper copy from the creators or the client can replace it |
+| `public/assets/site/case-*.jpg` | (each video's first frame) | made from the videos |
+
+Not taken: drafts and the folder marked "need review"; a Holafly reel that is a screen recording with Instagram's
+editor over it; two 1.85 GB Papaya "AIRPORT" masters; the Temu product folders (about 280 raw cuts in three shapes).
+Of the Glam AI sheet's 21 Instagram links, two posts are gone, three gave no video, the profile link isn't a video,
+seven came only at 360p and one shows another brand's product (a Coca-Cola can), so those were left out. The Overdub
+sheet lists TikTok profiles, not videos: two no longer exist or show nothing, and TikTok refused the downloads from
+the others after the first (which was already on the site). Five downloads were already on the site, byte for byte (Comfelie's two, Papaya's and Temu's upright
+clips, and Greene King's pub clip, which the document lists under Comfelie's section).
+
+## Stride Talent: its Instagram profile (`/talent`, the opening)
+
+`talent/InstaProfile.astro` recreates instagram.com/stridetalent (the owner, 2026-11-17). Stride's own posts:
+
+| File | What it is | Source | Fetched |
+| --- | --- | --- | --- |
+| `public/assets/site/ig-stridetalent-<code>.jpg` (6) | The grid's pictures, 720 wide: each post's first picture, its cover (the owner, 2026-11-17), for DdlvXYSDAfo, DBiRc6gT8pQ, DV_Bl8jjM1G, DZFWP_NjGfN, DbViw-ijPc9 and `creators-say` | @stridetalent's posts through Instagram's public embeds and savefrom.net; `creators-say` is the owner's own picture (below) | 2026-11-17 |
+| `public/assets/site/ig-stridetalent-<code>-<n>.jpg` (31) | Every picture of the grid's six posts, for the profile's own post viewer, each up to 1080 wide: DdlvXYSDAfo 6, DBiRc6gT8pQ 3, DV_Bl8jjM1G 7, DZFWP_NjGfN 6, DbViw-ijPc9 5, and `creators-say` 4 ("What creators say about Stride": its cover, then the quotes of Justice Buys, Sam Shan Shops and Jack Chalmers, as Stride designed them) | @stridetalent's posts, downloaded from Instagram's servers on 2026-11-17 at the owner's request (the links found through savefrom.net); `creators-say` supplied by the owner in the conversation on 2026-11-18, in place of the Karla's signing post (DfZnRCZjOSt), and not found on the profile yet | 2026-11-17 |
+| `public/assets/video/ig-stridetalent-reel-<code>.mp4` (46) + `public/assets/site/ig-stridetalent-reel-<code>.jpg` (46) | The Reels tab's case studies: each @stridetalent case-study reel whole (576 wide, H.264 with AAC sound, faststart; 198 MB in all) and its Instagram cover (720 wide), from the newest, DfpD4rnpsor, down to DUsXDqUjAEj (the codes are in `src/config/stride-instagram.ts` `reels`); each also has its first frame, `ig-stridetalent-reel-<code>-first.jpg`, the poster wherever it plays as a story or in /social's feed, so the cover never flashes; sixteen of them also play in their niches' stories (talent2.yaml) | @stridetalent's own reels, instagram.com/stridetalent/reels, downloaded from Instagram's own servers through savefrom.net (the owner's suggestion) | 2026-11-18 |
+| `public/assets/site/stride-story-{1..13}.jpg` + `public/assets/video/stride-story-{10..13}.mp4` | The profile picture's own stories: nine pictures of the Stride team at events (up to 1080 wide; 1 the Ideal Home Show, 2 The Baby Show, 3 a brands day with momo kombucha and Spill the Beans, 4 Insta360, 5 Laifen at CES, 6 the Influencer Marketing Show, 7 TikTok in Cannes, 8 and 9 ICE London) and four clips (720 wide, up to 30 seconds, with a poster of the same number: 10 the Bali office, 11 Bali × IFA Berlin, 12 and 13 VivaTech) | Stride's own Instagram stories, the owner's files | 2026-11-18 |
+| `public/assets/video/stridesociall-reel-<code>.mp4` (20) + `public/assets/site/stridesociall-reel-<code>.jpg` and `-first.jpg` | Stride Advertising's feed (/social): twenty of Stride Social's own case-study reels, the best-known brands among them (McDonald's, Coca-Cola, Opera, Temu, MUBI, Megalopolis, Nebula by Anker, SKIN1004, Dreame, Block Blast, Cosori, Ecovacs, EZVIZ, Printful, Gauth, Talkie AI, Printify, TrainPal, Saily, Ulike), each whole (576 wide, H.264 with AAC, faststart; 78 MB in all), its Instagram cover (720 wide, "case study: <brand>") and its first frame (the poster); codes in `src/config/stride-social-instagram.ts` | @stridesociall's own reels, instagram.com/stridesociall/reels, downloaded from Instagram's own servers through savefrom.net (the owner's suggestion) | 2026-11-18 |
+| `public/assets/site/social-strategy-bg.jpg` | The background of the strategy posts on /social: navy with Stride's triangles faint in it, 941×1672 | The owner's own image | 2026-11-18 |
+| `public/assets/site/case-temu-2-first.jpg`, `public/assets/site/flowdrive-VDbaPLrkg8ffAjqF0f0AG-first.jpg` | First frames of the Temu and Comfelie case-study clips, the posters of /social's UGC Production and TikTok Shop slides | Made from Stride's own clips already on the site | 2026-11-18 |
+| `public/assets/site/social-service-<id>.jpg` (7) | /social's thumbnail for each Stride Social service (sidebar and Details), a 200px square frame of the video its picture slide plays | Made from Stride's own videos already on the site | 2026-11-18 |
+| `public/assets/site/stride-logo-square.png` | Stride's logo, the mark in ice blue on navy, 150×150: the avatar beside every post on /social | The owner's own file | 2026-11-18 |
+| `public/assets/site/stridegram-logo-white.png` | The "Stridegram" logo (Stride's mark and the word in script), in white on transparent, 1040×224, for the profile's top centre | The owner's logo file (navy on white), cropped to its ink and turned white with ffmpeg | 2026-11-17 |
+| `public/assets/video/talent-{lifestyle-1,beauty-2,sport-1,sport-3,sport-4,fitness-3,tech-3}.mp4` + their posters in `public/assets/site/` | The owner's clips whose creators are confirmed (seven: fitness-1, @itsmetiffd's Tendergreens date night, was removed by the owner), each under its creator's name, photo and page (`creator` in talent2.yaml): lifestyle-1 a winter morning routine (an INIU ad, @kawaiiimin, roster `kawaiimln`), beauty-2 a swim turban promotion (@justchillkay, `justchillkaylin`), sport-1 a Get The Label sketch (@tomallenfootball), sport-3 a tennis coaching app (@sam_tennis42, `samtennis`), sport-4 a Nike boots unboxing (@ljcollects), fitness-1 a Tendergreens date night (@itsmetiffd), fitness-3 a Gymshark run (@cameronblackk), tech-3 a Zelda Switch 2 unboxing (@hylianpeapod). Each its first 30 seconds or less, H.264/AAC with a poster | Supplied by the owner on 2026-11-17 from their downloads; creators confirmed by the owner the same day. The owner's other twelve clips (no known creator) were dropped. Brand deals' terms to be checked before launch | 2026-11-17 |
+| `public/assets/video/talent-<niche>-<handle>.mp4` + their posters in `public/assets/site/` | Each niche's stories after the owner's own clips: the latest reel marked as an ad ("Paid partnership" or #ad) of creators on Stride's roster sheet, under the creator's name, photo and page, each in the niche its subject belongs to (the owner moved several between niches and dropped a few, 2026-11-17; Beauty's, Fitness's, Family's, Food's and Gaming's later additions were found as ads about the niche itself, Gaming's by looking further back; two are borderline: soyas_sauce's is SEA LIFE's Animal Crossing event, realjgf's a pool game that pays out money). Lifestyle: bhavanachowdaryy Dfzt9A4ItY6, nursenoriii DffxXnpOGj1, christine_shine Dfx9mF6xsST, brennancjennings DfmufHqxuk6. Sport: joe_ashman Df2cRO5RNXv, thehijabiballer Dfr7mveq438, addaepaponette DeH_HEuuaAb. Beauty: amberhollyregel DfHQURgAAs6, minksbyv DfSJ4LdBk6U, yasminwild Df2hpWMTo_j, quinciesimone_ DL8JvrmRO3n, iamsamanthabraham DeMqGzACksK, thejenniejenkins DfNWIJFIJN6, curlygirl_45 DfFyZWKy8Y_. Fitness: samanthabarlow.fitness Dfa0FnuRjxO, mitchsercombe Dfm9kfkK3xd, lucykentfit Df1o_1VKvyU, karlatafra DVBw8VignL6, sainasante DbtcqxOzqOG. Tech: andrewjpdiaz Dfz-fQ_GROD, justin_joseph_espejo DfzbIQDoL5E, jaes.tech DfsixF0qRiO, jeorgepaolo_ De9PdvtODzI, faithyymariee DeZ07-tuTAq. Entertainment: spencer, stchabz DcYZmDuRozN (a pilates comedy bit made with Pakt Fitness, a joint post with no ad label: the owner's choice, 2026-11-18, as no roster creator had a marked ad that is also entertainment).sebastian.yang DfS3YS4oXQW, lsclarky Dfm7Ju5umTm, jayyduran_ DajJhG7Bisy, tylerqxail DT_TrMPjO45. Fashion: lauradopamineoutfits Dfl5upXIyhU, fernalizz DfchzrpS7ty, beatriceturner DfDGJBvgvcB, mimijacksonfit DfARUKNNLMV, miacaven Df0H4KYsQNK, alyssaknight.bc Df2eMupgikK. Travel: bethnicole.2 DfhkDgUOSrB, taylortakesprague DfNZaqLARtD, alyanna.ross DetCUSeh0Jc, vanlife.with.ravi Dei4vZJTBcI, twinpassporttales Dfhp6SsxWNn. Family: paigetbrown DezmSASzDQi, glutenfreefi Dew9-XQuGa_, heidiixoxo Ddwx68yM1-5, hannahburnns DfulbnLB0wv, bristolwiththeboys Dfz_geSNiIL. Food: jimladofficial DfpPNdtIwy5, hijabieatslondon De6iTgxN8Bk, acegamergirl Df2fLjQK3ET, jamesholt.ig Da8W-jkMnM8, wellwithkaija DfHwbWpgxHn, theninadaily Dcd7q7xT8En. Books: blossomingbookss Dfr94-exeE9, lit.by.adam DfckZh7s_2b, abookblog.bytay Dd9NZdPhN5b, shereadsandtravels DdRv0HiI9zC, mxzwastaken DVgrYggiPjO. Gaming: steamflow1 Detn9YLT2Oa, soyas_sauce Da8Qhsao-cZ, realjgf DZnNJQ9uraS, nishgames CwnT9DwLWQX. Art and DIY: yourlifeiswhatyoumakeit Df0NVfNuhbu, whythepigment.studio Dfpn6CRozBi, hannahroseyb DfZ0U9fJ9ef, bofenglin DcwAd4sIXF7, erinjayee DbLGW3-tyQ8. Each its first 30 seconds, 720 wide, H.264/AAC with a poster | The creators' own Instagram reels (instagram.com/reel/<code>), downloaded from Instagram's servers on 2026-11-17/18 at the owner's request (the links found through savefrom.net). Creators on Stride's roster; the brands' deal terms to be checked before launch | 2026-11-17 |
+| `public/assets/site/stride-talent-avatar.svg` | The clips' face in the story player: Stride's mark in ice on navy, as the profile's picture | Drawn for the site | 2026-11-17 |
+
 ## Our Sponsorships: the events' photographs (`/sponsorships`)
 
 Supplied by the owner on 2026-11-12 in the conversation, with their captions; saved as JPEG at the size they came
@@ -265,3 +336,13 @@ Every article's cover (`public/assets/insights/<article>.jpg`, 42) was drawn for
 grain, laid out from the article's own name so no two are alike. Nothing in them comes from anyone else, so they
 need no licence. The script that made them is not part of the site; replace any of them with a real picture whenever
 there is one (the article's `cover`). The old covers stay where they were, unused.
+
+
+## Light copies for blurred backgrounds (2026-11-18)
+
+Pages on the deep look show their footage blurred into soft light, so on desktop `core/BackVideo.astro` plays a light copy where one sits beside the file (`-haze.mp4`). They're the same footage, re-encoded smaller, under the same terms as the original.
+
+| File | What it is | Made from |
+|---|---|---|
+| `public/assets/video/stride-showreel-haze.mp4` | The showreel at 960 by 540, muted, a keyframe a second (so About's player can scrub it), 2.2 MB in place of 16 | `stride-showreel-desktop.mp4` |
+| `public/assets/video/careers-blue-haze.mp4` | Careers' blue silk at 960 by 540, 1.5 MB | `careers-blue.mp4` |

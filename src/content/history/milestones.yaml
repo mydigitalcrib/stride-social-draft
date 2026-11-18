@@ -16,14 +16,14 @@
     - src: /assets/history/2019-alxhendy-1.jpg
       video: /assets/video/history-2019-alxhendy-1.mp4
       alt: "A still from @alxhendy's TikTok prank I kissed his GF: two friends playing a lie-detector game in a garden"
-      caption: "@alxhendy on TikTok"
+      # The figure is the owner's (2026-11-18), in place of "@alxhendy on TikTok".
+      caption: "+5.5M followers on TikTok"
     - src: /assets/history/2019-alxhendy-2.jpg
       video: /assets/video/history-2019-alxhendy-2.mp4
       alt: "A still from @alxhendy's TikTok Sour Candy Prank On sister: a tube of super sour sweets held up to the camera"
-  # His profile, previewed over the page from a button (the owner, 2026-11-13).
-  tiktok: alxhendy
+  # No button previewing his TikTok profile since 2026-11-18 (the owner: "remove the 'see alexhendy on tiktok' button").
   status: verified
-  source: Stride's history, from the owner (2026-11-13); the videos are Alex's own TikToks
+  source: Stride's history, from the owner (2026-11-13); the videos are Alex's own TikToks; his TikTok following (+5.5M) from the owner (2026-11-18)
   order: 1
 - id: m2021
   year: 2021

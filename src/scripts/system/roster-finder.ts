@@ -2,13 +2,13 @@
 // second tap takes the shot), the photocall's camera
 // on the roster: over the photographs the pointer is a viewfinder that locks onto the one under it, with their name and
 // what a click does. A click on a photograph takes the shot: the creator goes into the shortlist (the card's own keep
-// button, so shortlist.ts keeps the list) with a flash, the shutter and their print flying into the tray (shot.ts); a
+// button, so shortlist.ts keeps the list) with the shutter and their print flying into the tray (shot.ts); a
 // second click takes them out. A click on a name opens their profile over the page (creator-sheet.ts); the card's own
 // buttons and links work as ever.
 // - The keyboard gets the same camera: focus on a card's name or button aims the viewfinder at it.
 // - A press on a photograph (or Space and Enter on a card's button) half-presses the shutter: the viewfinder closes in
 //   and the photo hunts for focus once; the release takes the shot.
-// - The flash on a photo comes once the viewfinder has settled on it, and never more than about two a second.
+// - No camera flash, on the photo or the wall (the owner, 2026-11-18: "very distracting").
 // - A creator added in any roster on the page gets their ring drawn round them, and taken out it unwinds (the styles are
 //   RosterBrowser.astro's: .is-selecting, .is-blooming, .is-unselecting).
 import { takeShot } from './shot';
@@ -16,8 +16,6 @@ import { uiScale } from './scale';
 import { reduced, tapWords } from './env';
 
 const FOLLOW = 0.24;
-const FLASH_DWELL = 140; // ms the viewfinder rests on a photo before its flash
-const FLASH_REST = 450; // ms: at most one flash in this long
 const SWEEP = 520; // ms: the ring drawn round a creator added (as in the component)
 const UNSWEEP = 300; // ms: and unwound
 
@@ -81,8 +79,6 @@ export function shootOnClick(grid: HTMLElement, after?: () => void) {
         const photo = c.querySelector<HTMLImageElement>('.ccc__photo img');
         const rect = (c.querySelector('.ccc__photo') ?? c).getBoundingClientRect();
         takeShot({ rect, src: photo?.currentSrc || photo?.src || '', name: c.getAttribute('aria-label') ?? '', id: keep.dataset.keepId });
-        // The wall behind catches the flash (TalentWall.astro).
-        document.dispatchEvent(new CustomEvent('talent:flash', { detail: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, size: Math.max(rect.width, 200 * uiScale()), power: 1 } }));
         c.querySelector('.ccc__photo')?.animate([{ scale: '1' }, { scale: '1.05' }, { scale: '1' }], { duration: 420, easing: 'cubic-bezier(0.2, 1.4, 0.4, 1)' });
       }),
     );
@@ -109,8 +105,6 @@ export function initRosterFinders() {
     let placed = false;
     let raf = 0;
     let last = 0;
-    let dwell = 0;
-    let flashed = -Infinity;
 
     const say = () => {
       nameEl.textContent = card?.getAttribute('aria-label') ?? '';
@@ -145,28 +139,16 @@ export function initRosterFinders() {
       raf = requestAnimationFrame(frame);
     };
 
-    // The flash on a photo, once the viewfinder has settled there (and not too soon after the last).
-    const flash = (c: HTMLElement) => {
-      if (c !== card) return;
-      flashed = performance.now();
-      c.classList.remove('is-flashing');
-      c.classList.add('is-flashing');
-      window.setTimeout(() => c.classList.remove('is-flashing'), 460);
-    };
-
     const aim = (c: HTMLElement | null) => {
       if (c === card) return;
       card?.classList.remove('is-aimed');
       card = c;
       card?.classList.add('is-aimed');
-      window.clearTimeout(dwell);
       if (card && !reduced()) {
         finder.classList.remove('is-locking');
         void finder.offsetWidth;
         finder.classList.add('is-locking');
         window.setTimeout(() => finder.classList.remove('is-locking'), 240);
-        const settled = card;
-        dwell = window.setTimeout(() => flash(settled), Math.max(FLASH_DWELL, flashed + FLASH_REST - performance.now()));
       }
     };
 

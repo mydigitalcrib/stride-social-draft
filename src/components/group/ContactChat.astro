@@ -266,8 +266,8 @@ const flow = JSON.stringify({ name: t('chat.name'), email: t('chat.email'), emai
       translate 300ms var(--ease-out);
   }
 
+  /* No lift when pointed at (the owner, 2026-11-18: "I like the button, not the movement"). */
   .chat__answer:hover {
-    translate: 0 -2px;
     background: rgb(var(--tone-lit));
     color: rgb(var(--tone-on));
   }
@@ -429,10 +429,6 @@ const flow = JSON.stringify({ name: t('chat.name'), email: t('chat.email'), emai
 
     .chat__answer {
       min-height: 2.5rem;
-    }
-
-    .chat__answer:hover {
-      translate: 0 -0.125rem;
     }
 
     /* What you sent, on its way into the conversation (contact-chat.ts): a copy of your bubble, the pill's glass on

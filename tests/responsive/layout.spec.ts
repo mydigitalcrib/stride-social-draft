@@ -33,9 +33,9 @@ for (const path of PAGES) {
   for (const width of [...PHONE_WIDTHS, ...TABLET_WIDTHS]) {
     test(`${path} @${width}`, async ({ page }, info) => {
       test.skip(!widthsFor(info.project.name).includes(width), 'not this device');
-      // The heaviest pages (the roster's hundreds of creators, Talent's photocall): Playwright's WebKit on Windows needs
+      // The heaviest page (Talent's profile, its rosters and stories): Playwright's WebKit on Windows needs
       // longer to draw them.
-      if (path === '/talent/roster' || path === '/talent') test.slow();
+      if (path === '/talent') test.slow();
       const errors: string[] = [];
       page.on('pageerror', (e) => errors.push(e.message));
       // Not the page's: the network (pictures from elsewhere, embeds) and the test browser's lack of an audio device

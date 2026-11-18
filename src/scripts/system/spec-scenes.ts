@@ -1,7 +1,6 @@
 // What Stride Sport, Stride Podcasts and Stride Speakers share on every screen (talent/SpecialistPage.astro): the division's
 // figures below the headline count up from nothing as the page opens (straight to them under reduced motion); and the
-// tray of creators picked steps away while a scene it would cover is on screen ([data-tray-away]: the squad, the dial,
-// the slides).
+// tray of creators picked steps away while a scene it would cover is on screen ([data-tray-away]: the slides).
 import { whenLoaded } from './loaded';
 import { reduced } from './env';
 const COUNT_FROM = 700; // ms after the page starts
