@@ -84,7 +84,7 @@ const mark = '<svg viewBox="0 0 106 106" aria-hidden="true"><path d="M53 53H0L53
           <span class="shero__island" aria-hidden="true"></span>
           {clips.map((c, i) => (
             <figure class:list={['shero__clip', { 'is-on': i === 0 }]} data-shero-clip={i} aria-hidden={i === 0 ? undefined : 'true'}>
-              <video muted playsinline preload={i === 0 ? 'metadata' : 'none'} poster={c.poster} aria-label={c.label} tabindex="-1" data-shero-video>
+              <video muted playsinline preload={i === 0 ? 'metadata' : 'none'} poster={c.poster} aria-label={c.label} tabindex="-1" data-shero-video data-sound="own">
                 <source src={c.src} type="video/mp4" />
               </video>
               <figcaption class="shero__meta">

@@ -810,34 +810,3 @@ html::-webkit-scrollbar-corner {
   color: rgb(var(--press-on));
 }
 
-/* A camera shot (src/scripts/system/shot.ts): the press print that flies into the shortlist (no flash since
-   2026-11-18). Only desktop takes shots, so the print is sized in rem (it grows with the screen). */
-.shot-print {
-  position: fixed;
-  z-index: 120;
-  display: grid;
-  gap: 0.4375rem;
-  padding: 0.5rem 0.5rem 0.6875rem;
-  border-radius: 0.1875rem;
-  background: linear-gradient(180deg, #f6f8fa, #e7ecf0);
-  box-shadow: 0 2.125rem 3.75rem -1.5rem rgb(0 0 0 / 0.9);
-  pointer-events: none;
-}
-
-.shot-print img {
-  width: 100%;
-  aspect-ratio: 4 / 5;
-  object-fit: cover;
-  object-position: 50% 25%;
-}
-
-.shot-print span {
-  overflow: hidden;
-  font-family: var(--font-mono);
-  font-size: 0.5625rem;
-  letter-spacing: 0.12em;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: rgb(16 24 42 / 0.75);
-}

@@ -127,6 +127,7 @@ const area = path === '/' ? -1 : Math.max(0, modes.findIndex((m) => m.key === mo
       import { initReveal } from '@/scripts/system/reveal';
       import { initRevealLines } from '@/scripts/system/reveal-lines';
       import { initParallax, initMagnetic } from '@/scripts/system/motion';
+      import { initSound } from '@/scripts/system/sound';
       // Ready: and if the safety net in the head gave up on a slow load, put `js` back, or anything styled for it
       // (the desktop layouts that need the scripts) stays in its no-script version.
       document.documentElement.classList.add('js', 'motion-ready');
@@ -136,6 +137,8 @@ const area = path === '/' ? -1 : Math.max(0, modes.findIndex((m) => m.key === mo
       initRevealLines();
       initParallax();
       initMagnetic();
+      // Every video's sound on, one voice at a time, from the visitor's first click (sound.ts).
+      initSound();
     </script>
   </body>
 </html>

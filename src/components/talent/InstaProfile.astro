@@ -376,7 +376,7 @@ const mark = '<svg viewBox="0 0 106 106" aria-hidden="true"><path d="M53 53H0L53
       <dialog class="igv igv--reel" data-igp-reels aria-label={`@${ig.handle}: case studies`}>
         <div class="igv__box">
           <div class="igv__media">
-            <video class="igv__video" playsinline loop preload="none" data-igr-video />
+            <video class="igv__video" playsinline loop preload="none" data-igr-video data-sound="own" />
             <button class="igv__play" type="button" aria-label="Pause" data-igr-play>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5Z" /></svg>
             </button>
@@ -1799,6 +1799,7 @@ const mark = '<svg viewBox="0 0 106 106" aria-hidden="true"><path d="M53 53H0L53
   import { initTalentStories } from '@/scripts/system/talent-stories';
   import { lenis, reduced } from '@/scripts/system/env';
   import { whenLoaded } from '@/scripts/system/loaded';
+  import { setSoundWanted, soundWanted } from '@/scripts/system/sound';
   // The highlights play their niche's stories (Talent 2.0's player).
   initTalentStories();
   // Posts shows them all; Reels only the reels. While the section is under the header (the top strip of the screen),
@@ -2085,7 +2086,7 @@ const mark = '<svg viewBox="0 0 106 106" aria-hidden="true"><path d="M53 53H0L53
     const prev = dialog.querySelector<HTMLButtonElement>('[data-igr-step="-1"]')!;
     const next = dialog.querySelector<HTMLButtonElement>('[data-igr-step="1"]')!;
     let at = 0;
-    let muted = false;
+    let muted = !soundWanted(); // sound on unless the visitor turned it off anywhere (sound.ts)
     let frame = 0;
 
     const setMuted = (m: boolean) => {
@@ -2138,6 +2139,7 @@ const mark = '<svg viewBox="0 0 106 106" aria-hidden="true"><path d="M53 53H0L53
     });
     sound.addEventListener('click', () => {
       setMuted(!muted);
+      setSoundWanted(!muted);
       if (video.paused) start();
     });
     [prev, next].forEach((b) => b.addEventListener('click', () => show(at + Number(b.dataset.igrStep))));

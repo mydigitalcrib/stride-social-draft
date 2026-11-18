@@ -10,8 +10,8 @@
 // squad on a pitch went on 2026-11-18, the owner: "I don't like the graphics"). Stride Podcasts: an ON AIR sign (PodcastOnAir; no
 // waveform, count or radio dial since 2026-11-13, the owner's call). Stride Speakers: its
 // speakers as a studio's monitor with a broadcast caption, and where they've spoken as slides on the stage's screen
-// with a laser pointer (SpeakerStage). Everywhere a click adds a creator to "Meet our talents" and a name opens their
-// profile over the page (CreatorSheet). Phones and tablets have the same scenes (the owner, 2026-11-13: phones rebuilt
+// with a laser pointer (SpeakerStage). Everywhere a click on a creator opens their profile over the page (CreatorSheet;
+// the "Meet our talents" tray they used to be added to went on 2026-11-18, the owner). Phones and tablets have the same scenes (the owner, 2026-11-13: phones rebuilt
 // from the desktop), laid out for their screens, a tap doing what a click does.
 // As the page first opens (a fresh visit at its top, not with reduced motion), the lights come up on cue:
 // Stride Sport's floodlights clunk on in three banks before its LED board powers up; Stride Speakers' house lights go
@@ -28,7 +28,6 @@ import { creatorView, nicheLabels } from '@/lib/creator-view';
 import { getCollection } from 'astro:content';
 import { routes } from '@/lib/routes';
 import { interfaceCopy } from '@/lib/ui-copy';
-import Tray from '../experience/Tray.astro';
 import CreatorSheet from './CreatorSheet.astro';
 import RosterBrowser from './RosterBrowser.astro';
 import SportBoard from './SportBoard.astro';
@@ -290,8 +289,7 @@ const deskPlacements = page === 'speakers' && seen.length > 0;
     frontmatter's `reels`), fixed behind everything, sharp, under the grain and a navy that is deepest behind the
     words. Two shots of one moment each play their part (data-from, data-to) and dissolve into the other; one shot
     alone plays whole and goes round (spec-reel.ts). */}
-{/* The creators picked ("Meet our talents") and their profiles over the page. */}
-<Tray list="creators" />
+{/* The creators' profiles over the page. */}
 <CreatorSheet data={sheetData} />
 
 {reel ? (

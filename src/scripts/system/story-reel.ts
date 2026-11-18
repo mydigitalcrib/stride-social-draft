@@ -673,6 +673,8 @@ export function initStoryReel() {
   // Out of the story at either end: the page's own scroll takes over.
   const leaving = (dir: number) => (dir > 0 && heading() >= n - 1) || (dir < 0 && heading() <= -1);
   window.addEventListener('wheel', (e) => {
+    // Over the dial at the edge, the wheel is the dial's (it turns, edge-nav.ts): not a step of the story.
+    if ((e.target as Element | null)?.closest?.('[data-radial]')) return;
     if (!canStep() || e.ctrlKey || Math.abs(e.deltaY) < Math.abs(e.deltaX) || !e.deltaY) return;
     const dir = Math.sign(e.deltaY);
     const now = performance.now();

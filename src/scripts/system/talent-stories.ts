@@ -11,6 +11,7 @@
 // goes to the roster page) or the next niche ("Keep watching").
 import { lenis, reduced } from './env';
 import { whenLoaded } from './loaded';
+import { setSoundWanted, soundWanted } from './sound';
 
 // `end`: the card after a niche's last story, offering its full roster (the owner, 2026-11-18). `pic`: a story's own
 // picture when it isn't the face beside the name; `alt`, what it shows. A niche that's `own` is a profile's own stories
@@ -21,7 +22,6 @@ type Niche = { k: string; l: string; ids: string[]; own?: boolean };
 type Data = { creators: Story[]; niches: Niche[]; words: Record<string, string> };
 
 const SEEN = 'stride:stories-seen';
-const SOUND = 'stride:stories-sound';
 const PHOTO_MS = 6000; // a photograph's story
 const MAX_CLIP_S = 30; // a clip's story lasts its own length, up to this
 const HOLD_MS = 220; // a press held this long pauses instead of going on
@@ -190,7 +190,9 @@ function initPlayer(root: HTMLElement, el: HTMLElement, data: Data) {
   let pushed = false;
   let landing: string | null = null; // the address to settle on once a Back of ours has landed
   let opener: HTMLElement | null = null;
-  let muted = sessionStorage.getItem(SOUND) !== 'on';
+  // Sound on (the owner, 2026-11-18), unless the visitor turned it off on a sound button anywhere (sound.ts); a story
+  // opens with a click, so the browser allows it.
+  let muted = !soundWanted();
   let raf = 0;
 
   const queue = () => niches[ni].ids;
@@ -276,6 +278,7 @@ function initPlayer(root: HTMLElement, el: HTMLElement, data: Data) {
       const v = document.createElement('video');
       Object.assign(v, { muted, playsInline: true, preload: 'auto', poster: c.vp ?? c.p, src: c.v });
       v.setAttribute('aria-hidden', 'true');
+      v.dataset.sound = 'own';
       media.append(v);
     } else {
       const img = document.createElement('img');
@@ -491,11 +494,7 @@ function initPlayer(root: HTMLElement, el: HTMLElement, data: Data) {
     }
     if (t.closest('[data-sf-sound]')) {
       muted = !muted;
-      try {
-        sessionStorage.setItem(SOUND, muted ? 'off' : 'on');
-      } catch {
-        /* fine */
-      }
+      setSoundWanted(!muted);
       return sync();
     }
   });
@@ -514,6 +513,7 @@ function initPlayer(root: HTMLElement, el: HTMLElement, data: Data) {
     }
     if ((e.key === 'm' || e.key === 'M') && video) {
       muted = !muted;
+      setSoundWanted(!muted);
       return sync();
     }
     if (e.key === 'Tab') {

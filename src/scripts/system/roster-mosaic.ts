@@ -2,10 +2,10 @@
 // around the pointer (on touch, around the photograph tapped; a second tap there takes the shot). The photograph under it grows and comes into colour with its name; its neighbours are eased aside
 // and half in colour, the light falling off with distance; the rest stay small, in black and white. Every value glides
 // to where it should be a share of the way each frame, so it never jumps. A click on a photograph adds the creator, with
-// the camera's shot (roster-finder.ts); a name opens their profile (creator-sheet.ts). The keyboard gets the same swell:
+// their profile (roster-finder.ts); a name opens their profile (creator-sheet.ts). The keyboard gets the same swell:
 // the card in focus is the one it swells around. Still under reduced motion: the one pointed at simply comes into colour
 // (RosterBrowser.astro).
-import { shootOnClick } from './roster-finder';
+import { openOnClick } from './roster-finder';
 import { uiScale } from './scale';
 import { reduced } from './env';
 
@@ -21,7 +21,7 @@ export function initRosterMosaics() {
     const grid = root.querySelector<HTMLElement>('[data-roster-grid]');
     if (!grid || grid.dataset.mosaic) return;
     grid.dataset.mosaic = 'true';
-    shootOnClick(grid);
+    openOnClick(grid);
 
     let tiles: Tile[] = [];
     let size = 200;
@@ -112,7 +112,7 @@ export function initRosterMosaics() {
       sync();
     });
     // A finger: its tap swells the sheet round the photograph it touched (it stays until another tap, or a tap
-    // elsewhere); a second tap on the same photograph takes the shot (the click goes on to shootOnClick).
+    // elsewhere); a second tap on the same photograph opens their profile (the click goes on to openOnClick).
     let aimedBefore = false;
     let byTouch = false;
     grid.addEventListener('pointerdown', (e) => {

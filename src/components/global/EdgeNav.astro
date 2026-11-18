@@ -13,7 +13,8 @@
 // (global/SiteHeader.astro); both share the active area. Behaviour: src/scripts/system/edge-nav.ts.
 // From page to page it keeps its spring (desktop): it starts where the last page's arc was and turns on to this
 // page's area (the inline script below draws it there before the first paint), the mark at its hub turning with it
-// and the capsule giving a little as it goes. Hovering or focusing it brings the faded areas up, eased.
+// and the capsule giving a little as it goes. Hovering or focusing it brings the faded areas up, eased. The wheel over it
+// turns it without scrolling the page (data-lenis-prevent), and dragging or scrolling it knocks softly at each area.
 import { modes, type ModeKey } from '@/config/navigation';
 
 export interface Props {
@@ -29,7 +30,7 @@ const active = home ? -1 : Math.max(0, modes.findIndex((m) => m.key === current)
 const fade = (d: number) => Math.max(0, 1 - Math.abs(d) * 0.2 - d * d * 0.045).toFixed(3);
 ---
 
-<nav class:list={['radial', { 'is-resting': active < 0 }]} id="radial-nav" aria-label="Stride areas" data-radial data-home={home ? '' : undefined} data-current={active}>
+<nav class:list={['radial', { 'is-resting': active < 0 }]} id="radial-nav" aria-label="Stride areas" data-radial data-lenis-prevent data-home={home ? '' : undefined} data-current={active}>
   {/* Somewhere to take hold of the arc between its labels, to drag it (the script). */}
   <span class="radial__grab" aria-hidden="true"></span>
   <span class="radial__hub" aria-hidden="true">

@@ -5,6 +5,7 @@
 // to the rest with "Read more", in place, what's below gliding down to make room (and back up again).
 // Under reduced motion nothing moves by itself or leans, but the dots still choose a picture.
 import { reduced } from './env';
+import { setSoundWanted, soundAllowed, soundWanted, whenSoundAllowed } from './sound';
 
 const NEXT = 4200; // ms a picture stays on
 const MAX_CLIP = 15; // s a clip on the phone plays at most before the next
@@ -91,7 +92,8 @@ export function initServiceHero() {
     const sound = phone.querySelector<HTMLButtonElement>('[data-shero-sound]');
     const auto = !reduced();
     let at = 0;
-    let muted = true;
+    // Sound on as soon as the browser allows it, unless the visitor turned it off (sound.ts; the owner, 2026-11-18).
+    let muted = !(soundWanted() && soundAllowed());
     let seen = false;
     let raf = 0;
     const limit = (v: HTMLVideoElement) => Math.min(Number.isFinite(v.duration) && v.duration > 0 ? v.duration : MAX_CLIP, MAX_CLIP);
@@ -140,13 +142,23 @@ export function initServiceHero() {
     videos.forEach((v) => v.addEventListener('ended', () => v === videos[at] && show(at + 1)));
     phone.querySelector('[data-shero-next]')?.addEventListener('click', () => show(at + 1));
     phone.querySelector('[data-shero-prev]')?.addEventListener('click', () => show(at - 1));
-    sound?.addEventListener('click', () => {
-      muted = !muted;
+    const setMuted = (m: boolean) => {
+      muted = m;
       videos[at].muted = muted;
-      sound.setAttribute('aria-pressed', String(!muted));
-      sound.setAttribute('aria-label', (muted ? sound.dataset.off : sound.dataset.on) ?? '');
+      sound?.setAttribute('aria-pressed', String(!muted));
+      sound?.setAttribute('aria-label', (muted ? sound.dataset.off : sound.dataset.on) ?? '');
       if (!muted && videos[at].paused) play();
+    };
+    sound?.addEventListener('click', () => {
+      setMuted(!muted);
+      setSoundWanted(!muted);
     });
+    if (muted) whenSoundAllowed(() => soundWanted() && setMuted(false));
+    else {
+      sound?.setAttribute('aria-pressed', 'true');
+      sound?.setAttribute('aria-label', sound.dataset.on ?? '');
+    }
+    document.addEventListener('stride:sound', (e) => setMuted(!(e as CustomEvent<{ on: boolean }>).detail.on));
     const rest = () => {
       videos[at].pause();
       cancelAnimationFrame(raf);

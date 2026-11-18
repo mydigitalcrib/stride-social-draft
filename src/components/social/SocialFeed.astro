@@ -191,7 +191,7 @@ const icon = {
           p.kind === 'campaign' ? (
             <article class="fy__item" data-fy-item data-kind="campaign" data-code={p.r.code} data-id={`campaign-${p.i}`} data-search={`${p.r.creator} ${p.r.client} ${p.r.title} ${p.r.text}`.toLowerCase()} aria-label={p.r.creator ? `${p.r.client}, with ${p.r.creator}` : p.r.client}>
               <div class="fy__card">
-                <video class="fy__video" playsinline loop muted preload="none" poster={p.r.poster} data-src={p.r.src} aria-hidden="true"></video>
+                <video class="fy__video" playsinline loop muted preload="none" data-sound="own" poster={p.r.poster} data-src={p.r.src} aria-hidden="true"></video>
                 <button class="fy__tap" type="button" aria-label="Pause" data-fy-tap>
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5Z"></path></svg>
                 </button>
@@ -312,7 +312,7 @@ const icon = {
                         <section class="fy__slide fy__slide--pic" data-auto={vid ? undefined : ''} aria-label={p.sv.name}>
                           {vid ? (
                             <div class="fy__slide-media">
-                              <video class="fy__slide-pic fy__slide-vid" muted loop playsinline preload="none" poster={vid.poster} data-src={vid.src} aria-label={`${p.sv.name}: ${vid.credit}`} style={vid.position ? `object-position: ${vid.position}` : undefined}></video>
+                              <video class="fy__slide-pic fy__slide-vid" muted loop playsinline preload="none" data-sound="own" poster={vid.poster} data-src={vid.src} aria-label={`${p.sv.name}: ${vid.credit}`} style={vid.position ? `object-position: ${vid.position}` : undefined}></video>
                               <span class:list={['fy__slide-credit', { 'fy__slide-credit--low': vid.low }]}>{vid.credit}</span>
                             </div>
                           ) : (
@@ -1866,6 +1866,7 @@ const icon = {
 <script>
   import { reduced } from '@/scripts/system/env';
   import { whenLoaded } from '@/scripts/system/loaded';
+  import { setSoundWanted, soundAllowed, soundWanted, whenSoundAllowed } from '@/scripts/system/sound';
 
   const LIKED = 'stride:fy-liked';
   const SAVED = 'stride:fy-saved';
@@ -1897,13 +1898,15 @@ const icon = {
     const liked = read(LIKED);
     const saved = read(SAVED);
     let active = -1;
-    let muted = true;
+    // Sound on (the owner, 2026-11-18): as soon as the browser allows it (the visitor's first click), unless they turned
+    // it off with a sound button somewhere on the site (sound.ts).
+    let muted = !(soundWanted() && soundAllowed());
     let inView = true;
     let started = false;
     let kind: 'all' | 'strategy' = 'all';
     let photoTime = 0;
     let last = 0;
-    root.classList.add('is-muted');
+    root.classList.toggle('is-muted', muted);
 
     const video = (i: number) => items[i]?.querySelector<HTMLVideoElement>('.fy__video') ?? null;
     const slidesOf = (i: number) => items[i]?.querySelector<HTMLElement>('[data-fy-slides]') ?? null;
@@ -2194,13 +2197,20 @@ const icon = {
       }
     });
 
-    sound?.addEventListener('click', () => {
-      muted = !muted;
+    const setMuted = (m: boolean) => {
+      muted = m;
       root.classList.toggle('is-muted', muted);
-      sound.setAttribute('aria-label', muted ? (root.dataset.soundOn ?? 'Sound on') : (root.dataset.soundOff ?? 'Sound off'));
+      sound?.setAttribute('aria-label', muted ? (root.dataset.soundOn ?? 'Sound on') : (root.dataset.soundOff ?? 'Sound off'));
       if (!muted) items[active]?.classList.remove('is-paused');
       sync();
+    };
+    sound?.addEventListener('click', () => {
+      setMuted(!muted);
+      setSoundWanted(!muted);
     });
+    if (muted) whenSoundAllowed(() => soundWanted() && setMuted(false));
+    else sound?.setAttribute('aria-label', root.dataset.soundOff ?? 'Sound off');
+    document.addEventListener('stride:sound', (e) => setMuted(!(e as CustomEvent<{ on: boolean }>).detail.on));
 
     search?.addEventListener('input', filter);
 

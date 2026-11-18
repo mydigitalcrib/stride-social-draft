@@ -33,7 +33,7 @@ const filters = filterable
   : {};
 ---
 
-<article class="ccc" aria-label={c.name} data-line={c.line || undefined} {...filters}>
+<article class="ccc" aria-label={c.name} data-creator-id={c.id} data-line={c.line || undefined} {...filters}>
   <div class="ccc__photo on-photo">
     {c.portrait ? (
       <img src={c.portrait.src} alt={c.portrait.alt} sizes={sizes ?? '(min-width: 1024px) 22vw, 50vw'} loading="lazy" decoding="async" draggable="false" />
@@ -64,9 +64,6 @@ const filters = filterable
         )}
         <p class="ccc__actions">
           <a class="ccc__enquire" href={c.enquire}>{t('card.enquire')}</a>
-          <button class="ccc__keep" type="button" aria-pressed="false" data-keep="creators" data-keep-id={c.id} data-keep-label={c.name} data-keep-image={c.portrait?.src}>
-            <span class="keep-off">+ {t('hand.keep')}</span><span class="keep-on">{t('hand.kept')}</span>
-          </button>
         </p>
       </div>
     </div>
@@ -262,8 +259,7 @@ const filters = filterable
     margin-top: 7px;
   }
 
-  .ccc__enquire,
-  .ccc__keep {
+  .ccc__enquire {
     position: relative;
     z-index: 1;
     font-family: var(--font-mono);
@@ -280,12 +276,7 @@ const filters = filterable
     color: rgb(var(--press-on));
   }
 
-  .ccc__keep {
-    color: var(--white);
-  }
-
   .ccc__enquire:focus-visible,
-  .ccc__keep:focus-visible,
   .ccc__platforms a:focus-visible {
     outline: 2px solid var(--white);
     outline-offset: 2px;

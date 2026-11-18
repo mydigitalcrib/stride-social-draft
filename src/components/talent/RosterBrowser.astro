@@ -65,7 +65,7 @@ const allDigits = String(totals?.[''] ?? creators.length).length;
 const allFit = allDigits > 3 ? `--all-fit: ${(150 / allDigits).toFixed(1)}cqi` : undefined;
 ---
 
-<section class:list={['rb', { 'rb--giant': giant }]} id="roster" aria-labelledby="rb-title" data-tone="talent" data-look="deep" data-roster data-page-size={pageSize} data-totals={totals ? JSON.stringify(totals) : undefined} data-glimpse={tools ? undefined : ''} style={`--hint: ${JSON.stringify(t('photocall.shoot'))}; --hint-kept: ${JSON.stringify(t('photocall.kept'))}`}>
+<section class:list={['rb', { 'rb--giant': giant }]} id="roster" aria-labelledby="rb-title" data-tone="talent" data-look="deep" data-roster data-page-size={pageSize} data-totals={totals ? JSON.stringify(totals) : undefined} data-glimpse={tools ? undefined : ''} style={`--hint: ${JSON.stringify(t('photocall.shoot'))}`}>
   {tools && <div class="rb__wall" aria-hidden="true" data-roster-wall></div>}
   <div class="rb__inner">
     <header class="rb__head">
@@ -114,7 +114,7 @@ const allFit = allDigits > 3 ? `--all-fit: ${(150 / allDigits).toFixed(1)}cqi` :
     {tools && (
       <>
         {/* The viewfinder over the photographs (roster-finder.ts), and the dot that marks the pointer exactly. */}
-        <div class="rb__finder" aria-hidden="true" data-roster-finder data-shoot={t('photocall.shoot')} data-kept={t('photocall.kept')} data-open={t('sheet.open')}>
+        <div class="rb__finder" aria-hidden="true" data-roster-finder data-shoot={t('photocall.shoot')} data-open={t('sheet.open')}>
           <i class="rb__corner rb__corner--tl"></i>
           <i class="rb__corner rb__corner--tr"></i>
           <i class="rb__corner rb__corner--bl"></i>
@@ -416,21 +416,13 @@ const allFit = allDigits > 3 ? `--all-fit: ${(150 / allDigits).toFixed(1)}cqi` :
       cursor: none;
     }
 
-    /* The photograph is the camera's: only the name opens the profile. */
+    /* The photograph opens the profile through the script (roster-finder.ts), so the name's link doesn't cover it. */
     .rb:not([data-glimpse]) .rb__grid :global(.ccc__name a)::after {
       display: none;
     }
 
-    .rb:not([data-glimpse]) .rb__grid :global(.ccc.is-aimed .ccc__photo img),
-    .rb:not([data-glimpse]) .rb__grid :global(.ccc:has(.ccc__keep[aria-pressed='true']) .ccc__photo img) {
+    .rb:not([data-glimpse]) .rb__grid :global(.ccc.is-aimed .ccc__photo img) {
       filter: none;
-    }
-
-    /* Added: in colour, ringed in light. */
-    .rb__grid :global(.ccc:has(.ccc__keep[aria-pressed='true']) .ccc__photo) {
-      box-shadow:
-        0 0 0 2px rgb(var(--tone-lit)),
-        0 0 1.625rem rgb(var(--tone-lit) / 0.4);
     }
 
     /* Only the keyboard needs the card's own buttons (the pointer adds with a click on the photo); the details are in
@@ -653,21 +645,13 @@ const allFit = allDigits > 3 ? `--all-fit: ${(150 / allDigits).toFixed(1)}cqi` :
       box-shadow: 0 1.5rem 2.5rem -1.625rem rgb(0 0 0 / 0.9);
     }
 
-    .rb[data-glimpse] .rb__grid :global(.ccc:has(.ccc__keep[aria-pressed='true']) .ccc__photo) {
-      box-shadow:
-        0 0 0 2px rgb(var(--tone-lit)),
-        0 0 1.625rem rgb(var(--tone-lit) / 0.4),
-        0 1.5rem 2.5rem -1.625rem rgb(0 0 0 / 0.9);
-    }
-
     .rb[data-glimpse] .rb__grid :global(.ccc__photo img) {
       filter: grayscale(var(--sg, 1)) contrast(1.04);
       transition: scale 900ms var(--ease-out);
     }
 
     .rb[data-glimpse] .rb__grid :global(.ccc.is-aimed .ccc__photo img),
-    .rb[data-glimpse] .rb__grid :global(.ccc:focus-within .ccc__photo img),
-    .rb[data-glimpse] .rb__grid :global(.ccc:has(.ccc__keep[aria-pressed='true']) .ccc__photo img) {
+    .rb[data-glimpse] .rb__grid :global(.ccc:focus-within .ccc__photo img) {
       filter: none;
     }
 
@@ -704,11 +688,7 @@ const allFit = allDigits > 3 ? `--all-fit: ${(150 / allDigits).toFixed(1)}cqi` :
       color: rgb(var(--tone-lit));
     }
 
-    .rb[data-glimpse] .rb__grid :global(.ccc:has(.ccc__keep[aria-pressed='true']) .ccc__over)::after {
-      content: var(--hint-kept);
-    }
-
-    /* Only the name opens the profile; the photograph adds them. */
+    /* The photograph opens the profile too (roster-finder.ts), so the name's link doesn't cover it. */
     .rb[data-glimpse] .rb__grid :global(.ccc__name a)::after {
       display: none;
     }
@@ -780,90 +760,6 @@ const allFit = allDigits > 3 ? `--all-fit: ${(150 / allDigits).toFixed(1)}cqi` :
     /* The tile says it: the pill beside the count is the phones'. */
     .rb[data-glimpse] .rb__meta .exp-pill {
       display: none;
-    }
-  }
-
-  /* ---------- Desktop: a creator added gets their ring drawn round them ----------
-     roster-finder.ts sets .is-selecting as they're added: a ring of light traces itself round the card from the top,
-     clockwise, like a select marked on a contact sheet; then it's the steady ring (.is-blooming for a frame, ring
-     without glow) and its glow blooms in. Taken out (.is-unselecting), the ring unwinds. On the card, so it follows the
-     contact sheet's swell. */
-  @property --ccc-sweep {
-    syntax: '<angle>';
-    inherits: false;
-    initial-value: 0deg;
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .rb__grid :global(.ccc .ccc__photo) {
-      transition: box-shadow 200ms var(--ease-out);
-    }
-
-    .rb__grid :global(.ccc.is-selecting)::before,
-    .rb__grid :global(.ccc.is-unselecting)::before {
-      content: '';
-      position: absolute;
-      inset: -2px;
-      z-index: 3;
-      border: 2px solid rgb(var(--tone-lit));
-      border-radius: calc(var(--ring-r, 0.25rem) + 2px);
-      -webkit-mask: conic-gradient(from 0deg, #000 var(--ccc-sweep), transparent 0);
-      mask: conic-gradient(from 0deg, #000 var(--ccc-sweep), transparent 0);
-      pointer-events: none;
-      animation: rb-sweep 520ms cubic-bezier(0.6, 0, 0.2, 1) forwards;
-    }
-
-    .rb__grid :global(.ccc.is-unselecting)::before {
-      animation: rb-unsweep 300ms var(--ease-out) forwards;
-    }
-
-    .rb__grid :global(.ccc.is-selecting .ccc__photo),
-    .rb__grid :global(.ccc.is-unselecting .ccc__photo) {
-      transition: none;
-    }
-
-    .rb:not([data-glimpse]) .rb__grid :global(.ccc.is-selecting .ccc__photo) {
-      box-shadow: none;
-    }
-
-    /* Here the kept creator's ring and glow are a stronger rule (above), so these say "kept" too, to come first. */
-    .rb[data-glimpse] .rb__grid :global(.ccc.is-selecting:has(.ccc__keep[aria-pressed='true']) .ccc__photo) {
-      box-shadow: 0 1.5rem 2.5rem -1.625rem rgb(0 0 0 / 0.9);
-    }
-
-    .rb:not([data-glimpse]) .rb__grid :global(.ccc.is-blooming .ccc__photo) {
-      box-shadow:
-        0 0 0 2px rgb(var(--tone-lit)),
-        0 0 0 rgb(var(--tone-lit) / 0);
-      transition: none;
-    }
-
-    .rb[data-glimpse] .rb__grid :global(.ccc.is-blooming:has(.ccc__keep[aria-pressed='true']) .ccc__photo) {
-      box-shadow:
-        0 0 0 2px rgb(var(--tone-lit)),
-        0 0 0 rgb(var(--tone-lit) / 0),
-        0 1.5rem 2.5rem -1.625rem rgb(0 0 0 / 0.9);
-      transition: none;
-    }
-
-    @keyframes rb-sweep {
-      from {
-        --ccc-sweep: 0deg;
-      }
-
-      to {
-        --ccc-sweep: 360deg;
-      }
-    }
-
-    @keyframes rb-unsweep {
-      from {
-        --ccc-sweep: 360deg;
-      }
-
-      to {
-        --ccc-sweep: 0deg;
-      }
     }
   }
 

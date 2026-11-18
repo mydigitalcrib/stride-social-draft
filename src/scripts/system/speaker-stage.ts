@@ -1,13 +1,12 @@
 // Stride Speakers' scenes (talent/SpeakerStage.astro, desktop).
 // The line-up: a speaker's name pointed at (or focused) puts them on the monitor, the broadcast caption wiping in with
 // their name; a press on the name opens their profile among the others (creator-sheet.ts, `creators:open`); a click on
-// the monitor adds them (their keep button, so shortlist.ts keeps the list, and the camera's shot).
+// the monitor opens their profile too.
 // Like a vision mixer: a new speaker is a cut, a line of light sweeping down the monitor and the picture settling from
-// bright (only for the one the pointer settles on, so skimming the names never strobes); a click snaps the frame marks in.
+// bright (only for the one the pointer settles on, so skimming the names never strobes).
 // Left alone in view for a few seconds, it moves on to the next speaker by itself (unannounced), until the pointer or
 // the focus comes into the line-up. The names are one stop in the tab order (the one on the monitor), the arrow keys,
-// Home and End move along them, and the next stop is that speaker's "+ Add" (so any of them can be added from the
-// keyboard, not only the last); taken from the keyboard it takes the shot too.
+// Home and End move along them.
 // The slides: one engagement at a time on the stage's screen; a click on its right half goes on, on its left half back
 // (round and round), as do the arrow keys while the screen is in view, the arrows and the pictures below, and a sideways
 // swipe on a trackpad. Over the screen the pointer is a presenter's laser with a short fading trail; a click sends a
@@ -15,8 +14,6 @@
 // that side and the number rolls. Over the caption's links the site's own cursor comes back. Nothing moves under
 // reduced motion.
 import { openCreators } from './creator-open';
-import { initShortlists } from './shortlist';
-import { takeShot } from './shot';
 import { uiScale } from './scale';
 import { reduced, tapWords } from './env';
 
@@ -27,13 +24,6 @@ const IDLE_EVERY = 5000; // ms on each speaker then
 const SWIPE = 60; // px of sideways travel a trackpad swipe needs (the gesture's own, so the same on any screen)
 const SWIPE_LOCK = 450; // ms after a swipe before the next can count
 const gone = (el: Element) => () => el.remove();
-// The frame marks' corners: which way each closes in.
-const CORNERS = [
-  [1, 1],
-  [-1, 1],
-  [1, -1],
-  [-1, -1],
-];
 
 function initLineup() {
   const root = document.querySelector<HTMLElement>('[data-speaker-lineup]');
@@ -43,14 +33,12 @@ function initLineup() {
   const names = [...root.querySelectorAll<HTMLButtonElement>('[data-lineup-name]')];
   const imgs = [...root.querySelectorAll<HTMLImageElement>('[data-lineup-img]')];
   const monitor = root.querySelector<HTMLElement>('[data-lineup-monitor]');
-  const marks = monitor ? [...monitor.querySelectorAll<HTMLElement>('.lineup__frame i')] : [];
   const line = root.querySelector<HTMLElement>('[data-lineup-cut]');
   const caption = root.querySelector<HTMLElement>('.lineup__caption');
   const capName = root.querySelector<HTMLElement>('[data-lineup-cap-name]');
   const capWhat = root.querySelector<HTMLElement>('[data-lineup-cap-what]');
   const capNote = root.querySelector<HTMLElement>('[data-lineup-cap-note]');
   const capAct = root.querySelector<HTMLElement>('[data-lineup-cap-act]');
-  const keeps = [...root.querySelectorAll<HTMLButtonElement>('[data-lineup-keep]')];
   let people: { name: string; note?: string; what: string; src: string }[] = [];
   try {
     people = JSON.parse(root.querySelector('[data-lineup-data]')?.textContent || '[]');
@@ -62,11 +50,8 @@ function initLineup() {
   let tall = monitor?.clientHeight ?? 0;
   if (monitor) new ResizeObserver(() => (tall = monitor.clientHeight)).observe(monitor);
 
-  const mark = () => {
-    const kept = keeps[on]?.getAttribute('aria-pressed') === 'true';
-    monitor?.classList.toggle('is-kept', kept);
-    if (capAct) capAct.textContent = tapWords((kept ? capAct.dataset.kept : capAct.dataset.shoot) ?? '');
-  };
+  // What a click does, in the caption ("Tap" on a touch screen).
+  if (capAct) capAct.textContent = tapWords(capAct.dataset.shoot ?? '');
 
   // The cut: the line of light down the monitor, the picture settling from bright.
   let cutTimer = 0;
@@ -94,25 +79,9 @@ function initLineup() {
       void caption.offsetWidth;
       caption.classList.add('is-in');
     }
-    keeps.forEach((k, n) => (k.hidden = n !== i));
-    mark();
     if (still) return;
     window.clearTimeout(cutTimer);
     cutTimer = window.setTimeout(() => cut(i), auto ? 0 : SKIM);
-  };
-
-  // The frame marks snap in further as a click adds the speaker, and settle back (no white flash since 2026-11-18).
-  const snap = () => {
-    if (still) return;
-    marks.forEach((m, k) => {
-      const [x, y] = CORNERS[k];
-      m.animate([{ translate: `${x * 0.875}rem ${y * 0.875}rem`, offset: 0 }], { duration: 140, easing: 'ease-out' });
-    });
-  };
-  const shoot = () => {
-    if (!monitor || keeps[on]?.getAttribute('aria-pressed') !== 'true') return;
-    snap();
-    takeShot({ rect: monitor.getBoundingClientRect(), src: people[on]?.src ?? '', name: people[on]?.name ?? '' });
   };
 
   // With a mouse, pointing at a name puts them on the monitor and a click opens their profile; on a touch screen the first
@@ -138,30 +107,8 @@ function initLineup() {
       names[Math.max(0, Math.min(names.length - 1, to))].focus();
     });
   });
-  monitor?.addEventListener('click', () => {
-    const keep = keeps[on];
-    if (!keep) return;
-    keep.click();
-    requestAnimationFrame(() =>
-      requestAnimationFrame(() => {
-        mark();
-        shoot();
-      }),
-    );
-  });
-  // "+ Add" pressed from the keyboard: the shot once the list has it.
-  let keyed = 0;
-  keeps.forEach((k) =>
-    k.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') keyed = performance.now();
-    }),
-  );
-  document.addEventListener('shortlist:render', () => {
-    mark();
-    if (!keyed || performance.now() - keyed > 600) return;
-    keyed = 0;
-    shoot();
-  });
+  // A click on the monitor: the speaker on it, their profile.
+  monitor?.addEventListener('click', () => openCreators(ids, on, monitor.getBoundingClientRect(), root.dataset.profile));
 
   // Left alone, in view: the next speaker every few seconds, until the pointer or the focus comes in.
   let inView = false;
@@ -205,8 +152,6 @@ function initLineup() {
 
   // One tab stop for the names: the speaker on the monitor's (show() moves it along with them).
   names.forEach((n, k) => (n.tabIndex = k === on ? 0 : -1));
-  initShortlists();
-  mark();
 }
 
 function initSlides() {

@@ -1,8 +1,8 @@
 // Behaviour for talent/CreatorSheet.astro: creators' profiles over the page (every screen; one column on a phone).
 // - A press on a creator's name in a roster (talent/RosterBrowser.astro) opens theirs, among the others of that roster
 //   as it's narrowed now; a modified click (new tab, and so on) still goes to their page.
-// - "Get to know them", in the tray of creators picked ("Meet our talents", shortlist.ts: `creators:meet`), opens the
-//   profiles of everyone picked, one after another; on the roster's own page `?meet=1` does the same as it arrives.
+// - A scene's name or picture (Stride Sport's board, Stride Speakers' line-up) opens theirs by id (`creators:open`). The
+//   "Meet our talents" tray and its "Get to know them" went on 2026-11-18 (the owner).
 // Each profile shows what the page has for that creator: their own card if it's on the page (what the roster's rules let
 // the card show), else the profile data the page carries (CreatorSheet's `data`), else just their name, photo and the
 // way to their page. The photo grows from where it was into the print, keeping its shape, and the paper comes up around
@@ -10,7 +10,6 @@
 // before or after, whose photo develops as it comes in (quick presses go straight to the last one asked for); the print
 // leans towards the pointer as if held. Escape, the veil or the close button closes it. While it's open the keyboard
 // stays in it, the page behind is out of reach, and `sheet:open` / `sheet:close` let the page's own motion wait.
-import { initShortlists, listOf } from './shortlist';
 import { uiScale } from './scale';
 import { lenis, reduced } from './env';
 
@@ -60,7 +59,6 @@ export function initCreatorSheet() {
   const platforms = q<HTMLElement>('[data-csheet-platforms]');
   const enquire = q<HTMLAnchorElement>('[data-csheet-enquire]');
   const enquireLabel = q<HTMLElement>('[data-csheet-enquire-label]');
-  const keep = q<HTMLButtonElement>('[data-csheet-keep]');
   const profile = q<HTMLAnchorElement>('[data-csheet-profile]');
   const prev = q<HTMLButtonElement>('[data-csheet-prev]');
   const next = q<HTMLButtonElement>('[data-csheet-next]');
@@ -92,13 +90,12 @@ export function initCreatorSheet() {
   const textOf = (card: HTMLElement, s: string) => card.querySelector(s)?.textContent?.trim() || null;
 
   // A creator's card on the page, by id.
-  const cardOf = (id: string) => document.querySelector<HTMLElement>(`[data-roster-card] .ccc__keep[data-keep-id="${CSS.escape(id)}"]`)?.closest<HTMLElement>('[data-roster-card]') ?? null;
+  const cardOf = (id: string) => document.querySelector<HTMLElement>(`[data-roster-card][data-creator-id="${CSS.escape(id)}"]`);
 
   const fromCard = (card: HTMLElement): SheetEntry => {
     const photo = card.querySelector<HTMLImageElement>('.ccc__photo img');
-    const k = card.querySelector<HTMLElement>('.ccc__keep');
     return {
-      id: k?.dataset.keepId ?? card.getAttribute('aria-label') ?? '',
+      id: card.dataset.creatorId ?? card.getAttribute('aria-label') ?? '',
       name: card.getAttribute('aria-label') ?? textOf(card, '.ccc__name') ?? '',
       src: photo?.getAttribute('src'),
       srcset: photo?.getAttribute('srcset'),
@@ -158,11 +155,6 @@ export function initCreatorSheet() {
     enquire.href = e.enquire ?? `/talent/enquire?creator=${encodeURIComponent(e.id)}`;
     enquireLabel.textContent = `${enquireWords} ${e.name}`;
     profile.href = e.href ?? `/talent?creator=${encodeURIComponent(e.id)}`;
-    keep.dataset.keepId = e.id;
-    keep.dataset.keepLabel = e.name;
-    if (e.src) keep.dataset.keepImage = e.src;
-    else delete keep.dataset.keepImage;
-    initShortlists(); // marks it added or not
     const before = list[at - 1];
     const after = list[at + 1];
     prev.hidden = !before;
@@ -469,13 +461,6 @@ export function initCreatorSheet() {
     open(cards.map(fromCard), cards.indexOf(card), () => card.querySelector<HTMLElement>('.ccc__photo')?.getBoundingClientRect() ?? null);
   });
 
-  // "Get to know them": everyone picked.
-  const meet = (from: DOMRect | null) => {
-    const picked = listOf('creators');
-    if (!picked.length) return;
-    open(picked.map(entryOf), 0, () => from);
-  };
-  document.addEventListener('creators:meet', (e) => meet((e as CustomEvent<{ from: DOMRect | null }>).detail?.from ?? null));
   // Any scene of its own (Stride Sport's board, Stride Podcasts' dial, Stride Speakers' line-up) opens a creator's
   // profile among others by id: `creators:open` with { ids, index, from }.
   document.addEventListener('creators:open', (e) => {
@@ -483,7 +468,6 @@ export function initCreatorSheet() {
     if (!d?.ids?.length) return;
     open(d.ids.map((id) => entryOf({ id, label: carried.get(id)?.name ?? id })), d.index ?? 0, () => d.from ?? null);
   });
-  if (new URLSearchParams(location.search).has('meet')) window.setTimeout(() => meet(null), 400);
 
   sheet.querySelectorAll('[data-csheet-close]').forEach((el) => el.addEventListener('click', close));
   prev.addEventListener('click', () => go(-1));

@@ -1,87 +1,29 @@
 // The roster's viewfinder (talent/RosterBrowser.astro with its tools: /talent/roster, every screen; a tap aims on touch, a
 // second tap takes the shot), the photocall's camera
 // on the roster: over the photographs the pointer is a viewfinder that locks onto the one under it, with their name and
-// what a click does. A click on a photograph takes the shot: the creator goes into the shortlist (the card's own keep
-// button, so shortlist.ts keeps the list) with the shutter and their print flying into the tray (shot.ts); a
-// second click takes them out. A click on a name opens their profile over the page (creator-sheet.ts); the card's own
-// buttons and links work as ever.
+// what a click does. A click on a photograph, or on a name, opens their profile over the page (creator-sheet.ts, by way of
+// the card's name link); the card's own buttons and links work as ever. (Creators used to be added to a tray with a
+// shot; that went on 2026-11-18, the owner.)
 // - The keyboard gets the same camera: focus on a card's name or button aims the viewfinder at it.
-// - A press on a photograph (or Space and Enter on a card's button) half-presses the shutter: the viewfinder closes in
-//   and the photo hunts for focus once; the release takes the shot.
+// - A press on a photograph half-presses the shutter: the viewfinder closes in and the photo hunts for focus once.
 // - No camera flash, on the photo or the wall (the owner, 2026-11-18: "very distracting").
-// - A creator added in any roster on the page gets their ring drawn round them, and taken out it unwinds (the styles are
-//   RosterBrowser.astro's: .is-selecting, .is-blooming, .is-unselecting).
-import { takeShot } from './shot';
 import { uiScale } from './scale';
 import { reduced, tapWords } from './env';
 
 const FOLLOW = 0.24;
-const SWEEP = 520; // ms: the ring drawn round a creator added (as in the component)
-const UNSWEEP = 300; // ms: and unwound
 
-/** The ring round a creator's card as they're added, or unwound as they're taken out. */
-const rings = new WeakMap<HTMLElement, number>();
-function ringFor(card: HTMLElement, kept: boolean) {
-  if (reduced()) return;
-  window.clearTimeout(rings.get(card));
-  card.classList.remove('is-selecting', 'is-blooming', 'is-unselecting');
-  if (kept) {
-    card.classList.add('is-selecting');
-    rings.set(
-      card,
-      window.setTimeout(() => {
-        // The steady ring, without its glow for a frame, then the glow blooms in.
-        card.classList.replace('is-selecting', 'is-blooming');
-        requestAnimationFrame(() => requestAnimationFrame(() => card.classList.remove('is-blooming')));
-      }, SWEEP),
-    );
-  } else {
-    card.classList.add('is-unselecting');
-    rings.set(card, window.setTimeout(() => card.classList.remove('is-unselecting'), UNSWEEP));
-  }
-}
-
-// Every way of adding a creator in a roster ends in a click on their card's keep button (a click on the photo presses
-// it, shootOnClick); shortlist.ts takes that click on the document, before it goes any further, so it's caught here on
-// its way down, just ahead of it, while it still says what it was.
-let ringing = false;
-function initRings() {
-  if (ringing) return;
-  ringing = true;
-  window.addEventListener(
-    'click',
-    (e) => {
-      const keep = e.target instanceof Element ? e.target.closest<HTMLElement>('[data-roster-grid] .ccc__keep[data-keep]') : null;
-      const card = keep?.closest<HTMLElement>('[data-roster-card]');
-      if (keep && card) ringFor(card, keep.getAttribute('aria-pressed') !== 'true');
-    },
-    true,
-  );
-}
-
-/** A click on a photograph in a roster's grid (not on a name, a button or a link) adds the creator, or takes them out:
-    the card's own keep button, so shortlist.ts keeps the list, and when added, the shot. */
-export function shootOnClick(grid: HTMLElement, after?: () => void) {
-  initRings();
+/** A click on a photograph in a roster's grid (not on a name, a button or a link) opens that creator's profile, as their
+    name does: the click goes on to the card's name link, which creator-sheet.ts takes. */
+export function openOnClick(grid: HTMLElement, after?: () => void) {
   grid.addEventListener('click', (e) => {
     if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     const target = e.target as Element;
     if (target.closest('a, button')) return;
-    const c = target.closest<HTMLElement>('[data-roster-card]');
-    const keep = c?.querySelector<HTMLButtonElement>('.ccc__keep');
-    if (!c || !keep) return;
+    const name = target.closest<HTMLElement>('[data-roster-card]')?.querySelector<HTMLAnchorElement>('.ccc__name a');
+    if (!name) return;
     e.preventDefault();
-    keep.click();
-    requestAnimationFrame(() =>
-      requestAnimationFrame(() => {
-        after?.();
-        if (keep.getAttribute('aria-pressed') !== 'true' || reduced()) return;
-        const photo = c.querySelector<HTMLImageElement>('.ccc__photo img');
-        const rect = (c.querySelector('.ccc__photo') ?? c).getBoundingClientRect();
-        takeShot({ rect, src: photo?.currentSrc || photo?.src || '', name: c.getAttribute('aria-label') ?? '', id: keep.dataset.keepId });
-        c.querySelector('.ccc__photo')?.animate([{ scale: '1' }, { scale: '1.05' }, { scale: '1' }], { duration: 420, easing: 'cubic-bezier(0.2, 1.4, 0.4, 1)' });
-      }),
-    );
+    after?.();
+    name.click();
   });
 }
 
@@ -95,7 +37,7 @@ export function initRosterFinders() {
     if (!grid || !finder || !dot || !nameEl || !actionEl || finder.dataset.ready) return;
     finder.dataset.ready = 'true';
     grid.setAttribute('data-own-cursor', '');
-    const words = { shoot: tapWords(finder.dataset.shoot ?? ''), kept: tapWords(finder.dataset.kept ?? ''), open: finder.dataset.open ?? '' };
+    const words = { shoot: tapWords(finder.dataset.shoot ?? ''), open: finder.dataset.open ?? '' };
 
     let card: HTMLElement | null = null;
     let over = false;
@@ -108,8 +50,7 @@ export function initRosterFinders() {
 
     const say = () => {
       nameEl.textContent = card?.getAttribute('aria-label') ?? '';
-      const kept = card?.querySelector('.ccc__keep')?.getAttribute('aria-pressed') === 'true';
-      actionEl.textContent = !card ? '' : what === 'name' ? words.open : what === 'other' ? '' : kept ? words.kept : words.shoot;
+      actionEl.textContent = !card ? '' : what === 'name' ? words.open : what === 'other' ? '' : words.shoot;
     };
 
     const frame = (now: number) => {
@@ -191,7 +132,7 @@ export function initRosterFinders() {
       run();
     });
     // A finger: its tap locks the viewfinder onto the photograph it touched, with its name and what a second tap does;
-    // that second tap takes the shot (the first one's click is held back here, before shootOnClick).
+    // that second tap takes the shot (the first one's click is held back here, before openOnClick).
     let aimedBefore = false;
     let byTouch = false;
     grid.addEventListener('pointerdown', (e) => {
@@ -249,15 +190,7 @@ export function initRosterFinders() {
       finder.classList.remove('is-on');
       aim(null);
     });
-    grid.addEventListener('keydown', (e) => {
-      if ((e.key === ' ' || e.key === 'Enter') && !e.repeat && (e.target as Element).closest('.ccc__keep')) half(true);
-    });
-    grid.addEventListener('keyup', () => half(false));
-
-    // The shot: a click on the photograph itself.
-    shootOnClick(grid, () => {
-      half(false);
-      say();
-    });
+    // A click on the photograph itself: their profile.
+    openOnClick(grid, () => half(false));
   });
 }

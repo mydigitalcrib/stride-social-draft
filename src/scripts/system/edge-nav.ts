@@ -30,6 +30,7 @@
 // - Reduced motion: no easing; the arc and the page jump.
 
 import { uiScale } from './scale';
+import { playTick } from './chime';
 import { desktop, lenis, reduced } from './env';
 
 // Where each area lives on the home page: Group is the three sides (the hero belongs to no area; see `sectionOf`).
@@ -44,6 +45,10 @@ const DRAG_STEP = 75;
 const DRAG_STEP_TOUCH = 140;
 // Pixels before a press counts as a drag rather than a click. It's the hand's slack, not the layout's, so it doesn't scale.
 const DRAG_START = 4;
+// Desktop: the wheel over the dial turns it, an area a notch (about 100px of a wheel, or a trackpad's swipe as far),
+// without scrolling the page; the areas browsed come back to this page's once the pointer has left it a moment.
+const WHEEL_STEP = 90;
+const WHEEL_BACK = 900; // ms after the pointer leaves
 // Phones and tablets: what has the foot of the screen to itself (the dial steps aside while one is there): About's
 // player, Our Work's controls, the homepage's rows (the open one's way in sits at its foot), the footer's last line.
 const FOOT = '.story__player, .wcanvas__foot, .sides__rows, .footer__base';
@@ -153,6 +158,7 @@ export function initEdgeNav() {
     }
     draw();
     cue(speed);
+    if (wheeling) knock();
     if (shown === goal) {
       raf = 0;
       then = 0;
@@ -163,6 +169,7 @@ export function initEdgeNav() {
   const run = () => {
     if (!raf && !held) raf = requestAnimationFrame(tick);
   };
+  let wheeling = false; // the wheel is browsing the areas (see below)
 
   // Arriving from another page: the arc starts where that page's was, at its speed, and the spring takes it on to
   // this page's area once the page change has begun (its view transition is ready), or straight after the page
@@ -417,6 +424,16 @@ export function initEdgeNav() {
 
   /* ---------- Dragging the arc ---------- */
   const nearest = (v: number) => Math.min(last, Math.max(0, Math.round(v)));
+  // The detent (the owner, 2026-11-18: "if you drag it it makes a sound"): a soft knock (chime.ts) each time another
+  // area reaches the capsule, while the dial is dragged or scrolled by the visitor, never as it turns by itself.
+  let detent = -1;
+  const knock = () => {
+    const at = nearest(shown);
+    if (at !== detent) {
+      if (detent >= 0) playTick();
+      detent = at;
+    }
+  };
   let suppressClick = false; // the click that ends a drag isn't a choice
   nav.addEventListener('pointerdown', (e) => {
     // Desktop: the mouse, up and down the arc on the left. Phones and tablets: a finger (or the mouse), along the arc at
@@ -445,6 +462,7 @@ export function initEdgeNav() {
         raf = 0;
         then = 0;
         speed = 0;
+        detent = nearest(shown);
       }
       // Pulling down (sideways to the right on phones) brings the area before to the capsule. Past either end it gives,
       // but only a little.
@@ -457,6 +475,7 @@ export function initEdgeNav() {
       setActive(nearest(shown));
       draw();
       cue(velocity);
+      knock();
     };
     const end = (ev: PointerEvent) => {
       window.removeEventListener('pointermove', move);
@@ -489,6 +508,46 @@ export function initEdgeNav() {
     document.addEventListener('selectstart', noSelect);
   });
   nav.addEventListener('dragstart', (e) => e.preventDefault()); // the browser's own dragging of links
+
+  /* ---------- The wheel over the arc (desktop) ----------
+     Scrolling with the pointer on the dial turns it, an area at a time, and the page stays where it is (the owner,
+     2026-11-18: "if someone wants to scroll only in the menu section it can do it"): the area brought to the capsule
+     lights there, a click takes it, and once the pointer has left the dial a moment it turns back to this page's. */
+  let wheelSum = 0;
+  let wheelBack = 0;
+  const browseBack = () => {
+    wheeling = false;
+    focusIndex = null;
+    setActive(target);
+    run();
+  };
+  nav.addEventListener(
+    'wheel',
+    (e) => {
+      if (!desktop() || moving || dragging || e.ctrlKey) return;
+      e.preventDefault();
+      window.clearTimeout(wheelBack);
+      wheelSum += e.deltaMode === 1 ? e.deltaY * 32 : e.deltaMode === 2 ? e.deltaY * window.innerHeight : e.deltaY;
+      const steps = Math.trunc(wheelSum / WHEEL_STEP);
+      if (!steps) return;
+      wheelSum -= steps * WHEEL_STEP;
+      const from = focusIndex ?? target;
+      const next = Math.min(last, Math.max(0, from + steps));
+      if (next === from) return;
+      if (!wheeling) detent = nearest(shown);
+      wheeling = true;
+      focusIndex = next;
+      setActive(next);
+      run();
+    },
+    { passive: false },
+  );
+  nav.addEventListener('pointerenter', () => window.clearTimeout(wheelBack));
+  nav.addEventListener('pointerleave', () => {
+    if (!wheeling) return;
+    window.clearTimeout(wheelBack);
+    wheelBack = window.setTimeout(browseBack, WHEEL_BACK);
+  });
   nav.addEventListener('click', (e) => {
     if (!suppressClick) return;
     suppressClick = false;

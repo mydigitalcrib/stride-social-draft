@@ -4,8 +4,8 @@
 // the monitor, the next opens their profile; the slides change with a tap on either half; no laser on a touch screen).
 // "Who you can book." The speakers' names in big type on the left, like a running order; on the right a studio monitor
 // (the camera's frame marks, a LIVE light) showing the one pointed at, in colour, with a broadcast caption sliding in
-// along its foot: their name, what they do, what a click does. A click on the picture adds them ("Click to get to know":
-// the camera's shot and the tray, shortlist.ts); a name opens their profile over the page (creator-sheet.ts).
+// along its foot: their name, what they do, what a click does. A click on the picture, or on a name, opens their profile
+// over the page ("Click to get to know", creator-sheet.ts; the tray they used to be added to went on 2026-11-18).
 // "Where they've spoken." The engagements as slides on the stage's big screen: the picture filling it, a caption with who,
 // what and when, the slide's number; the pointer over the screen is a presenter's laser, a click on its right half goes
 // on and on its left half back, as do the arrow keys and the strip of pictures below; "See the post" opens the post it
@@ -66,20 +66,15 @@ const ids = speakers.map((s) => s.id).join(' ');
         <b data-lineup-cap-name>{speakers[0]?.name}</b>
         <span class="lineup__note" data-lineup-cap-note>{(speakers[0] && notes[speakers[0].id]) ?? ''}</span>
         <span data-lineup-cap-what>{[speakers[0]?.niche, speakers[0]?.handle].filter(Boolean).join(' · ')}</span>
-        <em class="exp-label" data-lineup-cap-act data-shoot={t('photocall.shoot')} data-kept={t('photocall.kept')}>{t('photocall.shoot')}</em>
+        <em class="exp-label" data-lineup-cap-act data-shoot={t('photocall.shoot')}>{t('photocall.shoot')}</em>
       </div>
-      {speakers.map((s, i) => (
-        <button class="lineup__keep exp-pill exp-pill--ghost" type="button" hidden={i !== 0} aria-pressed="false" data-keep="creators" data-keep-id={s.id} data-keep-label={s.name} data-keep-image={s.portrait?.src} data-lineup-keep={i}>
-          <span class="keep-off">+ {t('hand.keep')} {s.name}</span><span class="keep-on">{t('hand.kept')}</span>
-        </button>
-      ))}
       <script type="application/json" data-lineup-data set:html={JSON.stringify(speakers.map((s) => ({ name: s.name, note: notes[s.id] ?? '', what: [s.niche, s.handle].filter(Boolean).join(' · '), src: s.portrait?.src ?? '' }))).replace(/</g, '\\u003c')} />
     </div>
   </div>
 </section>
 
 {seen.length > 0 && (
-  <section class="slides" aria-labelledby="slides-title" data-tone="talent" data-look="deep" data-speaker-slides data-tray-away>
+  <section class="slides" aria-labelledby="slides-title" data-tone="talent" data-look="deep" data-speaker-slides>
     <div class="slides__inner">
       <header class="slides__head">
         {placements.eyebrow && <p class="exp-label">{placements.eyebrow}</p>}
@@ -375,31 +370,6 @@ const ids = speakers.map((s) => s.id).join(' ');
     to {
       clip-path: inset(0);
     }
-  }
-
-  .lineup__monitor.is-kept {
-    box-shadow:
-      0 0 0 2px rgb(var(--tone-lit)),
-      0 0 3.75rem rgb(var(--tone-lit) / 0.35),
-      0 3.125rem 5.625rem -2.5rem rgb(0 0 0 / 0.95);
-  }
-
-  /* The speaker on the monitor's "+ Add", for the keyboard: unseen until it's focused, then over the monitor's corner. */
-  .lineup__keep {
-    position: absolute;
-    top: 1.125rem;
-    left: 1.125rem;
-    z-index: 3;
-  }
-
-  .lineup__keep:not(:focus-visible) {
-    overflow: hidden;
-    width: 1px;
-    min-height: 0;
-    height: 1px;
-    padding: 0;
-    clip-path: inset(50%);
-    white-space: nowrap;
   }
 
   /* ---------- Where they've spoken: the stage's screen ---------- */
