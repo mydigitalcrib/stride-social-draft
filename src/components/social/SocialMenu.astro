@@ -23,6 +23,16 @@ export interface Props {
 
 const { strategies, approach, intro, title } = Astro.props;
 
+// Each strategy's card plays Stride's own video of that work, the one its lead service had in the feed (the owner,
+// 2026-11-18), labelled with who and what it is.
+const workReels: Record<string, NonNullable<Card['reel']>> = {
+  // Framed from the top, so the clip's own caption stays below the card and clear of its name.
+  'influencer-activations': { src: '/assets/video/ig-stridetalent-reel-DfFAs2oprqm.mp4', poster: '/assets/site/ig-stridetalent-reel-DfFAs2oprqm-first.jpg', credit: '@joshandjem × Netflix UK', position: '50% 0%' },
+  'ugc-production': { src: '/assets/video/case-temu-2.mp4', poster: '/assets/site/case-temu-2-first.jpg', credit: 'Temu × Stride Social', position: '50% 0%' },
+  'tiktok-shop': { src: '/assets/video/flowdrive-VDbaPLrkg8ffAjqF0f0AG.mp4', poster: '/assets/site/flowdrive-VDbaPLrkg8ffAjqF0f0AG-first.jpg', credit: 'Comfelie × TikTok Shop' },
+  'influencer-events': { src: '/assets/video/stride-story-12.mp4', poster: '/assets/site/stride-story-12.jpg', credit: 'Stride at VivaTech' },
+};
+
 // Our Strategies: each of the owner's groupings holds the services it speaks of, the lead one first.
 const cardIcons = ['megaphone', 'layers', 'bag', 'wave'];
 const groups: Record<string, string[]> = {
@@ -41,6 +51,7 @@ const services: Card[] = await Promise.all(
       // A photo chosen for this card (`image`, `alt`, `position`), or the lead service's.
       image: item.image ? { src: item.image, alt: item.alt ?? item.label, position: item.position } : (entries[0]?.data.hero ?? undefined),
       mark: cardIcons[i],
+      reel: workReels[item.key ?? ''],
       blocks: entries.map((e) => ({ title: e.data.name, text: e.data.descriptor, list: e.data.deliverables, href: routes.service(e.id), action: 'View service' })),
     };
   }),
@@ -75,13 +86,15 @@ const industries: Card[] = (
   )
 ).flatMap((c) => (c ? [c] : []));
 
-// Featured Work: Stride Social's campaign reels, as the feed had them (their captions as posted, first frames as
-// posters), the best-known brands first.
+// Featured Work: Stride Social's campaign reels, as the feed had them (their captions as posted), the best-known brands
+// first. Each card starts where the brand or its product shows and has that frame as its picture (`at`, -brand.jpg), so
+// it's plain what the campaign advertised (the owner, 2026-11-23); its big card plays the whole film.
 const featured: Card[] = ig.reels.slice(0, 8).map((r) => ({
   name: r.client,
   text: r.text,
   href: `https://www.instagram.com/reel/${r.code}/`,
-  image: { src: `/assets/site/stridesociall-reel-${r.code}-first.jpg`, alt: `${r.client} campaign${r.creator ? ` with ${r.creator}` : ''}` },
+  image: { src: `/assets/site/stridesociall-reel-${r.code}-brand.jpg`, alt: `${r.client} campaign${r.creator ? ` with ${r.creator}` : ''}` },
+  reel: { src: `/assets/video/stridesociall-reel-${r.code}.mp4${r.at ? `#t=${r.at}` : ''}`, poster: `/assets/site/stridesociall-reel-${r.code}-brand.jpg`, credit: r.creator || undefined },
   video: `/assets/video/stridesociall-reel-${r.code}.mp4`,
   action: { label: 'View on Instagram', href: `https://www.instagram.com/reel/${r.code}/`, external: true },
 }));

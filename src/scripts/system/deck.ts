@@ -134,6 +134,22 @@ function playReels(root: HTMLElement) {
   };
   ['play', 'pause', 'ended'].forEach((k) => root.addEventListener(k, film, true));
   document.addEventListener('visibilitychange', sync);
+  // A film's big card plays it as it opens (the press that opened it lets it play with sound) and stops it as it closes.
+  root.querySelectorAll<HTMLElement>('.bigcard--film').forEach((card) => {
+    const video = card.querySelector<HTMLVideoElement>('.bigcard__video');
+    if (!video) return;
+    new MutationObserver(() => {
+      if (card.hidden) {
+        video.pause();
+        return;
+      }
+      video.currentTime = 0;
+      video.play().catch(() => {
+        video.muted = true;
+        video.play().catch(() => {});
+      });
+    }).observe(card, { attributes: true, attributeFilter: ['hidden'] });
+  });
 }
 
 export function initDecks() {

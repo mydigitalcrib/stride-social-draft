@@ -31,6 +31,9 @@ export type Card = {
   quote?: string;
   attribution?: string;
   video?: string;
+  /** A clip the card plays while it's the open one in a deck that opens (`spines`): its file, its first picture, who
+   *  and what it shows (a small label on the card) and where it's framed. */
+  reel?: { src: string; poster?: string; credit?: string; position?: string };
   /** `keep`: the block can be added to a list (src/scripts/system/shortlist.ts). */
   blocks?: { title: string; text?: string | null; list?: string[]; href: string; action: string; keep?: { list: 'brief' | 'creators'; id: string; label: string; group?: string } }[];
   stats?: { label: string; value: string }[];

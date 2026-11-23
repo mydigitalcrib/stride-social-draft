@@ -111,13 +111,18 @@ const icons: Record<string, string> = {
                 <a class:list={['deck__card', { 'on-photo': c.image || opens || lineup }]} href={c.href} draggable="false" data-grow-card={c.direct ? undefined : `${t.key}-${i}`} data-desk={c.direct ? undefined : t.atDesk}>
                   {/* Past 1920 wide the cards grow with the screen (tokens.css), so the width there is a share of it. A
                       plain row's cards share the content's width (about 84vw on desktop) four at most to a screen. */}
-                  {/* A card with its own clip (`video`; Stride Social's campaigns) plays it while it's the open one (deck.ts). */}
-                  {c.video && opens && (
-                    <video class="deck__image deck__reel" muted loop playsinline preload="none" poster={c.image?.src} tabindex="-1" aria-hidden="true" data-deck-reel>
-                      <source src={c.video} type="video/mp4" />
-                    </video>
+                  {/* A card with its own clip (`reel`; Stride Social's strategies and campaigns) plays it while it's the
+                      open one (deck.ts), labelled with who and what it shows. */}
+                  {c.reel && opens && (
+                    <>
+                      <video class="deck__image deck__reel" muted loop playsinline preload="none" poster={c.reel.poster ?? c.image?.src} tabindex="-1" aria-hidden="true" style={c.reel.position ? `object-position: ${c.reel.position}` : undefined} data-deck-reel>
+                        <source src={c.reel.src} type="video/mp4" />
+                      </video>
+                      <span class="deck__shade" aria-hidden="true"></span>
+                      {c.reel.credit && <span class="deck__credit">{c.reel.credit}</span>}
+                    </>
                   )}
-                  {c.image && !(c.video && opens) && <img class="deck__image" src={c.image.src} alt="" style={c.image.position ? `object-position: ${c.image.position}` : undefined} sizes={opens ? '(min-width: 1921px) 33.4vw, 640px' : lineup ? '(min-width: 1921px) 18.75vw, 360px' : `(min-width: 1024px) ${Math.ceil(84 / Math.min(4, t.cards.length))}vw, 300px`} loading="lazy" decoding="async" draggable="false" />}
+                  {c.image && !(c.reel && opens) && <img class="deck__image" src={c.image.src} alt="" style={c.image.position ? `object-position: ${c.image.position}` : undefined} sizes={opens ? '(min-width: 1921px) 33.4vw, 640px' : lineup ? '(min-width: 1921px) 18.75vw, 360px' : `(min-width: 1024px) ${Math.ceil(84 / Math.min(4, t.cards.length))}vw, 300px`} loading="lazy" decoding="async" draggable="false" />}
                   {c.mark ? (
                     <>
                       {/* Desktop: one triangle on all of them, standing as the Stride mark's do (its foot flat, its upright
@@ -321,6 +326,52 @@ const icons: Record<string, string> = {
 
   .deck__cta:hover svg {
     translate: 0.1875rem 0;
+  }
+
+  /* Over a card's clip, a shade rising from its foot, so its name and words read over the clip's own captions; its
+     words two lines at most (the whole caption is in its big card). */
+  .deck__shade {
+    position: absolute;
+    inset: 35% 0 0;
+    z-index: -1;
+    background: linear-gradient(to top, rgb(var(--navy-900-rgb) / 0.94), rgb(var(--navy-900-rgb) / 0.72) 42%, transparent);
+    pointer-events: none;
+  }
+
+  .deck__card:has(> .deck__reel) .deck__copy {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
+  /* Who and what a card's clip shows, at its top right, while it's the open one. */
+  .deck__credit {
+    position: absolute;
+    top: 1.375rem;
+    right: 1.25rem;
+    z-index: 1;
+    max-width: calc(100% - 5rem);
+    padding: 0.3125rem 0.6875rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgb(var(--navy-900-rgb) / 0.55);
+    backdrop-filter: blur(0.5rem);
+    -webkit-backdrop-filter: blur(0.5rem);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--white);
+    opacity: 0;
+    transition: opacity 300ms var(--ease-out);
+  }
+
+  .deck__cards > li.is-open .deck__credit {
+    opacity: 1;
   }
 
   .deck__lede {
