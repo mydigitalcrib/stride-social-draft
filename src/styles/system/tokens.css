@@ -42,6 +42,8 @@
 
   /* Type families */
   --font-display: 'Archivo Variable', 'Archivo', 'Arial Narrow', system-ui, sans-serif;
+  /* Titles: the same, their full stop Stride's triangle (glass.css, 'Stride Stop'). */
+  --font-titles: 'Stride Stop', 'Archivo Variable', 'Archivo', 'Arial Narrow', system-ui, sans-serif;
   --font-text: 'Inter Variable', 'Inter', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
   --font-serif: 'Instrument Serif', Georgia, serif;

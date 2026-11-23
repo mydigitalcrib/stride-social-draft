@@ -170,9 +170,8 @@ export const footerColumns: { title: string; links: NavLink[] }[] = [
   {
     title: 'Stride Social',
     links: [
-      // "Services" in place of "Overview" (the owner, 2026-11-18, after trying "Our strategies"): /social is the feed of
-      // its strategies.
-      { label: 'Services', href: '/social' },
+      // "Influencer Strategies" (the owner, 2026-11-23; "Services" from 2026-11-18): /social is the feed of its strategies.
+      { label: 'Influencer Strategies', href: '/social' },
       { label: 'Our Work', href: '/work' },
       { label: 'Start a campaign', href: '/social/enquire' },
     ],
@@ -184,10 +183,7 @@ export const footerColumns: { title: string; links: NavLink[] }[] = [
       { label: 'Apply', href: '/talent/apply' },
     ],
   },
-  {
-    title: 'Stride Academy',
-    links: [{ label: 'Overview', href: '/academy' }],
-  },
+  // No Stride Academy column (the owner, 2026-11-23: the footer only; the page stays and the menus keep it).
 ];
 
 export const legalLinks: NavLink[] = [

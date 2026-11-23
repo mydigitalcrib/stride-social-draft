@@ -8,8 +8,8 @@ sections:
   empty:
     status: draft
     body: We're putting this archive together. In the meantime, see what we do for creators and brands.
-  # The page's close (drafted by us, 2026-11-12).
+  # The page's close (the owner's words, 2026-11-23): to the brand form (/social/enquire, which goes to Stride OS's).
   join:
-    status: draft
-    headline: Got an event in mind?
-    cta: { label: Get in touch, href: /contact }
+    status: approved
+    headline: Start a campaign today
+    cta: { label: Start a campaign, href: /social/enquire }

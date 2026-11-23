@@ -34,6 +34,24 @@
   color: rgb(var(--ink) / 0.8);
 }
 
+/* Titles end on Stride's triangle, not a dot (the owner, 2026-11-23: "the dot after Stride Sport is a triangle instead of
+   a dot"): a font of one glyph, the full stop drawn as one of the mark's triangles (public/fonts/stride-stop.woff2, made
+   for the site), put in front of the display font on titles only. Only the full stop comes from it (unicode-range), so
+   the words, the page's tab and what a screen reader or a search engine reads keep a real full stop. Not on an
+   article's title or a case study's name, which can hold a web address (Insights, Our Work). */
+@font-face {
+  font-family: 'Stride Stop';
+  src: url('/fonts/stride-stop.woff2') format('woff2');
+  unicode-range: U+002E;
+  font-weight: 1 1000;
+  font-stretch: 50% 200%;
+  font-display: block;
+}
+
+:is(.exp-title, .story__name, .sides__title, .eclose__title, .news__title, .formstage__title):not(.read__title, .latest__name, .reel__name) {
+  --font-display: var(--font-titles);
+}
+
 .exp-title {
   font-family: var(--font-display);
   font-weight: 850;

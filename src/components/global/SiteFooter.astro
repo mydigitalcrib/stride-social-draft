@@ -18,11 +18,10 @@ export interface Props {
 
 const { noDesk = false } = Astro.props;
 
+// Academy and General enquiries left out (the owner, 2026-11-23).
 const contactRoutes = [
   { label: 'Brand enquiries', href: '/social/enquire' },
   { label: 'Creator applications', href: '/talent/apply' },
-  { label: 'Academy', href: '/academy' },
-  { label: 'General enquiries', href: '/contact' },
 ];
 // The Contact column's place in the credits: after the others.
 const lastCol = footerColumns.length;
@@ -100,7 +99,7 @@ const lastCol = footerColumns.length;
   .footer__cols {
     grid-column: 5 / -1;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: var(--space-6);
   }
 
