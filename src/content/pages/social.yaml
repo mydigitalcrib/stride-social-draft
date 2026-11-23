@@ -109,8 +109,10 @@ sections:
         position: 55% 40%
       - label: Campaign Execution
         copy: We manage briefs, content approvals, posting schedules and creator relationships, so content lands on time and is ready to reuse across ads, email and social.
-        image: /assets/site/social-events-dinner.jpg
-        alt: Guests at a candlelit dinner on a terrace at night, a city's lights below
+        # The owner's picture for it (2026-11-23), cut inside its dark rounded frame.
+        image: /assets/site/social-approach-execution.jpg
+        alt: Three young women laughing round a laptop at a candlelit table on a terrace at night, a camera filming them and a drawn clapperboard above, in black and white
+        position: 50% 28%
       - label: Reporting
         copy: You get clear reports on reach, engagement and content performance, written so anyone in your business can read them, and we use them to sharpen the next wave.
         # The owner's picture for it (2026-11-23).

@@ -204,6 +204,7 @@ viewer and only the photograph was kept: no client logos, figures, quotes or sli
 | `public/assets/site/social-street-interview.jpg` | A presenter interviewing a young man in the street | UGC Production; "Creator Selection" |
 | `public/assets/site/social-tiktok-phones.jpg` | Three phones: a TikTok Shop video, the product page, the checkout | TikTok Shop; TikTok Shop Livestreams; "Reporting" |
 | `public/assets/site/social-approach-reporting.jpg` | Reporting in /social's Our Approach: a laptop, a printed report of charts, a drawn megaphone and a rising arrow, in black and white | The owner (2026-11-23) | To confirm: it looks like a stock collage; if it is, its licence must allow commercial use | 2026-11-23 |
+| `public/assets/site/social-approach-execution.jpg` | Campaign Execution in /social's Our Approach: three young women round a laptop on a terrace at night, a camera filming them and a drawn clapperboard, in black and white (cut inside the file's dark rounded frame) | The owner (2026-11-23) | To confirm: it looks like a stock collage; if it is, its licence must allow commercial use | 2026-11-23 |
 | `public/assets/site/social-team.jpg` | The Stride Social team in their office, in black and white | Influencer Activations; "Strategy" |
 | `public/assets/site/social-events-dinner.jpg` | A candlelit dinner on a terrace at night | Influencer Events; "Campaign Execution" |
 | `public/assets/site/social-events-run.jpg` | A run club event in a city street | Influencer Events |
