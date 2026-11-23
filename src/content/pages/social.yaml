@@ -113,8 +113,10 @@ sections:
         alt: Guests at a candlelit dinner on a terrace at night, a city's lights below
       - label: Reporting
         copy: You get clear reports on reach, engagement and content performance, written so anyone in your business can read them, and we use them to sharpen the next wave.
-        image: /assets/site/social-tiktok-phones.jpg
-        alt: Three phones showing a creator's TikTok Shop video, the product page and the checkout
+        # The owner's picture for it (2026-11-23).
+        image: /assets/site/social-approach-reporting.jpg
+        alt: A laptop on a desk beside a glass of water and a printed report of bar and ring charts, with a drawn megaphone and a rising arrow, in black and white
+        position: 60% 55%
 
   final:
     status: approved
