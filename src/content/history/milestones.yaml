@@ -63,6 +63,19 @@
   status: verified
   source: Stride's history, from the owner (2026-11-13)
   order: 4
+- id: m2023-christmas
+  year: 2023
+  title: "Stride's first Christmas"
+  body: |-
+    At Christmas 2023, Stride sends its first gifts to its talent: parcels and cards, packed by hand at the office table.
+  images:
+    - src: /assets/history/2023-first-christmas.jpg
+      alt: "Two of the Stride team at a table covered in padded envelopes and red cards, packing Christmas gifts for Stride's talent"
+    - src: /assets/history/2023-first-christmas-2.jpg
+      alt: "Christmas presents wrapped in red, white and brown paper with ribbons, on a wooden table, softly out of focus"
+  status: verified
+  source: The owner (2026-11-13), with the photograph, and its year corrected to 2023 (2026-11-23); the words drafted by us
+  order: 5
 - id: m2024-ims
   year: 2024
   title: "The Influencer Marketing Show"
@@ -79,7 +92,7 @@
       alt: "The Influencer Marketing Show USA's title card, dated 3 to 4 June 2024"
   status: verified
   source: Stride's history, from the owner (2026-11-13), with the owner's photograph and the show's title card
-  order: 5
+  order: 6
 - id: m2024-ces
   year: 2024
   title: "CES Las Vegas"
@@ -95,7 +108,7 @@
       alt: "A member of the Stride team standing behind the giant #CES2024 letters outside in Las Vegas, under a cloudy sky"
   status: verified
   source: The owner (2026-11-13), with the photograph
-  order: 6
+  order: 7
 - id: m2024
   year: 2024
   title: "Over 200 talent"
@@ -105,30 +118,17 @@
   creators: 4
   status: verified
   source: Stride's history, from the owner (2026-11-13)
-  order: 7
-- id: m2024-christmas
-  year: 2024
-  title: "Stride's first Christmas"
-  body: |-
-    At Christmas 2024, Stride sends its first gifts to its talent: parcels and cards, packed by hand at the office table.
-  images:
-    - src: /assets/history/2024-first-christmas.jpg
-      alt: "Two of the Stride team at a table covered in padded envelopes and red cards, packing Christmas gifts for Stride's talent"
-    - src: /assets/history/2024-first-christmas-2.jpg
-      alt: "Christmas presents wrapped in red, white and brown paper with ribbons, on a wooden table, softly out of focus"
-  status: verified
-  source: The owner (2026-11-13), with the photograph; the words drafted by us
   order: 8
 - id: m2025
   year: 2025
   title: "New divisions"
   body: |-
-    Stride Talent officially launches divisions for each kind of content its talent publish: Gaming, AI, Family, Fashion, Technology, Beauty, Outdoors and Lifestyle.
-  # One creator from each of these niches that is a division on the roster (the owner, 2026-11-13); AI, Technology and
-  # Outdoors have none yet.
-  divisions: [gaming, family, fashion, beauty, lifestyle]
+    Stride Talent officially launches divisions for each kind of content its talent publish: Gaming, AI, Family, Fashion, Technology, Beauty, Outdoors, Lifestyle and Pets.
+  # One creator from each of these niches that is a division on the roster (the owner, 2026-11-13; Pets added by the
+  # owner, 2026-11-23); AI, Technology and Outdoors have none yet.
+  divisions: [gaming, family, fashion, beauty, lifestyle, pets]
   status: verified
-  source: Stride's history, from the owner (2026-11-13)
+  source: Stride's history, from the owner (2026-11-13; Pets added 2026-11-23)
   order: 9
 - id: m2025-socialjet
   year: 2025

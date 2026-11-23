@@ -134,6 +134,12 @@ sections:
           - {src: /assets/video/talent-family-heidiixoxo.mp4, poster: /assets/site/talent-family-heidiixoxo.jpg, alt: "A family's holiday booked with Luxury Escapes", creator: heidiixoxo}
           - {src: /assets/video/talent-family-hannahburnns.mp4, poster: /assets/site/talent-family-hannahburnns.jpg, alt: "A mum shows the Papablic baby bottle washer she couldn't live without", creator: hannahburnns}
           - {src: /assets/video/talent-family-bristolwiththeboys.mp4, poster: /assets/site/talent-family-bristolwiththeboys.jpg, alt: "A mum of boys talks about trusting a Koru Kids nanny with her children after school", creator: bristolwiththeboys}
+      # Stride Pets (the owner, 2026-11-23: "we need to add Stride Pets"): no clips yet, so its stories are its creators'
+      # (their photo, or their clip once their roster entry has one), chosen by the roster's rules.
+      - key: pets
+        label: Pets
+        creators: []
+        rosterPost: true
       - key: food
         label: Food
         creators: []

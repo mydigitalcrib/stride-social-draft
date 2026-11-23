@@ -96,7 +96,7 @@ const jsonLd = [
 
 <SiteLayout title="About Stride | Social, Talent and Academy" description={s.hero.body} jsonLd={jsonLd} headerOverlay>
   <BackVideo look="deep" mp4="/assets/video/stride-showreel-desktop.mp4" webm="/assets/video/stride-showreel-desktop.webm" poster="/assets/site/stride-showreel-desktop-poster.jpg" blur={12} />
-  <StoryReel copy={{ headline: s.hero.headline, body: s.hero.body }} stops={stops} crumbs={[{ label: 'About' }]}>
+  <StoryReel copy={{ headline: s.hero.headline, body: s.hero.body, image: s.hero.image }} stops={stops} crumbs={[{ label: 'About' }]}>
     {isPreview && <PlaceholderNotice label="Needed from Stride">{(s.mission.awaiting ?? []).join(' · ')}</PlaceholderNotice>}
   </StoryReel>
   {/* The people behind Stride, under the story: Our Team's field of faces, on the same navy. */}

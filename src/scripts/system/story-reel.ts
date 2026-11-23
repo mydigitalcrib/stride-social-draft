@@ -71,6 +71,7 @@ export function initStoryReel() {
   const lead = root.querySelector<HTMLElement>('[data-story-lead]');
   const chapters = [...root.querySelectorAll<HTMLElement>('[data-story-chapter]')];
   const big = root.querySelector<HTMLElement>('[data-story-big]');
+  const door = root.querySelector<HTMLElement>('[data-story-door]');
   const cols = [...root.querySelectorAll<HTMLElement>('.story__digits')];
   const word = root.querySelector<HTMLElement>('[data-story-word]');
   const medias = [...root.querySelectorAll<HTMLElement>('[data-story-media]')];
@@ -308,6 +309,7 @@ export function initStoryReel() {
       lead?.style.setProperty('--lead', l);
       lead?.style.setProperty('--lead-events', Number(l) > 0.2 ? 'auto' : 'none');
       big?.style.setProperty('--lead', l);
+      door?.style.setProperty('--lead', l);
     }
     show(seg < 0.5 ? -1 : Math.min(n - 1, Math.floor(seg - 0.5)));
     if (scrubbing && !reduced()) clock(seg - 1);

@@ -333,6 +333,8 @@ const sectionCopy = z.object({
     .array(z.object({ key: z.string().optional(), label: z.string(), copy: z.string().optional(), cta: z.string().optional(), href: z.string().optional(), audience: z.string().optional(), image: assetPath.optional(), alt: z.string().optional(), position: z.string().optional(), channel: z.string().optional(), embed: z.boolean().optional() }))
     .optional(),
   awaiting: z.array(z.string()).optional(),
+  /** One photograph for the section (About's opening shows it beside the words). */
+  image: media.optional(),
   /** Photographs for the section, each with an optional caption (About's Our story shows them as prints). */
   images: z.array(media.extend({ caption: z.string().optional() })).optional(),
   /** The counts under a specialist page's headline (Stride Sport, Podcasts, Speakers): false leaves them out. */

@@ -7,6 +7,10 @@ sections:
     headline: About Stride.
     # The homepage hero line (client brief, PDF §3).
     body: One global group. Three businesses shaping how creators build careers, how brands reach audiences, and how the next generation gets started.
+    # Beside the words on About's opening, as a print (the owner's photograph, 2026-11-23).
+    image:
+      src: /assets/history/stride-group-door.jpg
+      alt: "An open doorway in a pale yellow wall, with Stride Group's sign glowing in blue neon inside"
 
   model:
     status: approved
