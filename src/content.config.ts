@@ -158,6 +158,7 @@ const roster = defineCollection({
         twitch: z.string().url(),
         podcast: z.string().url(),
         x: z.string().url(),
+        linkedin: z.string().url(),
         website: z.string().url(),
       })
       .partial()

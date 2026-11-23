@@ -29,6 +29,7 @@ export const platformNames = {
   twitch: 'Twitch',
   podcast: 'Podcast',
   x: 'X',
+  linkedin: 'LinkedIn',
   website: 'Website',
 } as const;
 export type Platform = keyof typeof platformNames;
