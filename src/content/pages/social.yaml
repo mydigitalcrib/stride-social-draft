@@ -104,9 +104,10 @@ sections:
         position: 50% 40%
       - label: Creator Selection
         copy: We source and vet creators who match your audience, checking quality, brand fit and authenticity, and we handle every conversation from pitch to post.
-        image: /assets/site/social-street-interview.jpg
-        alt: A presenter holding a microphone, interviewing a young man in the street
-        position: 55% 40%
+        # The owner's picture for it (2026-11-23), cut inside its dark rounded frame.
+        image: /assets/site/social-approach-creators.jpg
+        alt: A presenter in a hijab holding a microphone to a smiling young man in a hoodie in a park, a drawn clapperboard above them, in black and white
+        position: 50% 35%
       - label: Campaign Execution
         copy: We manage briefs, content approvals, posting schedules and creator relationships, so content lands on time and is ready to reuse across ads, email and social.
         # The owner's picture for it (2026-11-23), cut inside its dark rounded frame.
