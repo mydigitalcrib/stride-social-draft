@@ -101,6 +101,41 @@ function openDeck(root: HTMLElement, tabs: HTMLButtonElement[], panels: HTMLElem
   };
 }
 
+// A card's own clip (`video`: Stride Social's campaigns): the open card plays it while its tab is shown and the deck is
+// on screen; the others rest on their first frame. A big card's film playing pauses them.
+function playReels(root: HTMLElement) {
+  const reels = [...root.querySelectorAll<HTMLVideoElement>('video[data-deck-reel]')];
+  if (!reels.length) return;
+  let seen = false;
+  let held = false;
+  const sync = () =>
+    reels.forEach((v) => {
+      const on = seen && !held && !reduced() && !document.hidden && !!v.closest('li')?.classList.contains('is-open') && !v.closest<HTMLElement>('[data-deck-panel]')?.hidden;
+      if (on && v.paused) {
+        v.preload = 'auto';
+        v.play().catch(() => {});
+      } else if (!on && !v.paused) v.pause();
+    });
+  new IntersectionObserver(([e]) => {
+    seen = e.isIntersecting;
+    sync();
+  }, { threshold: 0.2 }).observe(root);
+  const watch = new MutationObserver(sync);
+  reels.forEach((v) => {
+    const li = v.closest('li');
+    const panel = v.closest('[data-deck-panel]');
+    if (li) watch.observe(li, { attributes: true, attributeFilter: ['class'] });
+    if (panel) watch.observe(panel, { attributes: true, attributeFilter: ['hidden'] });
+  });
+  const film = (e: Event) => {
+    if (!(e.target instanceof HTMLVideoElement) || e.target.matches('[data-deck-reel]')) return;
+    held = e.type === 'play';
+    sync();
+  };
+  ['play', 'pause', 'ended'].forEach((k) => root.addEventListener(k, film, true));
+  document.addEventListener('visibilitychange', sync);
+}
+
 export function initDecks() {
   // A video behind a section (.exp-haze) plays only while it's in view, with motion allowed; phones and tablets play
   // its smaller file (the same name with -phone).
@@ -136,6 +171,7 @@ export function initDecks() {
     const grown = initGrow(root, { canOpen: (card) => !dragged && !(card.dataset.desk && desktop()), hold: true });
     const made = { spines: openDeck, lineup: initLineup, stairs: initStairs }[root.dataset.variant ?? ''];
     const chosen = made?.(root, tabs, panels);
+    playReels(root);
 
     const bar = root.querySelector('.deck__bar');
     const tray = document.querySelector<HTMLElement>('.tray[data-tray]');

@@ -8,6 +8,9 @@ sections:
     # The owner's words (2026-11-17): it was "The right creators. Real impact.", the brief's headline.
     lines: [The right, strategies., Real impact.]
     body: We build influencer campaigns that put brands in front of the audiences that matter, through talent, content, and social-first strategy.
+    # The way in under the name, where the line was (the owner, 2026-11-23: "remove this and just add the CTA"); the
+    # old menu's label.
+    cta: { label: Start a Campaign, href: /social/enquire }
     items:
       - label: Speak To Our Team
         href: /social/enquire

@@ -25,7 +25,7 @@ export interface Props {
   intro?: string;
   /** Desktop: the division's name above the cards instead, margin to margin ("Stride" in outline, as on the
    *  homepage's rows), with its line on the left and the intro on the right. */
-  title?: { pre: string; name: string; line?: string };
+  title?: { pre: string; name: string; line?: string; cta?: { label: string; href: string } };
   /** Desktop: a silent looping video behind the whole section, blurred, with noise (deck.ts plays it). `stars`: the
    *  Social globe's starfield, as sharp and lightly shaded as the globe has it, running on under the next section's
    *  top, where the globe's own fades in over it, so the two read as one sky. */
@@ -74,9 +74,17 @@ const icons: Record<string, string> = {
     {title ? (
       <header class="deck__head">
         <p class="deck__title" id={`${id}-title`} data-deck-title><span class="deck__title-pre">{title.pre}</span> <span class="deck__title-name">{title.name}</span></p>
-        {(title.line || intro) && (
+        {(title.line || title.cta || intro) && (
           <div class="deck__head-row">
-            {title.line && <p class="deck__line">{title.line}</p>}
+            {/* A way in where the line would be (Stride Social, the owner, 2026-11-23). */}
+            {title.cta ? (
+              <a class="deck__cta exp-pill" href={title.cta.href}>
+                {title.cta.label}
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
+              </a>
+            ) : (
+              title.line && <p class="deck__line">{title.line}</p>
+            )}
             {intro && <p class="deck__lede">{intro}</p>}
           </div>
         )}
@@ -103,7 +111,13 @@ const icons: Record<string, string> = {
                 <a class:list={['deck__card', { 'on-photo': c.image || opens || lineup }]} href={c.href} draggable="false" data-grow-card={c.direct ? undefined : `${t.key}-${i}`} data-desk={c.direct ? undefined : t.atDesk}>
                   {/* Past 1920 wide the cards grow with the screen (tokens.css), so the width there is a share of it. A
                       plain row's cards share the content's width (about 84vw on desktop) four at most to a screen. */}
-                  {c.image && <img class="deck__image" src={c.image.src} alt="" style={c.image.position ? `object-position: ${c.image.position}` : undefined} sizes={opens ? '(min-width: 1921px) 33.4vw, 640px' : lineup ? '(min-width: 1921px) 18.75vw, 360px' : `(min-width: 1024px) ${Math.ceil(84 / Math.min(4, t.cards.length))}vw, 300px`} loading="lazy" decoding="async" draggable="false" />}
+                  {/* A card with its own clip (`video`; Stride Social's campaigns) plays it while it's the open one (deck.ts). */}
+                  {c.video && opens && (
+                    <video class="deck__image deck__reel" muted loop playsinline preload="none" poster={c.image?.src} tabindex="-1" aria-hidden="true" data-deck-reel>
+                      <source src={c.video} type="video/mp4" />
+                    </video>
+                  )}
+                  {c.image && !(c.video && opens) && <img class="deck__image" src={c.image.src} alt="" style={c.image.position ? `object-position: ${c.image.position}` : undefined} sizes={opens ? '(min-width: 1921px) 33.4vw, 640px' : lineup ? '(min-width: 1921px) 18.75vw, 360px' : `(min-width: 1024px) ${Math.ceil(84 / Math.min(4, t.cards.length))}vw, 300px`} loading="lazy" decoding="async" draggable="false" />}
                   {c.mark ? (
                     <>
                       {/* Desktop: one triangle on all of them, standing as the Stride mark's do (its foot flat, its upright
@@ -285,6 +299,28 @@ const icons: Record<string, string> = {
     font-weight: 800;
     line-height: 1.02;
     letter-spacing: -0.025em;
+  }
+
+  .deck__cta {
+    flex: none;
+    gap: 0.75rem;
+    min-height: 3.25rem;
+    padding-inline: 1.75rem;
+  }
+
+  .deck__cta svg {
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: translate 300ms var(--ease-out);
+  }
+
+  .deck__cta:hover svg {
+    translate: 0.1875rem 0;
   }
 
   .deck__lede {

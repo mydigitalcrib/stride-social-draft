@@ -1,0 +1,106 @@
+---
+// Stride Social's menu (the owner, 2026-11-23: the old page's layout, "a more aesthetic version", restructured with the
+// content /social already had): its name, giant, with what it does and the way in where its line was, over the shared
+// menu (experience/Deck, `spines`), in front of Contact's background (no night sky, no meteors, no globe). Our Strategies
+// (the owner's four groupings of the services, each opening its services), Industries (those with case studies, with the
+// real count), Featured Work (Stride Social's own campaign reels from Instagram, config/stride-social-instagram.ts, the
+// open card playing its clip and its big card the whole film) and Our Approach (the four steps). Nothing is added to a
+// brief: the enquiry is Stride OS's form, which a pick doesn't reach.
+import { getCollection, getEntry } from 'astro:content';
+import Deck from '../experience/Deck.astro';
+import { routes } from '@/lib/routes';
+import type { Card } from '@/lib/experience';
+import { strideSocialInstagram as ig } from '@/config/stride-social-instagram';
+
+export interface Props {
+  strategies: { key?: string; label: string; copy?: string; image?: string; alt?: string; position?: string }[];
+  approach: { label: string; copy?: string; image?: string; alt?: string; position?: string }[];
+  /** What Stride Social does, beside the way in. */
+  intro?: string;
+  /** Its name, giant, above the cards, with the way in under it (experience/Deck.astro, `title`). */
+  title: { pre: string; name: string; cta?: { label: string; href: string } };
+}
+
+const { strategies, approach, intro, title } = Astro.props;
+
+// Our Strategies: each of the owner's groupings holds the services it speaks of, the lead one first.
+const cardIcons = ['megaphone', 'layers', 'bag', 'wave'];
+const groups: Record<string, string[]> = {
+  'influencer-activations': ['influencer-activations', 'influencer-seeding'],
+  'ugc-production': ['ugc-production'],
+  'tiktok-shop': ['tiktok-shop', 'tiktok-shop-livestreams'],
+  'influencer-events': ['influencer-events', 'podcast-activations'],
+};
+const services: Card[] = await Promise.all(
+  strategies.map(async (item, i) => {
+    const entries = (await Promise.all((groups[item.key ?? ''] ?? []).map((id) => getEntry('services', id)))).flatMap((e) => (e ? [e] : []));
+    return {
+      name: item.label,
+      text: item.copy,
+      href: entries[0] ? routes.service(entries[0].id) : '/social',
+      // A photo chosen for this card (`image`, `alt`, `position`), or the lead service's.
+      image: item.image ? { src: item.image, alt: item.alt ?? item.label, position: item.position } : (entries[0]?.data.hero ?? undefined),
+      mark: cardIcons[i],
+      blocks: entries.map((e) => ({ title: e.data.name, text: e.data.descriptor, list: e.data.deliverables, href: routes.service(e.id), action: 'View service' })),
+    };
+  }),
+);
+
+// Industries: real case studies only.
+const work = (await getCollection('work', (w) => w.data.visible)).sort((a, b) => a.data.order - b.data.order);
+const clientOf = async (w: (typeof work)[number]) => (await getEntry(w.data.client))?.data.name ?? w.data.title;
+// Each industry takes a photo the ones before it haven't used, where it has one.
+const usedPhotos = new Set<string>();
+const photoFor = (tagged: typeof work) => {
+  const pick = tagged.find((w) => w.data.card && !usedPhotos.has(w.data.card.src)) ?? tagged[0];
+  if (pick?.data.card) usedPhotos.add(pick.data.card.src);
+  return pick?.data.card;
+};
+const industries: Card[] = (
+  await Promise.all(
+    (await getCollection('industries'))
+      .sort((a, b) => a.data.order - b.data.order)
+      .map(async (ind) => {
+        const tagged = work.filter((w) => w.data.industries.some((r) => r.id === ind.id));
+        if (!tagged.length) return null;
+        return {
+          name: ind.data.label,
+          text: `${tagged.length} ${tagged.length === 1 ? 'case study' : 'case studies'}`,
+          href: routes.workFiltered({ industry: ind.id }),
+          image: photoFor(tagged),
+          blocks: await Promise.all(tagged.slice(0, 4).map(async (w) => ({ title: await clientOf(w), text: w.data.summary, href: routes.caseStudy(w.id), action: 'View case study' }))),
+          action: { label: 'See all', href: routes.workFiltered({ industry: ind.id }) },
+        };
+      }),
+  )
+).flatMap((c) => (c ? [c] : []));
+
+// Featured Work: Stride Social's campaign reels, as the feed had them (their captions as posted, first frames as
+// posters), the best-known brands first.
+const featured: Card[] = ig.reels.slice(0, 8).map((r) => ({
+  name: r.client,
+  text: r.text,
+  href: `https://www.instagram.com/reel/${r.code}/`,
+  image: { src: `/assets/site/stridesociall-reel-${r.code}-first.jpg`, alt: `${r.client} campaign${r.creator ? ` with ${r.creator}` : ''}` },
+  video: `/assets/video/stridesociall-reel-${r.code}.mp4`,
+  action: { label: 'View on Instagram', href: `https://www.instagram.com/reel/${r.code}/`, external: true },
+}));
+const steps: Card[] = approach.map((a) => ({ name: a.label, text: a.copy, href: '#approach', image: a.image ? { src: a.image, alt: a.alt ?? a.label, position: a.position } : undefined }));
+---
+
+<Deck
+  variant="spines"
+  id="social-menu"
+  label="Explore Stride Social"
+  tone="social"
+  look="deep"
+  intro={intro}
+  title={title}
+  onVideo
+  tabs={[
+    { key: 'do', label: 'Our Strategies', icon: 'grid', cards: services },
+    { key: 'industries', label: 'Industries', icon: 'layers', cards: industries },
+    { key: 'work', label: 'Featured Work', icon: 'play', cards: featured },
+    { key: 'approach', label: 'Our Approach', icon: 'target', anchor: 'approach', numbered: true, atDesk: 'still', cards: steps },
+  ]}
+/>

@@ -1,24 +1,29 @@
 ---
-// Stride Advertising, /social: Stride Social as a feed of its campaigns, strategies and approach, scrolled the way TikTok
-// plays one (social/SocialFeed.astro; the owner, 2026-11-18: Draft 1 became the page, the old page with its menu and
-// Draft 2 were deleted). It ends on a giant row, as Stride Talent's "Join the roster." does: "Start your campaign
-// now.", opening onto Stride's own photographs, the way to the brand enquiry.
+// Stride Advertising, /social (the owner, 2026-11-23: the old page's layout, "a more aesthetic version", restructured with
+// the content the feed had, in front of Contact's background): its name, giant, with what it does and the way in, over
+// its menu (social/SocialMenu: Our Strategies, Industries, Featured Work, Our Approach), then the brand partners' logos
+// and the closing line with its way in (social/SocialClose). The TikTok-style feed it replaces (SocialFeed.astro,
+// 2026-11-18) is in Git.
 import { getEntry } from 'astro:content';
 import SiteLayout from '@/layouts/SiteLayout.astro';
 import BackVideo from '@/components/core/BackVideo.astro';
-import SocialFeed from '@/components/social/SocialFeed.astro';
-import TalentClose from '@/components/talent/TalentClose.astro';
-import { getSocialPictures } from '@/lib/social-pictures';
+import SocialMenu from '@/components/social/SocialMenu.astro';
+import SocialClose from '@/components/social/SocialClose.astro';
+import { getPartners } from '@/lib/partners';
 
 const page = await getEntry('pages', 'social');
 if (!page) throw new Error('Missing src/content/pages/social.yaml');
-const close = page.data.sections.feed?.items?.find((i) => i.key === 'close');
-// Behind it, Stride's own photographs (lib/social-pictures.ts, shared with the homepage's Stride Social row).
-const pictures = await getSocialPictures();
+const s = page.data.sections;
+// The same brand partners as under the homepage's three sides.
+const home = await getEntry('pages', 'home');
+const { shown: partners } = await getPartners(home?.data.sections.partners?.featured ?? []);
+const [pre = 'Stride', ...rest] = (s.hero.eyebrow ?? 'Stride Social').split(' ');
+const cta = s.hero.cta ? { label: s.hero.cta.label, href: s.hero.cta.href } : undefined;
 ---
 
-<SiteLayout title="Stride Social | Influencer Marketing Agency" description={page.data.sections.hero.body} division="social" look="deep" headerOverlay>
+<SiteLayout title="Stride Social | Influencer Marketing Agency" description={s.hero.body} division="social" look="deep" headerOverlay>
   <BackVideo look="deep" mp4="/assets/video/stride-showreel-desktop.mp4" webm="/assets/video/stride-showreel-desktop.webm" poster="/assets/site/stride-showreel-desktop-poster.jpg" blur={10} />
-  <SocialFeed />
-  {close && <TalentClose items={[{ key: 'campaign', label: close.label, href: close.href ?? '/social/enquire' }]} pictures={pictures} tone="social" label="Start your campaign with Stride Social" fit={19.5} fitPhone={7.4} />}
+  <h1 class="visually-hidden">Stride Social</h1>
+  <SocialMenu strategies={s.menu?.items ?? []} approach={s.approach?.items ?? []} intro={s.hero.body} title={{ pre, name: rest.join(' ') || 'Social', cta }} />
+  {s.final?.headline && s.final.cta && <SocialClose brands={partners} headline={s.final.headline} cta={{ label: s.final.cta.label, href: s.final.cta.href ?? '/social/enquire' }} />}
 </SiteLayout>

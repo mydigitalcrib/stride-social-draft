@@ -1,0 +1,101 @@
+---
+// Stride Social's close (the owner, 2026-11-23: "under the logos just keep the CTA and the button"): the brand partners'
+// logos on their ticker (core/BrandTicker), then the approved closing line and its way in, nothing else. The line rises
+// a line at a time as it comes into view (reveal-lines.ts) and the button follows (reveal.ts).
+import BrandTicker from '../core/BrandTicker.astro';
+
+export interface Props {
+  brands: { name: string; logo: string }[];
+  headline: string;
+  cta: { label: string; href: string };
+}
+
+const { brands, headline, cta } = Astro.props;
+---
+
+<section class="sclose" aria-labelledby="sclose-title" data-tone="social" data-look="deep">
+  <div class="sclose__logos"><BrandTicker brands={brands} /></div>
+  <div class="sclose__body">
+    <h2 class="sclose__title exp-title" id="sclose-title" data-reveal-lines>{headline}</h2>
+    <a class="sclose__cta exp-pill" href={cta.href} data-reveal>
+      {cta.label}
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
+    </a>
+  </div>
+</section>
+
+<style>
+  .sclose {
+    position: relative;
+    display: grid;
+    align-content: center;
+    gap: clamp(3rem, 9vh, 6.5rem);
+    min-height: 88svh;
+    padding-block: clamp(1rem, 3vh, 2rem) clamp(4rem, 12vh, 8rem);
+    color: rgb(var(--ink));
+  }
+
+  .sclose__logos {
+    display: grid;
+  }
+
+  .sclose__body {
+    display: grid;
+    justify-items: center;
+    gap: clamp(1.5rem, 4vh, 2.5rem);
+    padding-inline: var(--margin);
+    text-align: center;
+  }
+
+  .sclose__title {
+    max-width: 16ch;
+    font-size: clamp(2.75rem, 5.4vw, 6.25rem);
+  }
+
+  .sclose__cta {
+    gap: 0.75rem;
+    min-height: 3.25rem;
+    padding-inline: 1.75rem;
+  }
+
+  .sclose__cta svg {
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: translate 300ms var(--ease-out);
+  }
+
+  .sclose__cta:hover svg {
+    translate: 0.1875rem 0;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :global(.js) .sclose__cta[data-reveal] {
+      opacity: 0;
+      translate: 0 1.25rem;
+      transition:
+        opacity 600ms var(--ease-out) 250ms,
+        translate 700ms var(--ease-out) 250ms;
+    }
+
+    :global(.js) .sclose__cta.is-revealed {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+
+  /* Phones and tablets: a 16px root, their own sizes. */
+  @media (max-width: 1023px) {
+    .sclose {
+      min-height: 70svh;
+    }
+
+    .sclose__title {
+      font-size: clamp(2.25rem, 10vw, 4rem);
+    }
+  }
+</style>

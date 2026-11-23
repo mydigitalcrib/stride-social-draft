@@ -1,5 +1,5 @@
-// Stride Social's own case-study reels on Instagram (instagram.com/stridesociall/reels), for Stride Advertising's feed
-// (/social, social/SocialFeed.astro; the owner, 2026-11-18: "use the case studies here as videos ... only use case studies ...
+// Stride Social's own case-study reels on Instagram (instagram.com/stridesociall/reels), for Stride Advertising's Featured
+// Work (/social, social/SocialMenu.astro, the first eight; first chosen for its feed, the owner, 2026-11-18: "use the case studies here as videos ... only use case studies ...
 // use the most relevant brands"). Twenty of the account's brand case studies (its other reels are tips and trends),
 // ordered by how well known the brand is, the same creator never twice in a row. Each played whole on the site:
 // public/assets/video/stridesociall-reel-<code>.mp4, its first frame as poster (-first.jpg) and its Instagram cover
