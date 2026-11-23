@@ -89,7 +89,8 @@ const industries: Card[] = (
 // Featured Work: Stride Social's campaign reels, as the feed had them (their captions as posted), the best-known brands
 // first. Each card starts where the brand or its product shows and has that frame as its picture (`at`, -brand.jpg), so
 // it's plain what the campaign advertised (the owner, 2026-11-23); its big card plays the whole film.
-const featured: Card[] = ig.reels.slice(0, 8).map((r) => ({
+type Reel = { code: string; at?: number; creator: string; client: string; text: string };
+const featured: Card[] = (ig.reels as Reel[]).slice(0, 8).map((r) => ({
   name: r.client,
   text: r.text,
   href: `https://www.instagram.com/reel/${r.code}/`,
