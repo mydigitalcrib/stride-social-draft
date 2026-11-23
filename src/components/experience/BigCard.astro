@@ -608,6 +608,9 @@ const cols = c.blocks?.length ? Math.min(c.blocks.length, listy ? 3 : 2) : 1;
       radial-gradient(55% 65% at 100% 0%, rgb(var(--ice-rgb) / 0.1), transparent 62%),
       radial-gradient(70% 80% at 40% 120%, rgb(41 67 104 / 0.5), transparent 70%),
       linear-gradient(160deg, rgb(12 39 83 / 0.95), rgb(var(--navy-900-rgb) / 0.98) 62%);
+    /* Solid underneath, so nothing of the cards or the page shows through it (the owner, 2026-11-23: "it doesn't look
+       too good to have that transparency stuff behind"). */
+    background-color: var(--navy-900);
     box-shadow:
       inset 0 0 0 1px rgb(var(--ice-rgb) / 0.22),
       inset 0 1px 0 rgb(var(--white-rgb) / 0.24),
@@ -1040,10 +1043,6 @@ const cols = c.blocks?.length ? Math.min(c.blocks.length, listy ? 3 : 2) : 1;
     filter: blur(2.5rem) saturate(1.25);
     transform: scale(1.2);
     pointer-events: none;
-  }
-
-  .bigcard.bigcard--spread.bigcard--film {
-    background-color: var(--navy-900);
   }
 
   .bigcard.bigcard--spread.bigcard--film .bigcard__rest {
