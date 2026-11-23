@@ -108,7 +108,7 @@ const icons: Record<string, string> = {
           <ul class="deck__cards" role="list" style={`--n: ${t.cards.length}`}>
             {t.cards.map((c, i) => (
               <li class:list={{ 'is-open': opens && i === 0 }} style={`--i: ${i}`} data-quote={said ? c.quote : undefined} data-who={said ? (c.attribution ?? c.name) : undefined}>
-                <a class:list={['deck__card', { 'on-photo': c.image || opens || lineup }]} href={c.href} draggable="false" data-grow-card={c.direct ? undefined : `${t.key}-${i}`} data-desk={c.direct ? undefined : t.atDesk}>
+                <a class:list={['deck__card', { 'on-photo': c.image || opens || lineup }]} href={t.still ? undefined : c.href} tabindex={t.still ? 0 : undefined} draggable="false" data-grow-card={c.direct || t.still ? undefined : `${t.key}-${i}`} data-desk={c.direct || t.still ? undefined : t.atDesk}>
                   {/* Past 1920 wide the cards grow with the screen (tokens.css), so the width there is a share of it. A
                       plain row's cards share the content's width (about 84vw on desktop) four at most to a screen. */}
                   {/* A card with its own clip (`reel`; Stride Social's strategies and campaigns) plays it while it's the
@@ -140,9 +140,11 @@ const icons: Record<string, string> = {
                     {stairs && c.html && <span class="deck__html" set:html={c.html} />}
                   </span>
                   {opens && <span class="deck__spine" aria-hidden="true">{c.name}</span>}
-                  <span class="deck__arrow" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
-                  </span>
+                  {!t.still && (
+                    <span class="deck__arrow" aria-hidden="true">
+                      <svg viewBox="0 0 24 24"><path d="M5 12h13.5M13 6.5 18.5 12 13 17.5"></path></svg>
+                    </span>
+                  )}
                 </a>
               </li>
             ))}
@@ -151,7 +153,7 @@ const icons: Record<string, string> = {
       ))}
 
       {tabs.flatMap((t) =>
-        t.cards.flatMap((c, i) => (c.direct ? [] : [<BigCard card={c} growKey={`${t.key}-${i}`} eyebrow={t.label} index={i} total={t.cards.length} opens={opens} />])),
+        t.cards.flatMap((c, i) => (c.direct || t.still ? [] : [<BigCard card={c} growKey={`${t.key}-${i}`} eyebrow={t.label} index={i} total={t.cards.length} opens={opens} />])),
       )}
     </div>
 
@@ -328,22 +330,13 @@ const icons: Record<string, string> = {
     translate: 0.1875rem 0;
   }
 
-  /* Over a card's clip, a shade rising from its foot, so its name and words read over the clip's own captions; its
-     words two lines at most (the whole caption is in its big card). */
+  /* Over a card's clip, a shade rising from its foot, so its name and words read over the clip's own captions. */
   .deck__shade {
     position: absolute;
     inset: 35% 0 0;
     z-index: -1;
     background: linear-gradient(to top, rgb(var(--navy-900-rgb) / 0.94), rgb(var(--navy-900-rgb) / 0.72) 42%, transparent);
     pointer-events: none;
-  }
-
-  .deck__card:has(> .deck__reel) .deck__copy {
-    display: -webkit-box;
-    overflow: hidden;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
   }
 
   /* Who and what a card's clip shows, at its top right, while it's the open one. */

@@ -4,7 +4,7 @@
 // menu (experience/Deck, `spines`), in front of Contact's background (no night sky, no meteors, no globe). Our Strategies
 // (the owner's four groupings of the services, each opening its services), Industries (those with case studies, with the
 // real count), Featured Work (Stride Social's own campaign reels from Instagram, config/stride-social-instagram.ts, the
-// open card playing its clip and its big card the whole film) and Our Approach (the four steps). Nothing is added to a
+// open card playing its clip, nothing more) and Our Approach (the four steps). Nothing is added to a
 // brief: the enquiry is Stride OS's form, which a pick doesn't reach.
 import { getCollection, getEntry } from 'astro:content';
 import Deck from '../experience/Deck.astro';
@@ -88,16 +88,15 @@ const industries: Card[] = (
 
 // Featured Work: Stride Social's campaign reels, as the feed had them (their captions as posted), the best-known brands
 // first. Each card starts where the brand or its product shows and has that frame as its picture (`at`, -brand.jpg), so
-// it's plain what the campaign advertised (the owner, 2026-11-23); its big card plays the whole film.
+// it's plain what the campaign advertised (the owner, 2026-11-23). The cards only open in the row and play there: no
+// arrow, no big card and no way to Instagram (the owner, 2026-11-23: "it's not needed"; the tab is `still`).
 type Reel = { code: string; at?: number; creator: string; client: string; text: string };
 const featured: Card[] = (ig.reels as Reel[]).slice(0, 8).map((r) => ({
   name: r.client,
   text: r.text,
-  href: `https://www.instagram.com/reel/${r.code}/`,
+  href: '#social-menu',
   image: { src: `/assets/site/stridesociall-reel-${r.code}-brand.jpg`, alt: `${r.client} campaign${r.creator ? ` with ${r.creator}` : ''}` },
   reel: { src: `/assets/video/stridesociall-reel-${r.code}.mp4${r.at ? `#t=${r.at}` : ''}`, poster: `/assets/site/stridesociall-reel-${r.code}-brand.jpg`, credit: r.creator || undefined },
-  video: `/assets/video/stridesociall-reel-${r.code}.mp4`,
-  action: { label: 'View on Instagram', href: `https://www.instagram.com/reel/${r.code}/`, external: true },
 }));
 const steps: Card[] = approach.map((a) => ({ name: a.label, text: a.copy, href: '#approach', image: a.image ? { src: a.image, alt: a.alt ?? a.label, position: a.position } : undefined }));
 ---
@@ -114,7 +113,7 @@ const steps: Card[] = approach.map((a) => ({ name: a.label, text: a.copy, href: 
   tabs={[
     { key: 'do', label: 'Our Strategies', icon: 'grid', cards: services },
     { key: 'industries', label: 'Industries', icon: 'layers', cards: industries },
-    { key: 'work', label: 'Featured Work', icon: 'play', cards: featured },
+    { key: 'work', label: 'Featured Work', icon: 'play', still: true, cards: featured },
     { key: 'approach', label: 'Our Approach', icon: 'target', anchor: 'approach', numbered: true, atDesk: 'still', cards: steps },
   ]}
 />

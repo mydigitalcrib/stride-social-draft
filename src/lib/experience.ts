@@ -53,6 +53,9 @@ export type DeckTab = {
   cards: Card[];
   /** On desktop its cards don't grow: they say everything already (`still`), or go straight to their page (`go`). */
   atDesk?: 'still' | 'go';
+  /** On every screen its cards only open in the row: no arrow, no big card, no link (Stride Social's Featured Work, the
+   *  owner, 2026-11-23). */
+  still?: boolean;
 };
 
 const strip = (html: string) =>
