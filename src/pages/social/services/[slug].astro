@@ -13,7 +13,7 @@ import type { Card } from '@/lib/experience';
 import ServiceHero from '@/components/social/ServiceHero.astro';
 import BackVideo from '@/components/core/BackVideo.astro';
 import { creatorRegions } from '@/config/creator-regions';
-import { PHONE_CLIPS, phoneClips } from '@/config/service-phones';
+import { PHONE_CLIPS, phoneClips, serviceClips } from '@/config/service-phones';
 import { getRoster, handleOf } from '@/lib/roster';
 
 export async function getStaticPaths() {
@@ -59,7 +59,9 @@ const reels = creatorRegions
     return c ? [{ src: reel.src, poster: reel.poster, who: handleOf(c) ?? c.data.name, href: routes.creator(c.id), note: platformOf(c.data.platforms), label: `${c.data.name}: creator video` }] : [];
   });
 const turn = reels.length ? (d.number * 3) % reels.length : 0;
-const clips = [...fromWork, ...reels.slice(turn), ...reels.slice(0, turn)].slice(0, PHONE_CLIPS);
+// A service with clips chosen by hand (config/service-phones.ts `serviceClips`) plays those alone.
+const chosen = serviceClips[service.id]?.map((c) => ({ ...c, label: `${c.who}: ${c.note.toLowerCase()} video` }));
+const clips = chosen ?? [...fromWork, ...reels.slice(turn), ...reels.slice(0, turn)].slice(0, PHONE_CLIPS);
 const others: Card[] = services
   .filter((x) => x.id !== service.id)
   .map((x) => ({ name: x.data.name, text: x.data.descriptor, href: routes.service(x.id), image: x.data.hero, direct: true }));

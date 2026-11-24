@@ -18,7 +18,7 @@ import { pad } from '@/lib/experience';
 import { interfaceCopy } from '@/lib/ui-copy';
 
 type Pic = { src: string; alt: string; position?: string };
-type Clip = { src: string; poster: string; who: string; href: string; note: string; label: string };
+type Clip = { src: string; poster: string; who: string; href: string; note: string; label: string; from?: number };
 export interface Props {
   name: string;
   number: number;
@@ -85,8 +85,8 @@ const mark = '<svg viewBox="0 0 106 106" aria-hidden="true"><path d="M53 53H0L53
           <span class="shero__island" aria-hidden="true"></span>
           {clips.map((c, i) => (
             <figure class:list={['shero__clip', { 'is-on': i === 0 }]} data-shero-clip={i} aria-hidden={i === 0 ? undefined : 'true'}>
-              <video muted playsinline preload={i === 0 ? 'metadata' : 'none'} poster={c.poster} aria-label={c.label} tabindex="-1" data-shero-video data-sound="own">
-                <source src={c.src} type="video/mp4" />
+              <video muted playsinline preload={i === 0 ? 'metadata' : 'none'} poster={c.poster} aria-label={c.label} tabindex="-1" data-shero-video data-sound="own" data-from={c.from || undefined}>
+                <source src={c.from ? `${c.src}#t=${c.from}` : c.src} type="video/mp4" />
               </video>
               <figcaption class="shero__meta">
                 <a class="shero__who" href={c.href} tabindex={i === 0 ? undefined : -1}>{c.who}</a>

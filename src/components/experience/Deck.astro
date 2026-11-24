@@ -115,7 +115,7 @@ const icons: Record<string, string> = {
                       open one (deck.ts), labelled with who and what it shows. */}
                   {c.reel && opens && (
                     <>
-                      <video class="deck__image deck__reel" muted loop={!c.reel.more?.length} playsinline preload="none" poster={c.reel.poster ?? c.image?.src} tabindex="-1" aria-hidden="true" style={c.reel.position ? `object-position: ${c.reel.position}` : undefined} data-deck-reel data-reel-list={c.reel.more?.length ? JSON.stringify([{ src: c.reel.src, credit: c.reel.credit, position: c.reel.position, from: c.reel.from, cap: c.reel.cap }, ...c.reel.more]) : undefined}>
+                      <video class="deck__image deck__reel" muted loop={!c.reel.more?.length && !c.reel.from} playsinline preload="none" poster={c.reel.poster ?? c.image?.src} tabindex="-1" aria-hidden="true" style={c.reel.position ? `object-position: ${c.reel.position}` : undefined} data-deck-reel data-reel-from={!c.reel.more?.length && c.reel.from ? c.reel.from : undefined} data-reel-list={c.reel.more?.length ? JSON.stringify([{ src: c.reel.src, credit: c.reel.credit, position: c.reel.position, from: c.reel.from, cap: c.reel.cap }, ...c.reel.more]) : undefined}>
                         <source src={c.reel.from ? `${c.reel.src}#t=${c.reel.from}` : c.reel.src} type="video/mp4" />
                       </video>
                       <span class="deck__shade" aria-hidden="true"></span>

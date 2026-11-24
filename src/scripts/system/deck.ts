@@ -106,6 +106,15 @@ function openDeck(root: HTMLElement, tabs: HTMLButtonElement[], panels: HTMLElem
 function playReels(root: HTMLElement) {
   const reels = [...root.querySelectorAll<HTMLVideoElement>('video[data-deck-reel]')];
   if (!reels.length) return;
+  // A clip with a start point and no run (`data-reel-from`) goes round from that point, not from its first second.
+  reels.forEach((v) => {
+    const start = Number(v.dataset.reelFrom);
+    if (!start) return;
+    v.addEventListener('ended', () => {
+      v.currentTime = start;
+      v.play().catch(() => {});
+    });
+  });
   // A card with a run of clips (`data-reel-list`): each plays from its `from` for its `cap` seconds (or to its end), then
   // the next comes in, round again; the label at the card's top says whose it is.
   reels.forEach((v) => {

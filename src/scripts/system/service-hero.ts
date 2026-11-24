@@ -96,15 +96,17 @@ export function initServiceHero() {
     let muted = !(soundWanted() && soundAllowed());
     let seen = false;
     let raf = 0;
-    const limit = (v: HTMLVideoElement) => Math.min(Number.isFinite(v.duration) && v.duration > 0 ? v.duration : MAX_CLIP, MAX_CLIP);
+    // A clip can start further in (`data-from`, the moment that shows its service), and plays from there.
+    const from = (v: HTMLVideoElement) => Number(v.dataset.from) || 0;
+    const limit = (v: HTMLVideoElement) => Math.min(Number.isFinite(v.duration) && v.duration > 0 ? v.duration - from(v) : MAX_CLIP, MAX_CLIP);
     const paint = () => {
-      bars.forEach((b, k) => b.style.setProperty('--p', k < at ? '1' : k > at ? '0' : String(Math.min(1, videos[at].currentTime / limit(videos[at])))));
+      bars.forEach((b, k) => b.style.setProperty('--p', k < at ? '1' : k > at ? '0' : String(Math.max(0, Math.min(1, (videos[at].currentTime - from(videos[at])) / limit(videos[at]))))));
     };
     const tick = () => {
       raf = 0;
       const v = videos[at];
       paint();
-      if (v.currentTime >= limit(v) - 0.05) return show(at + 1);
+      if (v.currentTime - from(v) >= limit(v) - 0.05) return show(at + 1);
       if (!v.paused) raf = requestAnimationFrame(tick);
     };
     const play = () => {
@@ -128,12 +130,12 @@ export function initServiceHero() {
       videos.forEach((v, k) => {
         if (k === at) return;
         v.pause();
-        if (k === was) window.setTimeout(() => (v.currentTime = 0), 650);
+        if (k === was) window.setTimeout(() => (v.currentTime = from(v)), 650);
       });
       // The next one starts loading while this one plays.
       const next = videos[(at + 1) % videos.length];
       if (next.preload === 'none') next.preload = 'auto';
-      videos[at].currentTime = 0;
+      videos[at].currentTime = from(videos[at]);
       cancelAnimationFrame(raf);
       raf = 0;
       paint();

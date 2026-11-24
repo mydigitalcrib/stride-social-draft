@@ -46,5 +46,54 @@ export const phoneClips: Record<string, PhoneClip> = Object.fromEntries([
   ...['temu-2', 'temu-3', 'temu-4', 'temu-5', 'temu-6'].map((n) => own(n)),
 ]);
 
+/** A clip chosen for a service's phone: its file, its first picture, the brand it's for (`who`, never a username), what
+ *  it is (`note`), where its name leads, and the second it starts from. */
+export type ServiceClip = { src: string; poster: string; who: string; note: string; href: string; from?: number };
+
+const igReel = (code: string) => `/assets/video/ig-stridetalent-reel-${code}.mp4`;
+const ssReel = (code: string) => `/assets/video/stridesociall-reel-${code}.mp4`;
+const ssPoster = (code: string, kind: 'first' | 'brand' | 'at') => `/assets/site/stridesociall-reel-${code}-${kind}.jpg`;
+
+/** The services whose phones play clips chosen by hand, each one watched against what the service says (the owner,
+ *  2026-11-23: "make sure the videos we're showcasing make sense to what we're talking about inside each card"): before,
+ *  a service with few case-study clips filled its phone with creators' unrelated reels. Labels name the brand, never a
+ *  username. A service not listed here plays its case studies' clips (UGC Production: Papaya Gaming's and Temu's UGC
+ *  films). Influencer Activations: creators presenting a brand; Influencer Seeding: creators unboxing or trying what they
+ *  were sent; TikTok Shop: Comfelie's TikTok Shop try-ons; TikTok Shop Livestreams: a TikTok LIVE; Influencer Events:
+ *  Stride's creator events (its photographs as one clip); Podcast Activations: The Fellas × TrainPal's podcast and Stride
+ *  Podcasts' studio. The landscape clips have phone versions over a blurred copy of themselves (`-phone.mp4`). */
+export const serviceClips: Record<string, ServiceClip[]> = {
+  'influencer-activations': [
+    { src: ssReel('DL2JV8uo-_i'), poster: ssPoster('DL2JV8uo-_i', 'first'), who: 'Coca-Cola', note: 'Campaign', href: '/work' },
+    { src: ssReel('DMNUhmzIgi2'), poster: ssPoster('DMNUhmzIgi2', 'brand'), who: 'McDonald’s', note: 'Campaign', href: '/work', from: 17 },
+    // From the Twilight film on screen, under its caption "Reacting to all the Twilight films on Netflix".
+    { src: igReel('DfFAs2oprqm'), poster: '/assets/site/ig-stridetalent-reel-DfFAs2oprqm-at.jpg', who: 'Netflix UK', note: 'Campaign', href: '/work', from: 9.5 },
+    { src: ssReel('DHdNiXaIJgN'), poster: ssPoster('DHdNiXaIJgN', 'first'), who: 'Gauth', note: 'Campaign', href: '/work' },
+    { src: ssReel('DJbpmN8Ip__'), poster: ssPoster('DJbpmN8Ip__', 'at'), who: 'Printful', note: 'Campaign', href: '/work', from: 6.5 },
+  ],
+  'influencer-seeding': [
+    { src: igReel('DdG1xsDpXSx'), poster: '/assets/site/ig-stridetalent-reel-DdG1xsDpXSx-first.jpg', who: 'Miniso', note: 'Seeding', href: '/work', from: 1.5 },
+    { src: ssReel('DNX_iB_IdgK'), poster: ssPoster('DNX_iB_IdgK', 'at'), who: 'Temu', note: 'Seeding', href: '/work', from: 8 },
+    { src: ssReel('DBs7OpCxag3'), poster: ssPoster('DBs7OpCxag3', 'brand'), who: 'Nebula by Anker', note: 'Seeding', href: '/work', from: 8 },
+    { src: ssReel('DRjyKlLCCSZ'), poster: ssPoster('DRjyKlLCCSZ', 'brand'), who: 'SKIN1004', note: 'Seeding', href: '/work', from: 10 },
+    { src: ssReel('DNncWu9okP9'), poster: ssPoster('DNncWu9okP9', 'first'), who: 'Cosori', note: 'Seeding', href: '/work' },
+  ],
+  'tiktok-shop': [
+    { src: '/assets/video/flowdrive-VDbaPLrkg8ffAjqF0f0AG.mp4', poster: '/assets/site/phone-flowdrive-VDbaPLrkg8ffAjqF0f0AG.jpg', who: 'Comfelie', note: 'TikTok Shop', href: '/work#comfelie-driving-20k-in-sales' },
+    { src: '/assets/video/flowdrive-4lGMMajIxr5eApG7p5kPZ.mp4', poster: '/assets/site/phone-flowdrive-4lGMMajIxr5eApG7p5kPZ.jpg', who: 'Comfelie', note: 'TikTok Shop', href: '/work#comfelie-driving-20k-in-sales' },
+  ],
+  'tiktok-shop-livestreams': [
+    { src: igReel('DfXCUFVJBeV'), poster: '/assets/site/ig-stridetalent-reel-DfXCUFVJBeV-first.jpg', who: 'TikTok LIVE', note: 'Livestream', href: '/work' },
+  ],
+  'influencer-events': [
+    { src: '/assets/video/social-events-reel-phone.mp4', poster: '/assets/site/social-events-reel-phone.jpg', who: 'Creator events', note: 'Stride Social', href: '/social/services/influencer-events' },
+  ],
+  'podcast-activations': [
+    { src: ssReel('DBNqTDKRWyH'), poster: '/assets/site/stridesociall-reel-DBNqTDKRWyH-first.jpg', who: 'TrainPal', note: 'Podcast', href: '/work#trainpal' },
+    { src: '/assets/video/case-trainpal-1-phone.mp4', poster: '/assets/site/case-trainpal-1-phone.jpg', who: 'TrainPal', note: 'Podcast', href: '/work#trainpal' },
+    { src: '/assets/video/stride-podcasts-studio-phone.mp4', poster: '/assets/site/stride-podcasts-studio-phone.jpg', who: 'Stride Podcasts', note: 'Podcast', href: '/talent/podcasts' },
+  ],
+};
+
 /** How many clips a phone plays at most. */
 export const PHONE_CLIPS = 8;

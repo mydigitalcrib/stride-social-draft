@@ -25,19 +25,19 @@ const { strategies, approach, intro, title } = Astro.props;
 
 // Each strategy's card plays Stride's own videos of what it says, one per service it speaks of, in turn (the videos its
 // services had in the feed, the owner, 2026-11-18; the owner, 2026-11-23: "make sure the videos relate to what we're
-// talking about in each card"), each labelled with who and what it is. Influencer Campaigns: an activation, then a
-// seeding unboxing; Content & UGC: a UGC product film; Social Commerce: a TikTok Shop video, then a TikTok LIVE;
+// talking about in each card"), each labelled with who and what it is. Influencer Campaigns: a creator presenting a brand
+// (Coca-Cola, from the can in hand), then a seeding unboxing; Content & UGC: a UGC product film; Social Commerce: a TikTok Shop video, then a TikTok LIVE;
 // Experiences & Audio: the creator events on its Influencer Events page (a dinner, a run club, a garden pop-up, a brand
 // trip: its photographs as one clip, social-events-reel.mp4, the owner, 2026-11-23: "make sure the content makes sense
 // to what we're describing"), then a podcast partnership. Long clips play a stretch (`cap`). The labels
 // name the brand, never the creator's username (the owner, 2026-11-23: "delete the usernames").
 const workReels: Record<string, NonNullable<Card['reel']>> = {
-  // Framed from the top, so the clip's own caption stays below the card and clear of its name.
   'influencer-activations': {
-    src: '/assets/video/ig-stridetalent-reel-DfFAs2oprqm.mp4',
-    poster: '/assets/site/ig-stridetalent-reel-DfFAs2oprqm-first.jpg',
-    credit: 'Netflix UK',
-    position: '50% 0%',
+    src: '/assets/video/stridesociall-reel-DL2JV8uo-_i.mp4',
+    poster: '/assets/site/stridesociall-reel-DL2JV8uo-_i-brand.jpg',
+    credit: 'Coca-Cola',
+    position: '50% 30%',
+    from: 13,
     cap: 9,
     more: [{ src: '/assets/video/ig-stridetalent-reel-DdG1xsDpXSx.mp4', credit: 'Miniso', position: '50% 30%', from: 1.5, cap: 9 }],
   },
@@ -121,7 +121,7 @@ const featured: Card[] = (ig.reels as Reel[]).slice(0, 8).map((r) => ({
   href: '#social-menu',
   image: { src: `/assets/site/stridesociall-reel-${r.code}-brand.jpg`, alt: `${r.client} campaign` },
   // No label: the card's name is the brand, and the creator's username isn't shown (the owner, 2026-11-23).
-  reel: { src: `/assets/video/stridesociall-reel-${r.code}.mp4${r.at ? `#t=${r.at}` : ''}`, poster: `/assets/site/stridesociall-reel-${r.code}-brand.jpg` },
+  reel: { src: `/assets/video/stridesociall-reel-${r.code}.mp4`, from: r.at, poster: `/assets/site/stridesociall-reel-${r.code}-brand.jpg` },
 }));
 const steps: Card[] = approach.map((a) => ({ name: a.label, text: a.copy, href: '#approach', image: a.image ? { src: a.image, alt: a.alt ?? a.label, position: a.position } : undefined }));
 ---
