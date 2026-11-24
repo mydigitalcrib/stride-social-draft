@@ -27,7 +27,9 @@ const { strategies, approach, intro, title } = Astro.props;
 // services had in the feed, the owner, 2026-11-18; the owner, 2026-11-23: "make sure the videos relate to what we're
 // talking about in each card"), each labelled with who and what it is. Influencer Campaigns: an activation, then a
 // seeding unboxing; Content & UGC: a UGC product film; Social Commerce: a TikTok Shop video, then a TikTok LIVE;
-// Experiences & Audio: Stride at an event, then a podcast partnership. Long clips play a stretch (`cap`). The labels
+// Experiences & Audio: the creator events on its Influencer Events page (a dinner, a run club, a garden pop-up, a brand
+// trip: its photographs as one clip, social-events-reel.mp4, the owner, 2026-11-23: "make sure the content makes sense
+// to what we're describing"), then a podcast partnership. Long clips play a stretch (`cap`). The labels
 // name the brand, never the creator's username (the owner, 2026-11-23: "delete the usernames").
 const workReels: Record<string, NonNullable<Card['reel']>> = {
   // Framed from the top, so the clip's own caption stays below the card and clear of its name.
@@ -48,9 +50,9 @@ const workReels: Record<string, NonNullable<Card['reel']>> = {
     more: [{ src: '/assets/video/ig-stridetalent-reel-DfXCUFVJBeV.mp4', credit: 'TikTok LIVE', position: '50% 28%', cap: 9 }],
   },
   'influencer-events': {
-    src: '/assets/video/stride-story-12.mp4',
-    poster: '/assets/site/stride-story-12.jpg',
-    credit: 'Stride at VivaTech',
+    src: '/assets/video/social-events-reel.mp4',
+    poster: '/assets/site/social-events-reel.jpg',
+    credit: 'Creator events',
     more: [{ src: '/assets/video/stridesociall-reel-DBNqTDKRWyH.mp4', credit: 'TrainPal', position: '50% 35%', cap: 10 }],
   },
 };
