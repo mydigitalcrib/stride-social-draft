@@ -115,11 +115,11 @@ const icons: Record<string, string> = {
                       open one (deck.ts), labelled with who and what it shows. */}
                   {c.reel && opens && (
                     <>
-                      <video class="deck__image deck__reel" muted loop playsinline preload="none" poster={c.reel.poster ?? c.image?.src} tabindex="-1" aria-hidden="true" style={c.reel.position ? `object-position: ${c.reel.position}` : undefined} data-deck-reel>
-                        <source src={c.reel.src} type="video/mp4" />
+                      <video class="deck__image deck__reel" muted loop={!c.reel.more?.length} playsinline preload="none" poster={c.reel.poster ?? c.image?.src} tabindex="-1" aria-hidden="true" style={c.reel.position ? `object-position: ${c.reel.position}` : undefined} data-deck-reel data-reel-list={c.reel.more?.length ? JSON.stringify([{ src: c.reel.src, credit: c.reel.credit, position: c.reel.position, from: c.reel.from, cap: c.reel.cap }, ...c.reel.more]) : undefined}>
+                        <source src={c.reel.from ? `${c.reel.src}#t=${c.reel.from}` : c.reel.src} type="video/mp4" />
                       </video>
                       <span class="deck__shade" aria-hidden="true"></span>
-                      {c.reel.credit && <span class="deck__credit">{c.reel.credit}</span>}
+                      {c.reel.credit && <span class="deck__credit" data-reel-credit>{c.reel.credit}</span>}
                     </>
                   )}
                   {c.image && !(c.reel && opens) && <img class="deck__image" src={c.image.src} alt="" style={c.image.position ? `object-position: ${c.image.position}` : undefined} sizes={opens ? '(min-width: 1921px) 33.4vw, 640px' : lineup ? '(min-width: 1921px) 18.75vw, 360px' : `(min-width: 1024px) ${Math.ceil(84 / Math.min(4, t.cards.length))}vw, 300px`} loading="lazy" decoding="async" draggable="false" />}

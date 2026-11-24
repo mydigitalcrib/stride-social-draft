@@ -19,6 +19,9 @@ export type StageMessage = {
 };
 
 /** A glass card, and what the big card it grows into holds. */
+/** One clip in a card's run of clips (Card's `reel`). */
+export type ReelClip = { src: string; credit?: string; position?: string; from?: number; cap?: number };
+
 export type Card = {
   name: string;
   text?: string | null;
@@ -32,8 +35,9 @@ export type Card = {
   attribution?: string;
   video?: string;
   /** A clip the card plays while it's the open one in a deck that opens (`spines`): its file, its first picture, who
-   *  and what it shows (a small label on the card) and where it's framed. */
-  reel?: { src: string; poster?: string; credit?: string; position?: string };
+   *  and what it shows (a small label on the card) and where it's framed. `more`: clips that play after it, one after
+   *  another and round again, each from `from` seconds for `cap` seconds at most (or whole). */
+  reel?: { src: string; poster?: string; credit?: string; position?: string; from?: number; cap?: number; more?: ReelClip[] };
   /** `keep`: the block can be added to a list (src/scripts/system/shortlist.ts). */
   blocks?: { title: string; text?: string | null; list?: string[]; href: string; action: string; keep?: { list: 'brief' | 'creators'; id: string; label: string; group?: string } }[];
   stats?: { label: string; value: string }[];

@@ -106,6 +106,28 @@ function openDeck(root: HTMLElement, tabs: HTMLButtonElement[], panels: HTMLElem
 function playReels(root: HTMLElement) {
   const reels = [...root.querySelectorAll<HTMLVideoElement>('video[data-deck-reel]')];
   if (!reels.length) return;
+  // A card with a run of clips (`data-reel-list`): each plays from its `from` for its `cap` seconds (or to its end), then
+  // the next comes in, round again; the label at the card's top says whose it is.
+  reels.forEach((v) => {
+    if (!v.dataset.reelList) return;
+    type Clip = { src: string; credit?: string; position?: string; from?: number; cap?: number };
+    const list = JSON.parse(v.dataset.reelList) as Clip[];
+    const credit = v.closest('.deck__card')?.querySelector<HTMLElement>('[data-reel-credit]');
+    let at = 0;
+    const next = () => {
+      at = (at + 1) % list.length;
+      const clip = list[at];
+      v.src = clip.from ? `${clip.src}#t=${clip.from}` : clip.src;
+      v.style.objectPosition = clip.position ?? '';
+      if (credit) credit.textContent = clip.credit ?? '';
+      v.play().catch(() => {});
+    };
+    v.addEventListener('timeupdate', () => {
+      const clip = list[at];
+      if (clip.cap && v.currentTime >= (clip.from ?? 0) + clip.cap) next();
+    });
+    v.addEventListener('ended', next);
+  });
   let seen = false;
   let held = false;
   const sync = () =>

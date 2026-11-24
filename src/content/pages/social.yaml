@@ -99,8 +99,9 @@ sections:
       # Pictures from Stride's own decks (the owner, 2026-11-12).
       - label: Strategy
         copy: We start with your brand, your goals and the customer you want to reach. Then we build the campaign around your budget, your brand voice and the results that matter to you. No copy-paste templates.
-        image: /assets/site/social-team.jpg
-        alt: The Stride Social team together in their office, in black and white
+        # The owner's picture for it (2026-11-23), cut inside its dark rounded frame.
+        image: /assets/site/social-approach-strategy.jpg
+        alt: The Stride team together at a Christmas night out, smiling under a wreath, in black and white
         position: 50% 40%
       - label: Creator Selection
         copy: We source and vet creators who match your audience, checking quality, brand fit and authenticity, and we handle every conversation from pitch to post.
