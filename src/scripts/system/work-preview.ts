@@ -287,6 +287,8 @@ export function initWorkPreview(
     };
     spot = () => {
       const room = text.scrollHeight - text.clientHeight;
+      // Only once the case is read up under the bar does it take a dark behind it (WorkCanvas.astro, .is-stuck).
+      nav.classList.toggle('is-stuck', text.scrollTop > 0 && nav.getBoundingClientRect().top <= text.getBoundingClientRect().top + 2);
       const under = text.getBoundingClientRect().top + nav.offsetHeight + 40 * deskScale();
       let n = 0;
       parts.forEach((p, k) => {
