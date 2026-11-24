@@ -64,6 +64,7 @@ const mark = '<svg viewBox="0 0 106 106" aria-hidden="true"><path d="M53 53H0L53
               <li class="shero__item">
                 <span class="shero__no">{pad(i + 1)}</span>
                 <span class="shero__name">{item}</span>
+                <svg class="shero__mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 19.5H4.5L19.5 4.5Z"></path></svg>
               </li>
             ))}
           </ol>
@@ -265,7 +266,7 @@ const mark = '<svg viewBox="0 0 106 106" aria-hidden="true"><path d="M53 53H0L53
   .shero__item {
     position: relative;
     display: grid;
-    grid-template-columns: 2.6rem minmax(0, 1fr);
+    grid-template-columns: 2.6rem minmax(0, 1fr) auto;
     align-items: center;
     gap: 0.875rem;
     width: 100%;
@@ -284,6 +285,18 @@ const mark = '<svg viewBox="0 0 106 106" aria-hidden="true"><path d="M53 53H0L53
     font-size: clamp(1rem, 1.3vw, 1.25rem);
     font-weight: 800;
     line-height: 1.2;
+  }
+
+  /* At each line's end, one of Stride's triangles standing as the mark's do, outlined like the cards' (the owner,
+     2026-11-23: "we can have the Stride triangles"). */
+  .shero__mark {
+    width: 1.375rem;
+    height: 1.375rem;
+    fill: none;
+    stroke: rgb(var(--tone-lit));
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 
   .shero__ways {

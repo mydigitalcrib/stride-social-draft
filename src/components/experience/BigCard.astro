@@ -79,7 +79,7 @@ const cols = c.blocks?.length ? Math.min(c.blocks.length, listy ? 3 : 2) : 1;
               {b.text && <p class="bigcard__block-text">{b.text}</p>}
               {b.list && b.list.length > 0 && (
                 <ol class="bigcard__block-list" role="list">
-                  {b.list.map((x, n) => <li><span aria-hidden="true">{pad(n + 1)}</span>{x}</li>)}
+                  {b.list.map((x, n) => <li><span aria-hidden="true">{pad(n + 1)}</span>{x}<svg class="bigcard__mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 19.5H4.5L19.5 4.5Z"></path></svg></li>)}
                 </ol>
               )}
               <span class="bigcard__go" aria-hidden="true">{b.action}</span>
@@ -427,8 +427,20 @@ const cols = c.blocks?.length ? Math.min(c.blocks.length, listy ? 3 : 2) : 1;
 
   .bigcard__block-list li {
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto 1fr auto;
     gap: var(--space-3);
+  }
+
+  /* At each line's end, one of Stride's triangles, outlined (the owner, 2026-11-23), as on a service's own page. */
+  .bigcard__mark {
+    align-self: center;
+    width: 1.125rem;
+    height: 1.125rem;
+    fill: none;
+    stroke: rgb(var(--tone-lit));
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 
   .bigcard__block-list span {
@@ -689,6 +701,13 @@ const cols = c.blocks?.length ? Math.min(c.blocks.length, listy ? 3 : 2) : 1;
     translate: none;
   }
 
+  /* A column with a list keeps its round arrow's height clear at its foot; a list too long for what's left brings the
+     card's sizes down (--fit, grow.ts, which looks inside the columns too), so its last line and triangle never meet the
+     arrow. */
+  .bigcard--spread .bigcard__block:has(.bigcard__block-list) {
+    padding-bottom: calc(3.25rem * var(--fit));
+  }
+
   .bigcard--spread .bigcard__block::before {
     display: none;
   }
@@ -785,7 +804,7 @@ const cols = c.blocks?.length ? Math.min(c.blocks.length, listy ? 3 : 2) : 1;
 
   .bigcard--spread .bigcard__block-list li {
     display: grid;
-    grid-template-columns: 1.75rem minmax(0, 1fr);
+    grid-template-columns: 1.75rem minmax(0, 1fr) auto;
     gap: 0.375rem;
     align-items: baseline;
     padding-block: calc(0.5rem * var(--fit));

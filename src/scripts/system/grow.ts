@@ -25,8 +25,10 @@ function fit(detail: HTMLElement) {
   if (!box) return;
   box.style.removeProperty('--fit');
   if (getComputedStyle(box).overflowY !== 'hidden') return;
+  // Too tall: the whole, or a column within it (a list running into the room kept for its arrow).
+  const over = () => box.scrollHeight > box.clientHeight + 1 || [...box.querySelectorAll<HTMLElement>('.bigcard__block')].some((b) => b.scrollHeight > b.clientHeight + 1);
   let k = 1;
-  for (let i = 0; i < 6 && k > 0.7 && box.scrollHeight > box.clientHeight + 1; i++) {
+  for (let i = 0; i < 6 && k > 0.7 && over(); i++) {
     k = Math.max(0.7, k * Math.min(0.96, Math.sqrt(box.clientHeight / box.scrollHeight)));
     box.style.setProperty('--fit', k.toFixed(3));
   }
