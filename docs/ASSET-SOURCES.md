@@ -273,6 +273,8 @@ services' phones.
 | `public/assets/video/case-glam-ig-*.mp4` (8) | Glam AI | the creators' own reels the Glam AI sheet links to on Instagram (@adam.godigital, @aitrendz.xyz, @digitalrajas.ai, @maskedguyai, @menu.design.jor, @microotech007, @_raviranjan_singh, @uxui_shrut), fetched through Instagram's public embed on 2026-11-17 |
 | `public/assets/video/case-trainpal-1.mp4` | TrainPal | The Fellas, "FULL POD EP.194" on YouTube (D0q7IZSAlIk), 0:12–0:52: the episode's sponsored read for TrainPal; YouTube gave only 360p to the tool used (yt-dlp), so a sharper copy from the creators or the client can replace it |
 | `public/assets/site/case-*.jpg` | (each video's first frame) | made from the videos |
+| `public/assets/video/case-comfelie-results.mp4` (first frame `public/assets/site/case-comfelie-results.jpg`) | Comfelie | `IMG_5031.png` in the Comfelie folder: the campaign's TikTok Shop data (1–17 June 2025), cropped below the phone's status bar and made a 6-second still clip with a slow push-in, 720 by 1280 (2026-11-23) |
+| `public/assets/site/case-trainpal-the-fellas.jpg` | TrainPal | FULL POD EP.194's YouTube thumbnail (D0q7IZSAlIk, i.ytimg.com maxresdefault), the photo the document asks for on the case study's page (2026-11-23) |
 
 Not taken: drafts and the folder marked "need review"; a Holafly reel that is a screen recording with Instagram's
 editor over it; two 1.85 GB Papaya "AIRPORT" masters; the Temu product folders (about 280 raw cuts in three shapes).

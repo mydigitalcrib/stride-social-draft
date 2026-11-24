@@ -9,12 +9,14 @@ industries:
 tagStatus: proposed
 markets: []
 year: null
+# The Fellas' episode artwork, as the document asks ("put this photo in the page for this casestudy", 2026-11-23):
+# FULL POD EP.194's YouTube thumbnail.
 hero:
-  src: /assets/cms/c283f5b5-1200x1200bf-1-.webp
-  alt: TrainPal campaign image
+  src: /assets/site/case-trainpal-the-fellas.jpg
+  alt: The Fellas' two hosts laughing into microphones either side of a photograph of a marriage proposal by a lake
 card:
-  src: /assets/cms/ecff7266-trainpal-cover.webp
-  alt: TrainPal campaign
+  src: /assets/site/case-trainpal-the-fellas.jpg
+  alt: The Fellas podcast hosts, the TrainPal campaign
 homeTile: null
 videos:
   # The Fellas' sponsored read for TrainPal (FULL POD EP.194 on YouTube, 0:12–0:52), from the document (2026-11-17).

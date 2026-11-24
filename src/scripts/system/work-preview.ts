@@ -145,11 +145,15 @@ export function initWorkPreview(
       if (!film.src) film.src = film.dataset.src;
       film.loop = all.length === 1;
       film.onended = () => play(clip + 1);
-      film.onloadedmetadata = () => {
+      // A tall clip stands whole: known once its size has loaded, which for a clip already loaded (a story gone back
+      // to) is now, so it's checked at once as well as when it loads.
+      const shape = () => {
         const tall = film.videoHeight > film.videoWidth;
         film.classList.toggle('is-tall', tall);
         media?.classList.toggle('is-tall', tall);
       };
+      film.onloadedmetadata = shape;
+      if (film.readyState >= 1) shape();
       film.classList.toggle('is-cut', at >= 0);
       film.onplaying = () => film.classList.add('is-in');
       film.currentTime = Math.max(0, at);

@@ -20,6 +20,10 @@ homeTile: null
 videos:
   - src: /assets/video/flowdrive-VDbaPLrkg8ffAjqF0f0AG.mp4
   - src: /assets/video/flowdrive-4lGMMajIxr5eApG7p5kPZ.mp4
+  # The campaign's TikTok Shop data screenshot from the document's Comfelie folder (IMG_5031.png), as a still clip with a
+  # slow push-in (2026-11-23): the figures the case study gives.
+  - src: /assets/video/case-comfelie-results.mp4
+    caption: TikTok Shop data, 1–17 June 2025
 brief: null
 strategy: null
 execution: null

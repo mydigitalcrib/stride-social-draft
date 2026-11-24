@@ -855,8 +855,9 @@ const chaptersOf = (s: Story) => [
       filter 220ms var(--ease-out);
   }
 
-  /* A tall clip (a reel) stands whole in the frame, over its picture softened and darkened. */
-  .wpreview__film.is-tall {
+  /* A tall clip (a reel) stands whole in the frame, over its picture softened and darkened. (Written as strongly as the
+     rule that fills the frame, `.wpreview__media video`, which otherwise won and cut every reel to the frame's shape.) */
+  .wpreview__media .wpreview__film.is-tall {
     object-fit: contain;
   }
 
