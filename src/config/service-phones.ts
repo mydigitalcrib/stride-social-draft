@@ -60,8 +60,8 @@ const ssPoster = (code: string, kind: 'first' | 'brand' | 'at') => `/assets/site
  *  username. A service not listed here plays its case studies' clips (UGC Production: Papaya Gaming's and Temu's UGC
  *  films). Influencer Activations: creators presenting a brand; Influencer Seeding: creators unboxing or trying what they
  *  were sent; TikTok Shop: Comfelie's TikTok Shop try-ons; TikTok Shop Livestreams: a TikTok LIVE; Influencer Events:
- *  Stride's creator events (its photographs as one clip); Podcast Activations: The Fellas × TrainPal's podcast and Stride
- *  Podcasts' studio. The landscape clips have phone versions over a blurred copy of themselves (`-phone.mp4`). */
+ *  Stride's creator events (its photographs as one clip); Podcast Activations: The Fellas × TrainPal's podcast. The
+ *  landscape clip has a phone version over a blurred copy of itself (`-phone.mp4`). */
 export const serviceClips: Record<string, ServiceClip[]> = {
   'influencer-activations': [
     { src: ssReel('DL2JV8uo-_i'), poster: ssPoster('DL2JV8uo-_i', 'first'), who: 'Coca-Cola', note: 'Campaign', href: '/work' },
@@ -89,9 +89,8 @@ export const serviceClips: Record<string, ServiceClip[]> = {
     { src: '/assets/video/social-events-reel-phone.mp4', poster: '/assets/site/social-events-reel-phone.jpg', who: 'Creator events', note: 'Stride Social', href: '/social/services/influencer-events' },
   ],
   'podcast-activations': [
+    // The Fellas × TrainPal's reel alone (the owner, 2026-11-23: "delete the other two videos").
     { src: ssReel('DBNqTDKRWyH'), poster: '/assets/site/stridesociall-reel-DBNqTDKRWyH-first.jpg', who: 'TrainPal', note: 'Podcast', href: '/work#trainpal' },
-    { src: '/assets/video/case-trainpal-1-phone.mp4', poster: '/assets/site/case-trainpal-1-phone.jpg', who: 'TrainPal', note: 'Podcast', href: '/work#trainpal' },
-    { src: '/assets/video/stride-podcasts-studio-phone.mp4', poster: '/assets/site/stride-podcasts-studio-phone.jpg', who: 'Stride Podcasts', note: 'Podcast', href: '/talent/podcasts' },
   ],
 };
 
