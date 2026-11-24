@@ -57,8 +57,8 @@ const ssPoster = (code: string, kind: 'first' | 'brand' | 'at') => `/assets/site
 /** The services whose phones play clips chosen by hand, each one watched against what the service says (the owner,
  *  2026-11-23: "make sure the videos we're showcasing make sense to what we're talking about inside each card"): before,
  *  a service with few case-study clips filled its phone with creators' unrelated reels. Labels name the brand, never a
- *  username. A service not listed here plays its case studies' clips (UGC Production: Papaya Gaming's and Temu's UGC
- *  films). Influencer Activations: creators presenting a brand; Influencer Seeding: creators unboxing or trying what they
+ *  username. A service not listed here plays its case studies' clips. Each service's list is also its preview in the other
+ *  services' pages' More Services cards ([slug].astro). Influencer Activations: creators presenting a brand; Influencer Seeding: creators unboxing or trying what they
  *  were sent; TikTok Shop: Comfelie's TikTok Shop try-ons; TikTok Shop Livestreams: a TikTok LIVE; Influencer Events:
  *  Stride's creator events (its photographs as one clip); Podcast Activations: The Fellas × TrainPal's podcast. The
  *  landscape clip has a phone version over a blurred copy of itself (`-phone.mp4`). */
@@ -77,6 +77,16 @@ export const serviceClips: Record<string, ServiceClip[]> = {
     { src: ssReel('DBs7OpCxag3'), poster: ssPoster('DBs7OpCxag3', 'brand'), who: 'Nebula by Anker', note: 'Seeding', href: '/work', from: 8 },
     { src: ssReel('DRjyKlLCCSZ'), poster: ssPoster('DRjyKlLCCSZ', 'brand'), who: 'SKIN1004', note: 'Seeding', href: '/work', from: 10 },
     { src: ssReel('DNncWu9okP9'), poster: ssPoster('DNncWu9okP9', 'first'), who: 'Cosori', note: 'Seeding', href: '/work' },
+  ],
+  // Its case studies' UGC films, Papaya Gaming's and Temu's, as its phone played them before (listed so the other
+  // services' pages can preview it too).
+  'ugc-production': [
+    { src: '/assets/video/flowdrive-QoKOHwrVK7RH9jNgRN073-phone.mp4', poster: '/assets/site/phone-flowdrive-QoKOHwrVK7RH9jNgRN073.jpg', who: 'Papaya Gaming', note: 'Case study', href: '/work#papaya-gaming' },
+    { src: '/assets/video/flowdrive-XlaHBz0jbaLXA20tZIdSs-phone.mp4', poster: '/assets/site/phone-flowdrive-XlaHBz0jbaLXA20tZIdSs.jpg', who: 'Temu', note: 'Case study', href: '/work#temu-scaling-paid-social-with-500-ugc-videos' },
+    { src: '/assets/video/case-papaya-2.mp4', poster: '/assets/site/case-papaya-2.jpg', who: 'Papaya Gaming', note: 'Case study', href: '/work#papaya-gaming' },
+    { src: '/assets/video/case-temu-2.mp4', poster: '/assets/site/case-temu-2.jpg', who: 'Temu', note: 'Case study', href: '/work#temu-scaling-paid-social-with-500-ugc-videos' },
+    { src: '/assets/video/case-papaya-3.mp4', poster: '/assets/site/case-papaya-3.jpg', who: 'Papaya Gaming', note: 'Case study', href: '/work#papaya-gaming' },
+    { src: '/assets/video/case-temu-3.mp4', poster: '/assets/site/case-temu-3.jpg', who: 'Temu', note: 'Case study', href: '/work#temu-scaling-paid-social-with-500-ugc-videos' },
   ],
   'tiktok-shop': [
     { src: '/assets/video/flowdrive-VDbaPLrkg8ffAjqF0f0AG.mp4', poster: '/assets/site/phone-flowdrive-VDbaPLrkg8ffAjqF0f0AG.jpg', who: 'Comfelie', note: 'TikTok Shop', href: '/work#comfelie-driving-20k-in-sales' },

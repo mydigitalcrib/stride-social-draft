@@ -62,9 +62,24 @@ const turn = reels.length ? (d.number * 3) % reels.length : 0;
 // A service with clips chosen by hand (config/service-phones.ts `serviceClips`) plays those alone.
 const chosen = serviceClips[service.id]?.map((c) => ({ ...c, label: `${c.who}: ${c.note.toLowerCase()} video` }));
 const clips = chosen ?? [...fromWork, ...reels.slice(turn), ...reels.slice(0, turn)].slice(0, PHONE_CLIPS);
+// More Services: each service's card plays a preview of its own videos, the ones its page's phone plays, a stretch of
+// each in turn with its brand at the top (the owner, 2026-11-23: "replace those images for the videos ... a mini video
+// preview of what videos each section contains"); its picture stays for a service without them.
+const previewOf = (id: string): Card['reel'] => {
+  const [first, ...rest] = serviceClips[id] ?? [];
+  if (!first) return undefined;
+  return {
+    src: first.src,
+    poster: first.poster,
+    credit: first.who,
+    from: first.from,
+    cap: rest.length ? 7 : undefined,
+    more: rest.map((c) => ({ src: c.src, credit: c.who, from: c.from, cap: 7 })),
+  };
+};
 const others: Card[] = services
   .filter((x) => x.id !== service.id)
-  .map((x) => ({ name: x.data.name, text: x.data.descriptor, href: routes.service(x.id), image: x.data.hero, direct: true }));
+  .map((x) => ({ name: x.data.name, text: x.data.descriptor, href: routes.service(x.id), image: x.data.hero, reel: previewOf(x.id), direct: true }));
 const jsonLd = [
   {
     '@context': 'https://schema.org',
