@@ -85,6 +85,9 @@ const t = await interfaceCopy();
      steel, from the palette, so the navy lockup still stands out clearly on it. */
   .opening {
     --opening-tint: color-mix(in srgb, var(--ice) 52%, var(--steel));
+    /* The lockup's navy, lighter (the owner, 2026-11-23: "make the navy blue look more like light navy blue"; it was the
+       darkest navy, #06142b, which read as black): between the palette's two middle navies. */
+    --opening-ink: color-mix(in srgb, var(--navy-700) 45%, var(--navy-500));
   }
 
   .opening__gate {
@@ -188,11 +191,12 @@ const t = await interfaceCopy();
     inset: 0;
   }
 
-  /* On the ice, the lockup is navy (#06142b, the owner's sample, 2026-11-17): its words, the divisions' names (their
-     own colours don't read on it) and the line along the foot, standing over the grain so the navy stays exactly
-     itself, as does the button's. Entering, the mark turns white as the gate goes to navy (below). */
+  /* On the ice, the lockup is a light navy (--opening-ink; the owner's darker sample, #06142b, 2026-11-17, until
+     2026-11-23): its words, the divisions' names (their own colours don't read on it) and the line along the foot,
+     standing over the grain so the navy stays exactly itself, as does the button's. Entering, the mark turns white as
+     the gate goes to navy (below). */
   .opening :global(.reveal) {
-    color: var(--navy-900);
+    color: var(--opening-ink);
   }
 
   .opening__lockup,
@@ -205,11 +209,11 @@ const t = await interfaceCopy();
   }
 
   .opening :global(.reveal__progress) {
-    background: rgb(var(--navy-900-rgb) / 0.14);
+    background: color-mix(in srgb, var(--opening-ink) 14%, transparent);
   }
 
   .opening :global(.reveal__progress-bar) {
-    background: var(--navy-900);
+    background: var(--opening-ink);
   }
 
   @media (min-width: 1024px) {
@@ -256,7 +260,7 @@ const t = await interfaceCopy();
     line-height: 1;
     letter-spacing: -0.01em;
     text-transform: uppercase;
-    color: var(--navy-900);
+    color: var(--opening-ink);
     white-space: nowrap;
   }
 
